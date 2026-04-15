@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/logia-crisol-elqui.html" },
-    { "source": "/intranet", "destination": "/pasos-perdidos.html" }
+    { "source": "/intranet", "destination": "/pasos-perdidos.html" },
+    { "source": "/admin", "destination": "/admin.html" }
   ]
 }
+

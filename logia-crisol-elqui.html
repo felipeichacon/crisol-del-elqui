@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Respetable Logia Crisol del Elqui N°189</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -293,18 +294,29 @@
     <p class="section-label">Actualidad</p>
     <h2 class="section-title">Noticias de la Logia</h2>
     <div class="divider-line"></div>
-    <div class="news-grid">
-      <div class="news-card">
-        <div class="news-photo"><img id="news-img-0" alt="" onload="this.classList.add('loaded')"><div class="news-photo-placeholder" onclick="document.getElementById('file-0').click()"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#C9A84C" stroke-width="1.2"/><circle cx="16" cy="16" r="5" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 6 L13 2 L19 2 L21 6" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg><span>Agregar foto</span></div><button class="news-photo-change" onclick="document.getElementById('file-0').click()">Cambiar foto</button><input type="file" id="file-0" accept="image/*" onchange="loadPhoto(this,0)"></div>
-        <div class="news-card-body"><div class="news-tag">Tenida</div><div class="news-date">15 de Marzo, 2025</div><h3 class="news-title">Tenida Solemne en conmemoración del aniversario N°189</h3><p class="news-excerpt">Con la presencia de hermanos visitantes de logias hermanas del Valle de La Serena, celebramos un nuevo año de trabajo fraterno.</p><a href="#" class="news-link">Leer más →</a></div>
+    <div class="news-grid" id="landing-news-grid">
+      <!-- Skeletons mientras carga -->
+      <div class="news-card" style="opacity:0.4;">
+        <div class="news-photo" style="background:var(--dark-4);"></div>
+        <div class="news-card-body">
+          <div style="height:12px;background:var(--dark-4);width:60%;margin-bottom:12px;"></div>
+          <div style="height:18px;background:var(--dark-4);width:90%;margin-bottom:8px;"></div>
+          <div style="height:14px;background:var(--dark-4);width:80%;"></div>
+        </div>
       </div>
-      <div class="news-card">
-        <div class="news-photo"><img id="news-img-1" alt="" onload="this.classList.add('loaded')"><div class="news-photo-placeholder" onclick="document.getElementById('file-1').click()"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#C9A84C" stroke-width="1.2"/><circle cx="16" cy="16" r="5" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 6 L13 2 L19 2 L21 6" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg><span>Agregar foto</span></div><button class="news-photo-change" onclick="document.getElementById('file-1').click()">Cambiar foto</button><input type="file" id="file-1" accept="image/*" onchange="loadPhoto(this,1)"></div>
-        <div class="news-card-body"><div class="news-tag">Comunidad</div><div class="news-date">2 de Marzo, 2025</div><h3 class="news-title">Jornada de servicio social en el Valle del Elqui</h3><p class="news-excerpt">Hermanos de la logia participaron en una jornada de apoyo a familias de la zona rural de la región de Coquimbo.</p><a href="#" class="news-link">Leer más →</a></div>
+      <div class="news-card" style="opacity:0.3;">
+        <div class="news-photo" style="background:var(--dark-4);"></div>
+        <div class="news-card-body">
+          <div style="height:12px;background:var(--dark-4);width:60%;margin-bottom:12px;"></div>
+          <div style="height:18px;background:var(--dark-4);width:90%;margin-bottom:8px;"></div>
+        </div>
       </div>
-      <div class="news-card">
-        <div class="news-photo"><img id="news-img-2" alt="" onload="this.classList.add('loaded')"><div class="news-photo-placeholder" onclick="document.getElementById('file-2').click()"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#C9A84C" stroke-width="1.2"/><circle cx="16" cy="16" r="5" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 6 L13 2 L19 2 L21 6" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg><span>Agregar foto</span></div><button class="news-photo-change" onclick="document.getElementById('file-2').click()">Cambiar foto</button><input type="file" id="file-2" accept="image/*" onchange="loadPhoto(this,2)"></div>
-        <div class="news-card-body"><div class="news-tag">Conferencia</div><div class="news-date">18 de Febrero, 2025</div><h3 class="news-title">Conferencia sobre filosofía estoica y el arte masónico</h3><p class="news-excerpt">El H∴ Marcos Rivero presentó una reflexión profunda ante la columna del Sur sobre estoicismo y virtud.</p><a href="#" class="news-link">Leer más →</a></div>
+      <div class="news-card" style="opacity:0.2;">
+        <div class="news-photo" style="background:var(--dark-4);"></div>
+        <div class="news-card-body">
+          <div style="height:12px;background:var(--dark-4);width:60%;margin-bottom:12px;"></div>
+          <div style="height:18px;background:var(--dark-4);width:90%;margin-bottom:8px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -319,22 +331,21 @@
     <div class="podcast-layout">
       <div>
         <p class="podcast-desc">"La palabra es el instrumento del alma. Reflexiones sobre filosofía, historia y el camino del perfeccionamiento humano."</p>
-        <ul class="episode-list">
-          <li class="episode-item" onclick="selectEp(this,'El simbolismo del compás y la escuadra')"><span class="ep-num">01</span><div><div class="ep-title">El simbolismo del compás y la escuadra</div><div class="ep-meta">42 min · Filosofía masónica</div></div></li>
-          <li class="episode-item" onclick="selectEp(this,'La alegoría de la caverna y el grado de aprendiz')"><span class="ep-num">02</span><div><div class="ep-title">La alegoría de la caverna y el grado de aprendiz</div><div class="ep-meta">38 min · Historia y filosofía</div></div></li>
-          <li class="episode-item" onclick="selectEp(this,'Hiram Abif: mito y enseñanza moral')"><span class="ep-num">03</span><div><div class="ep-title">Hiram Abif: mito y enseñanza moral</div><div class="ep-meta">55 min · Rituales y leyendas</div></div></li>
-          <li class="episode-item" onclick="selectEp(this,'El Valle del Elqui como espacio de contemplación')"><span class="ep-num">04</span><div><div class="ep-title">El Valle del Elqui como espacio de contemplación</div><div class="ep-meta">29 min · Territorio y cultura</div></div></li>
+        <ul class="episode-list" id="episode-list">
+          <li class="episode-item" style="opacity:0.4;"><span class="ep-num">··</span><div><div class="ep-title" style="background:var(--dark-4);height:16px;width:220px;margin-bottom:6px;"></div><div class="ep-meta" style="background:var(--dark-4);height:12px;width:140px;"></div></div></li>
+          <li class="episode-item" style="opacity:0.3;"><span class="ep-num">··</span><div><div class="ep-title" style="background:var(--dark-4);height:16px;width:200px;margin-bottom:6px;"></div><div class="ep-meta" style="background:var(--dark-4);height:12px;width:120px;"></div></div></li>
+          <li class="episode-item" style="opacity:0.2;"><span class="ep-num">··</span><div><div class="ep-title" style="background:var(--dark-4);height:16px;width:180px;margin-bottom:6px;"></div><div class="ep-meta" style="background:var(--dark-4);height:12px;width:100px;"></div></div></li>
         </ul>
       </div>
       <div class="player-widget">
         <div class="player-ep-label">Reproduciendo ahora</div>
-        <div class="player-ep-title" id="player-title">El simbolismo del compás y la escuadra</div>
+        <div class="player-ep-title" id="player-title">Radio Ágora</div>
         <div class="player-waveform" id="waveform"></div>
         <div class="player-controls">
           <button class="btn-play" id="play-btn" onclick="togglePlay()">▶</button>
-          <span class="player-time" id="current-time">14:32</span>
+          <span class="player-time" id="current-time">00:00</span>
           <div class="player-progress" onclick="scrubProgress(event)"><div class="player-progress-fill" id="progress-fill"></div></div>
-          <span class="player-time">42:00</span>
+          <span class="player-time" id="player-duration">00:00</span>
         </div>
       </div>
     </div>
@@ -347,10 +358,10 @@
     <p class="section-label">Reflexión y magisterio</p>
     <h2 class="section-title">Palabras del Venerable Maestro</h2>
     <div class="divider-line"></div>
-    <div class="blog-grid">
-      <div class="blog-card"><div class="blog-category">Filosofía</div><h3 class="blog-title">El trabajo en la piedra bruta: metáfora del perfeccionamiento personal</h3><p class="blog-excerpt">Cada hombre llega a la logia como una piedra sin pulir. El trabajo masónico es el cincel que da forma al carácter...</p><div class="blog-author">V∴M∴ Pablo Araya · 8 min lectura</div></div>
-      <div class="blog-card"><div class="blog-category">Mensaje</div><h3 class="blog-title">Reflexiones al inicio del año masónico 6025</h3><p class="blog-excerpt">Al iniciar un nuevo año de labores, convoco a mis hermanos a renovar el compromiso con la verdad y la virtud...</p><div class="blog-author">V∴M∴ Pablo Araya · 5 min lectura</div></div>
-      <div class="blog-card"><div class="blog-category">Meditación</div><h3 class="blog-title">La tolerancia como pilar de la convivencia fraternal</h3><p class="blog-excerpt">En un mundo fragmentado, la fraternidad masónica nos recuerda que el diálogo honesto y respetuoso es posible...</p><div class="blog-author">V∴M∴ Pablo Araya · 6 min lectura</div></div>
+    <div class="blog-grid" id="venerable-grid">
+      <div class="blog-card" style="opacity:0.4;"><div style="height:10px;background:var(--dark-4);width:40%;margin-bottom:14px;"></div><div style="height:20px;background:var(--dark-4);width:90%;margin-bottom:10px;"></div><div style="height:14px;background:var(--dark-4);width:80%;"></div></div>
+      <div class="blog-card" style="opacity:0.3;"><div style="height:10px;background:var(--dark-4);width:40%;margin-bottom:14px;"></div><div style="height:20px;background:var(--dark-4);width:90%;margin-bottom:10px;"></div><div style="height:14px;background:var(--dark-4);width:80%;"></div></div>
+      <div class="blog-card" style="opacity:0.2;"><div style="height:10px;background:var(--dark-4);width:40%;margin-bottom:14px;"></div><div style="height:20px;background:var(--dark-4);width:90%;margin-bottom:10px;"></div><div style="height:14px;background:var(--dark-4);width:80%;"></div></div>
     </div>
   </div>
 </section>
@@ -364,15 +375,15 @@
     <div class="egregora-grid">
       <div class="egregora-cover">
         <div class="egregora-cover-badge">Egrégora</div>
-        <div class="egregora-cover-sub">Revista · N°12 · 2025</div>
+        <div class="egregora-cover-sub" id="egregora-edicion">Revista · 2025</div>
         <p class="egregora-issue">Publicación trimestral de reflexión masónica, filosofía e historia del Valle del Elqui.</p>
         <a href="#" class="btn-corp" style="margin-bottom:12px;">Leer edición completa</a>
         <a href="#" class="btn-corp" style="margin-top:12px;">Ver archivo histórico</a>
       </div>
-      <div class="egregora-articles">
-        <div class="egregora-article"><div class="egregora-num">01</div><div><div class="egregora-article-title">La geometría sagrada en el templo de Salomón y su influencia en la arquitectura masónica</div><div class="egregora-article-meta">H∴ Rodrigo Céspedes · Historia · 14 min</div></div></div>
-        <div class="egregora-article"><div class="egregora-num">02</div><div><div class="egregora-article-title">El pensamiento de Voltaire y su relación con los principios de la ilustración masónica</div><div class="egregora-article-meta">H∴ Felipe Montoya · Filosofía · 11 min</div></div></div>
-        <div class="egregora-article"><div class="egregora-num">03</div><div><div class="egregora-article-title">Identidad regional y fraternidad: la masonería en el norte chico de Chile</div><div class="egregora-article-meta">H∴ Andrés Villablanca · Cultura · 9 min</div></div></div>
+      <div class="egregora-articles" id="egregora-articles">
+        <div class="egregora-article" style="opacity:0.4;"><div class="egregora-num">··</div><div><div style="height:18px;background:var(--dark-4);width:85%;margin-bottom:8px;"></div><div style="height:13px;background:var(--dark-4);width:55%;"></div></div></div>
+        <div class="egregora-article" style="opacity:0.3;"><div class="egregora-num">··</div><div><div style="height:18px;background:var(--dark-4);width:90%;margin-bottom:8px;"></div><div style="height:13px;background:var(--dark-4);width:60%;"></div></div></div>
+        <div class="egregora-article" style="opacity:0.2;"><div class="egregora-num">··</div><div><div style="height:18px;background:var(--dark-4);width:80%;margin-bottom:8px;"></div><div style="height:13px;background:var(--dark-4);width:50%;"></div></div></div>
       </div>
     </div>
   </div>
@@ -390,9 +401,9 @@
         <a href="#contacto" class="btn-corp">Contactar</a>
       </div>
     </div>
-    <div class="corp-preview">
-      <div class="corp-preview-card" onclick="showCorpPage()"><div class="corp-card-type">Noticia · Corporación</div><div class="corp-card-title">Nuevo programa de becas para estudiantes del Valle del Elqui 2025</div><div class="corp-card-meta">12 de Marzo, 2025 · Educación</div></div>
-      <div class="corp-preview-card" onclick="showCorpPage()"><div class="corp-card-type">Blog · Corporación</div><div class="corp-card-title">Reflexión sobre el rol de la cultura en el desarrollo humano regional</div><div class="corp-card-meta">5 de Marzo, 2025 · Cultura y sociedad</div></div>
+    <div class="corp-preview" id="corp-preview">
+      <div class="corp-preview-card" style="opacity:0.4;"><div class="corp-card-type">Cargando…</div><div class="corp-card-title" style="background:var(--dark-5);height:18px;width:85%;margin-bottom:8px;"></div><div class="corp-card-meta" style="background:var(--dark-5);height:12px;width:55%;"></div></div>
+      <div class="corp-preview-card" style="opacity:0.3;"><div class="corp-card-type">Cargando…</div><div class="corp-card-title" style="background:var(--dark-5);height:18px;width:80%;margin-bottom:8px;"></div><div class="corp-card-meta" style="background:var(--dark-5);height:12px;width:50%;"></div></div>
     </div>
   </div>
 </section>
@@ -509,19 +520,10 @@
     <p class="section-label">Actividades y proyectos</p>
     <h2 class="section-title">Noticias de la Corporación</h2>
     <div class="divider-line"></div>
-    <div class="news-grid">
-      <div class="news-card">
-        <div class="news-photo"><img id="corp-img-0" alt="" onload="this.classList.add('loaded')"><div class="news-photo-placeholder" onclick="document.getElementById('cf-0').click()"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#C9A84C" stroke-width="1.2"/><circle cx="16" cy="16" r="5" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 6 L13 2 L19 2 L21 6" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg><span>Agregar foto</span></div><button class="news-photo-change" onclick="document.getElementById('cf-0').click()">Cambiar foto</button><input type="file" id="cf-0" accept="image/*" onchange="loadCorpPhoto(this,0)"></div>
-        <div class="news-card-body"><div class="news-tag">Educación</div><div class="news-date">12 de Marzo, 2025</div><h3 class="news-title">Nuevo programa de becas para estudiantes del Valle del Elqui 2025</h3><p class="news-excerpt">La Corporación Elqui abre postulaciones para su programa anual de becas de educación superior.</p><a href="#" class="news-link">Leer más →</a></div>
-      </div>
-      <div class="news-card">
-        <div class="news-photo"><img id="corp-img-1" alt="" onload="this.classList.add('loaded')"><div class="news-photo-placeholder" onclick="document.getElementById('cf-1').click()"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#C9A84C" stroke-width="1.2"/><circle cx="16" cy="16" r="5" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 6 L13 2 L19 2 L21 6" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg><span>Agregar foto</span></div><button class="news-photo-change" onclick="document.getElementById('cf-1').click()">Cambiar foto</button><input type="file" id="cf-1" accept="image/*" onchange="loadCorpPhoto(this,1)"></div>
-        <div class="news-card-body"><div class="news-tag">Cultura</div><div class="news-date">28 de Febrero, 2025</div><h3 class="news-title">Ciclo de charlas sobre astronomía y cosmovisión andina en Vicuña</h3><p class="news-excerpt">En colaboración con el Observatorio del Elqui, la Corporación organizó tres jornadas de difusión científica.</p><a href="#" class="news-link">Leer más →</a></div>
-      </div>
-      <div class="news-card">
-        <div class="news-photo"><img id="corp-img-2" alt="" onload="this.classList.add('loaded')"><div class="news-photo-placeholder" onclick="document.getElementById('cf-2').click()"><svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect x="2" y="6" width="28" height="20" rx="3" stroke="#C9A84C" stroke-width="1.2"/><circle cx="16" cy="16" r="5" stroke="#C9A84C" stroke-width="1.2"/><path d="M11 6 L13 2 L19 2 L21 6" stroke="#C9A84C" stroke-width="1.2" fill="none"/></svg><span>Agregar foto</span></div><button class="news-photo-change" onclick="document.getElementById('cf-2').click()">Cambiar foto</button><input type="file" id="cf-2" accept="image/*" onchange="loadCorpPhoto(this,2)"></div>
-        <div class="news-card-body"><div class="news-tag">Social</div><div class="news-date">15 de Febrero, 2025</div><h3 class="news-title">Entrega de útiles escolares a escuelas rurales de Paihuano y Montegrande</h3><p class="news-excerpt">Más de 200 niños de zonas rurales recibieron materiales escolares gracias al programa solidario.</p><a href="#" class="news-link">Leer más →</a></div>
-      </div>
+    <div class="news-grid" id="corp-news-grid">
+      <div class="news-card" style="opacity:0.4;"><div class="news-photo" style="background:var(--dark-4);"></div><div class="news-card-body"><div style="height:10px;background:var(--dark-4);width:50%;margin-bottom:12px;"></div><div style="height:18px;background:var(--dark-4);width:90%;margin-bottom:8px;"></div></div></div>
+      <div class="news-card" style="opacity:0.3;"><div class="news-photo" style="background:var(--dark-4);"></div><div class="news-card-body"><div style="height:10px;background:var(--dark-4);width:50%;margin-bottom:12px;"></div><div style="height:18px;background:var(--dark-4);width:85%;margin-bottom:8px;"></div></div></div>
+      <div class="news-card" style="opacity:0.2;"><div class="news-photo" style="background:var(--dark-4);"></div><div class="news-card-body"><div style="height:10px;background:var(--dark-4);width:50%;margin-bottom:12px;"></div><div style="height:18px;background:var(--dark-4);width:80%;margin-bottom:8px;"></div></div></div>
     </div>
   </div>
 </section>
@@ -532,10 +534,10 @@
     <p class="section-label">Pensamiento y comunidad</p>
     <h2 class="section-title">Blog de la Corporación</h2>
     <div class="divider-line"></div>
-    <div class="blog-grid">
-      <div class="blog-card"><div class="blog-category">Educación</div><h3 class="blog-title">El rol de la educación laica en el desarrollo del Valle del Elqui</h3><p class="blog-excerpt">Reflexionamos sobre la tradición de una educación libre y fraternal que ha guiado a nuestra corporación...</p><div class="blog-author">Directorio Corporación · 7 min lectura</div></div>
-      <div class="blog-card"><div class="blog-category">Cultura</div><h3 class="blog-title">Identidad y patrimonio: preservar la memoria del Valle</h3><p class="blog-excerpt">El Valle del Elqui alberga una riqueza cultural única. Nuestra misión es custodiarla y difundirla a las nuevas generaciones...</p><div class="blog-author">Secretaría Cultura · 9 min lectura</div></div>
-      <div class="blog-card"><div class="blog-category">Sociedad</div><h3 class="blog-title">Reflexión sobre el rol de la cultura en el desarrollo humano regional</h3><p class="blog-excerpt">Cultura y desarrollo no son conceptos separados. Una comunidad que lee, reflexiona y debate, construye mejor su destino...</p><div class="blog-author">Directorio Corporación · 6 min lectura</div></div>
+    <div class="blog-grid" id="corp-blog-grid">
+      <div class="blog-card" style="opacity:0.4;"><div style="height:10px;background:var(--dark-4);width:40%;margin-bottom:14px;"></div><div style="height:20px;background:var(--dark-4);width:90%;margin-bottom:10px;"></div></div>
+      <div class="blog-card" style="opacity:0.3;"><div style="height:10px;background:var(--dark-4);width:40%;margin-bottom:14px;"></div><div style="height:20px;background:var(--dark-4);width:85%;margin-bottom:10px;"></div></div>
+      <div class="blog-card" style="opacity:0.2;"><div style="height:10px;background:var(--dark-4);width:40%;margin-bottom:14px;"></div><div style="height:20px;background:var(--dark-4);width:80%;margin-bottom:10px;"></div></div>
     </div>
   </div>
 </section>
@@ -552,6 +554,300 @@
 </div><!-- /page-corp -->
 
 <script>
+  // ── SUPABASE — noticias dinámicas ──
+  const _sb = supabase.createClient(
+    'https://rpzigsvocrychahsrzfj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODYzNzAsImV4cCI6MjA5MTI2MjM3MH0.RCtxrM0KzzBjeijgSTomlFPCDKiu9SzutUgpb6PPwUo'
+  );
+
+  async function loadLandingNoticias() {
+    const grid = document.getElementById('landing-news-grid');
+    const { data, error } = await _sb
+      .from('noticias')
+      .select('*')
+      .eq('publicado', true)
+      .order('fecha_pub', { ascending: false })
+      .limit(3);
+
+    if (error || !data?.length) {
+      // Sin noticias en Supabase — mostrar placeholder elegante
+      grid.innerHTML = `
+        <div class="news-card" style="grid-column:1/-1;text-align:center;padding:60px 40px;border:1px dashed var(--border);">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">Próximamente</div>
+          <div style="font-family:'Cinzel',serif;font-size:18px;color:var(--cream);margin-bottom:12px;">Las noticias de la logia aparecerán aquí</div>
+          <div style="font-size:15px;color:var(--text-dim);">Publica noticias desde el panel de administración</div>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = '';
+    data.forEach(n => {
+      const fecha = n.fecha_pub
+        ? new Date(n.fecha_pub + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' })
+        : '';
+      const imgHtml = n.imagen_url
+        ? `<div class="news-photo"><img src="${n.imagen_url}" alt="${n.titulo}" onload="this.classList.add('loaded')" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.4s;"></div>`
+        : `<div class="news-photo" style="background:var(--dark-4);display:flex;align-items:center;justify-content:center;"><span style="font-size:32px;opacity:0.2;">◈</span></div>`;
+      const card = document.createElement('div');
+      card.className = 'news-card';
+      card.innerHTML = `
+        ${imgHtml}
+        <div class="news-card-body">
+          <div class="news-tag">${n.tag||'Noticia'}</div>
+          <div class="news-date">${fecha}</div>
+          <h3 class="news-title">${n.titulo}</h3>
+          <p class="news-excerpt">${n.extracto||n.contenido.substring(0,160)+'…'}</p>
+          <a href="#" class="news-link">Leer más →</a>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  loadLandingNoticias();
+
+  // ── VENERABLE MAESTRO — posts del rol maestro ──
+  async function loadVenerable() {
+    const grid = document.getElementById('venerable-grid');
+    const { data } = await _sb
+      .from('posts')
+      .select('*')
+      .eq('role', 'maestro')
+      .eq('publicado', true)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (!data?.length) {
+      grid.innerHTML = `<div class="blog-card" style="grid-column:1/-1;text-align:center;padding:40px;">
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Próximamente</div>
+        <div style="font-family:'Cinzel',serif;font-size:17px;color:var(--cream);">Las palabras del Venerable Maestro aparecerán aquí</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    data.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'blog-card';
+      div.innerHTML = `
+        <div class="blog-category">${p.extracto ? p.extracto.split(' ')[0] : 'Reflexión'}</div>
+        <h3 class="blog-title">${p.titulo}</h3>
+        <p class="blog-excerpt">${(p.extracto||p.contenido).substring(0,180)}…</p>
+        <div class="blog-author">${p.autor_nombre||'V∴M∴'}</div>`;
+      grid.appendChild(div);
+    });
+  }
+  loadVenerable();
+
+  // ── REVISTA EGRÉGORA — posts de tipo egregora ──
+  async function loadEgregora() {
+    const container = document.getElementById('egregora-articles');
+    const { data } = await _sb
+      .from('posts')
+      .select('*')
+      .eq('publicado', true)
+      .ilike('titulo', '%egrégora%')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    // Si no hay posts específicos de Egrégora, buscar cualquier post publicado reciente
+    let posts = data;
+    if (!posts?.length) {
+      const { data: fallback } = await _sb
+        .from('posts')
+        .select('*')
+        .eq('publicado', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      posts = fallback;
+    }
+
+    if (!posts?.length) {
+      container.innerHTML = `
+        <div class="egregora-article" style="grid-column:1/-1;">
+          <div class="egregora-num">—</div>
+          <div><div class="egregora-article-title">Los artículos de la Revista Egrégora aparecerán aquí</div>
+          <div class="egregora-article-meta">Publica desde el panel de administración</div></div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    posts.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'egregora-article';
+      div.innerHTML = `
+        <div class="egregora-num">${String(i+1).padStart(2,'0')}</div>
+        <div>
+          <div class="egregora-article-title">${p.titulo}</div>
+          <div class="egregora-article-meta">${p.autor_nombre||'—'}</div>
+        </div>`;
+      container.appendChild(div);
+    });
+
+    // Actualizar subtítulo de la portada
+    const edicion = document.getElementById('egregora-edicion');
+    if (edicion && posts[0]) {
+      const year = new Date(posts[0].created_at).getFullYear();
+      edicion.textContent = `Revista · ${year}`;
+    }
+  }
+  loadEgregora();
+
+  // ── RADIO ÁGORA — episodios dinámicos ──
+  let epData = [];
+  let currentEpDuration = 0;
+
+  async function loadRadioAgora() {
+    const list = document.getElementById('episode-list');
+    const { data } = await _sb
+      .from('episodios')
+      .select('*')
+      .eq('publicado', true)
+      .order('numero', { ascending: true })
+      .limit(8);
+
+    if (!data?.length) {
+      list.innerHTML = `<li class="episode-item" style="color:var(--text-dim);font-style:italic;padding:20px 0;">
+        Los episodios de Radio Ágora aparecerán aquí una vez publicados desde el panel de administración.
+      </li>`;
+      return;
+    }
+    epData = data;
+    list.innerHTML = '';
+    data.forEach(ep => {
+      const li = document.createElement('li');
+      li.className = 'episode-item';
+      li.onclick = () => selectEpFromDB(ep);
+      li.innerHTML = `
+        <span class="ep-num">${String(ep.numero).padStart(2,'0')}</span>
+        <div>
+          <div class="ep-title">${ep.titulo}</div>
+          <div class="ep-meta">${ep.duracion||'—'} · ${ep.categoria||'Reflexión'}</div>
+        </div>`;
+      list.appendChild(li);
+    });
+    // Cargar primer episodio
+    if (data[0]) selectEpFromDB(data[0]);
+  }
+
+  function selectEpFromDB(ep) {
+    document.getElementById('player-title').textContent = ep.titulo;
+    const durParts = (ep.duracion||'0:00').split(':');
+    currentEpDuration = durParts.length === 2
+      ? parseInt(durParts[0])*60 + parseInt(durParts[1])
+      : parseInt(durParts[0])*3600 + parseInt(durParts[1])*60 + parseInt(durParts[2]||0);
+    if (!currentEpDuration) currentEpDuration = 2520;
+    document.getElementById('player-duration').textContent = ep.duracion||'—';
+    currentSec = 0; playing = false; clearInterval(timerInterval);
+    document.getElementById('play-btn').textContent = '▶';
+    updateProgress();
+    // Si hay audio real, cargar
+    if (ep.audio_url) {
+      window._currentAudioUrl = ep.audio_url;
+    }
+  }
+
+  loadRadioAgora();
+
+  // ── CORPORACIÓN ELQUI — preview en landing ──
+  async function loadCorpPreview() {
+    const container = document.getElementById('corp-preview');
+    const [{ data: noticias }, { data: posts }] = await Promise.all([
+      _sb.from('corp_noticias').select('titulo,tag,fecha_pub').eq('publicado',true).order('fecha_pub',{ascending:false}).limit(1),
+      _sb.from('corp_posts').select('titulo,categoria,created_at').eq('publicado',true).order('created_at',{ascending:false}).limit(1)
+    ]);
+
+    container.innerHTML = '';
+    const items = [
+      noticias?.[0] ? { type:'Noticia · Corporación', title:noticias[0].titulo, meta: noticias[0].fecha_pub ? new Date(noticias[0].fecha_pub+'T12:00:00').toLocaleDateString('es-CL') + ' · ' + (noticias[0].tag||'') : '' } : null,
+      posts?.[0]    ? { type:'Blog · Corporación',    title:posts[0].titulo,    meta: new Date(posts[0].created_at).toLocaleDateString('es-CL') + ' · ' + (posts[0].categoria||'') } : null
+    ].filter(Boolean);
+
+    if (!items.length) {
+      container.innerHTML = `
+        <div class="corp-preview-card" style="grid-column:1/-1;text-align:center;padding:32px;">
+          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;">Próximamente</div>
+        </div>`;
+      return;
+    }
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'corp-preview-card';
+      div.onclick = () => showCorpPage();
+      div.innerHTML = `
+        <div class="corp-card-type">${item.type}</div>
+        <div class="corp-card-title">${item.title}</div>
+        <div class="corp-card-meta">${item.meta}</div>`;
+      container.appendChild(div);
+    });
+  }
+  loadCorpPreview();
+
+  // ── CORPORACIÓN ELQUI — noticias y blog completos ──
+  async function loadCorpNoticias() {
+    const grid = document.getElementById('corp-news-grid');
+    const { data } = await _sb
+      .from('corp_noticias')
+      .select('*')
+      .eq('publicado', true)
+      .order('fecha_pub', { ascending: false })
+      .limit(3);
+
+    if (!data?.length) {
+      grid.innerHTML = `<div class="news-card" style="grid-column:1/-1;text-align:center;padding:48px 32px;border:1px dashed var(--border);">
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Próximamente</div>
+        <div style="font-family:'Cinzel',serif;font-size:17px;color:var(--cream);">Las noticias de la Corporación Elqui aparecerán aquí</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    data.forEach(n => {
+      const fecha = n.fecha_pub ? new Date(n.fecha_pub+'T12:00:00').toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'}) : '';
+      const imgHtml = n.imagen_url
+        ? `<div class="news-photo"><img src="${n.imagen_url}" alt="${n.titulo}" onload="this.classList.add('loaded')" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.4s;"></div>`
+        : `<div class="news-photo" style="background:var(--dark-4);display:flex;align-items:center;justify-content:center;"><span style="font-size:32px;opacity:0.2;">◈</span></div>`;
+      const card = document.createElement('div');
+      card.className = 'news-card';
+      card.innerHTML = `${imgHtml}<div class="news-card-body"><div class="news-tag">${n.tag||'Corporación'}</div><div class="news-date">${fecha}</div><h3 class="news-title">${n.titulo}</h3><p class="news-excerpt">${n.extracto||n.contenido.substring(0,160)+'…'}</p><a href="#" class="news-link">Leer más →</a></div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  async function loadCorpBlog() {
+    const grid = document.getElementById('corp-blog-grid');
+    const { data } = await _sb
+      .from('corp_posts')
+      .select('*')
+      .eq('publicado', true)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (!data?.length) {
+      grid.innerHTML = `<div class="blog-card" style="grid-column:1/-1;text-align:center;padding:40px;">
+        <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Próximamente</div>
+        <div style="font-family:'Cinzel',serif;font-size:17px;color:var(--cream);">El blog de la Corporación Elqui aparecerá aquí</div>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    data.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'blog-card';
+      div.innerHTML = `
+        <div class="blog-category">${p.categoria||'Cultura'}</div>
+        <h3 class="blog-title">${p.titulo}</h3>
+        <p class="blog-excerpt">${(p.extracto||p.contenido).substring(0,180)}…</p>
+        <div class="blog-author">${p.autor_nombre||'Corporación Elqui'}</div>`;
+      grid.appendChild(div);
+    });
+  }
+
+  // Cargar corp al abrir la página de corporación
+  const _origShowCorpPage = showCorpPage;
+  function showCorpPage() {
+    _origShowCorpPage();
+    loadCorpNoticias();
+    loadCorpBlog();
+  }
   function showCorpPage() { document.getElementById('page-landing').style.display='none'; document.getElementById('page-corp').style.display='block'; window.scrollTo(0,0); }
   function showLanding() { document.getElementById('page-corp').style.display='none'; document.getElementById('page-landing').style.display='block'; window.scrollTo(0,0); }
 
@@ -562,13 +858,12 @@
   const bars = 52;
   for (let i=0; i<bars; i++) { const b=document.createElement('div'); b.className='wf-bar'+(i<18?' active':''); b.style.height=(12+Math.random()*36)+'px'; wf.appendChild(b); }
 
-  let playing=false, timerInterval=null, currentSec=872;
-  function togglePlay() { playing=!playing; document.getElementById('play-btn').textContent=playing?'⏸':'▶'; if(playing){timerInterval=setInterval(()=>{currentSec=Math.min(currentSec+1,2520);updateProgress();},1000);}else{clearInterval(timerInterval);} }
-  function updateProgress() { const pct=(currentSec/2520)*100; document.getElementById('progress-fill').style.width=pct+'%'; const m=Math.floor(currentSec/60),s=String(currentSec%60).padStart(2,'0'); document.getElementById('current-time').textContent=m+':'+s; const active=Math.floor((pct/100)*bars); document.querySelectorAll('.wf-bar').forEach((b,i)=>b.classList.toggle('active',i<active)); }
-  function scrubProgress(e) { const rect=e.currentTarget.getBoundingClientRect(); currentSec=Math.floor(((e.clientX-rect.left)/rect.width)*2520); updateProgress(); }
+  let playing=false, timerInterval=null, currentSec=0;
+  function togglePlay() { playing=!playing; document.getElementById('play-btn').textContent=playing?'⏸':'▶'; if(playing){timerInterval=setInterval(()=>{currentSec=Math.min(currentSec+1,currentEpDuration||2520);updateProgress();},1000);}else{clearInterval(timerInterval);} }
+  function updateProgress() { const dur=currentEpDuration||2520; const pct=(currentSec/dur)*100; document.getElementById('progress-fill').style.width=pct+'%'; const m=Math.floor(currentSec/60),s=String(currentSec%60).padStart(2,'0'); document.getElementById('current-time').textContent=m+':'+s; const active=Math.floor((pct/100)*bars); document.querySelectorAll('.wf-bar').forEach((b,i)=>b.classList.toggle('active',i<active)); }
+  function scrubProgress(e) { const rect=e.currentTarget.getBoundingClientRect(); currentSec=Math.floor(((e.clientX-rect.left)/rect.width)*(currentEpDuration||2520)); updateProgress(); }
   function selectEp(el,title) { document.getElementById('player-title').textContent=title; currentSec=0; playing=false; clearInterval(timerInterval); document.getElementById('play-btn').textContent='▶'; updateProgress(); }
 
-  function loadPhoto(input,idx) { const file=input.files[0]; if(!file)return; const r=new FileReader(); r.onload=e=>{const img=document.getElementById('news-img-'+idx); img.src=e.target.result; img.onload=()=>{img.classList.add('loaded');img.closest('.news-photo').querySelector('.news-photo-placeholder').style.display='none';};}; r.readAsDataURL(file); }
   function loadCorpPhoto(input,idx) { const file=input.files[0]; if(!file)return; const r=new FileReader(); r.onload=e=>{const img=document.getElementById('corp-img-'+idx); img.src=e.target.result; img.onload=()=>{img.classList.add('loaded');img.closest('.news-photo').querySelector('.news-photo-placeholder').style.display='none';};}; r.readAsDataURL(file); }
 
   function handleContactForm() { const n=document.getElementById('cf-nombre').value; if(!n.trim()){alert('Por favor ingresa tu nombre completo.');return;} alert('Tu solicitud ha sido recibida con absoluta discreción, H∴ '+n.split(' ')[0]+'.\n\nNos pondremos en contacto contigo pronto.\n\nA∴L∴G∴D∴G∴A∴D∴U∴'); }
