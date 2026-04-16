@@ -713,29 +713,32 @@ function toast(msg, type='') {
 
 // ── INIT ──
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  document.getElementById('loading').style.display = 'none';
-  if (session) {
-    currentUser = session.user;
-    document.getElementById('screen-login').classList.add('hidden');
-    await loadProfile();
-  } else {
-    document.getElementById('screen-login').classList.remove('hidden');
-  }
-  sb.auth.onAuthStateChange(async(_e, s) => {
-    if (!s && currentUser) {
+  sb.auth.onAuthStateChange(async(_e, session) => {
+    document.getElementById('loading').style.display = 'none';
+    if (session) {
+      currentUser = session.user;
+      await loadProfile();
+    } else {
       currentUser = null;
       currentProfile = null;
       document.getElementById('screen-app').classList.add('hidden');
       document.getElementById('screen-login').classList.remove('hidden');
     }
   });
+  // Verificar sesión existente al cargar
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('screen-login').classList.remove('hidden');
+  }
 }
 
 async function loadProfile() {
-  // Usar sb (cliente con sesión del usuario) para leer el perfil propio
-  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-  if (error || !data || data.role !== 'admin') {
+  // Usamos sbAdmin (service role) para leer el perfil sin problemas de RLS
+  const { data, error } = await sbAdmin.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+  if (error) { toast('Error al conectar con la base de datos: ' + error.message, 'error'); return; }
+  if (!data) { toast('Perfil no encontrado. Contacta al administrador.', 'error'); return; }
+  if (data.role !== 'admin') {
     document.getElementById('screen-login').classList.remove('hidden');
     document.getElementById('screen-app').classList.add('hidden');
     toast('Acceso denegado. Solo administradores.', 'error');
