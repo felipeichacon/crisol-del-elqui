@@ -723,16 +723,23 @@ async function init() {
     document.getElementById('screen-login').classList.remove('hidden');
   }
   sb.auth.onAuthStateChange(async(_e, s) => {
-    if (!s) { location.reload(); }
+    if (!s && currentUser) {
+      currentUser = null;
+      currentProfile = null;
+      document.getElementById('screen-app').classList.add('hidden');
+      document.getElementById('screen-login').classList.remove('hidden');
+    }
   });
 }
 
 async function loadProfile() {
-  const { data } = await sbAdmin.from('profiles').select('*').eq('id', currentUser.id).single();
-  if (!data || data.role !== 'admin') {
+  // Usar sb (cliente con sesión del usuario) para leer el perfil propio
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (error || !data || data.role !== 'admin') {
     document.getElementById('screen-login').classList.remove('hidden');
     document.getElementById('screen-app').classList.add('hidden');
     toast('Acceso denegado. Solo administradores.', 'error');
+    currentUser = null;
     await sb.auth.signOut(); return;
   }
   currentProfile = data;
