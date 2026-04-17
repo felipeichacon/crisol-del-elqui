@@ -714,11 +714,12 @@ function toast(msg, type='') {
 // ── INIT ──
 async function init() {
   sb.auth.onAuthStateChange(async(_e, session) => {
-    document.getElementById('loading').style.display = 'none';
-    if (session) {
+    // Solo reaccionar a SIGNED_IN y SIGNED_OUT, ignorar TOKEN_REFRESHED y otros
+    if (_e === 'SIGNED_IN' && !currentProfile) {
       currentUser = session.user;
+      document.getElementById('loading').style.display = 'none';
       await loadProfile();
-    } else {
+    } else if (_e === 'SIGNED_OUT') {
       currentUser = null;
       currentProfile = null;
       document.getElementById('screen-app').classList.add('hidden');
@@ -727,8 +728,11 @@ async function init() {
   });
   // Verificar sesión existente al cargar
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
-    document.getElementById('loading').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+  if (session) {
+    currentUser = session.user;
+    await loadProfile();
+  } else {
     document.getElementById('screen-login').classList.remove('hidden');
   }
 }
@@ -1036,8 +1040,8 @@ async function saveEditUser(id) {
   if (window.euAvatarFile) {
     const ext  = window.euAvatarFile.name.split('.').pop();
     const path = id + '/avatar.' + ext;
-    await sbAdmin.storage.from('avatars').upload(path, window.euAvatarFile, {upsert:true});
-    const { data: { publicUrl } } = sbAdmin.storage.from('avatars').getPublicUrl(path);
+    await sbAdmin.storage.from('Avatars').upload(path, window.euAvatarFile, {upsert:true});
+    const { data: { publicUrl } } = sbAdmin.storage.from('Avatars').getPublicUrl(path);
     avatarUrl = publicUrl;
   }
   const corpChecked = document.getElementById('eu-corp')?.checked || false;
@@ -1201,8 +1205,8 @@ async function createUser() {
   if (nuAvatarFile) {
     const ext  = nuAvatarFile.name.split('.').pop();
     const path = userId + '/avatar.' + ext;
-    await sbAdmin.storage.from('avatars').upload(path, nuAvatarFile, { upsert:true });
-    const { data: { publicUrl } } = sbAdmin.storage.from('avatars').getPublicUrl(path);
+    await sbAdmin.storage.from('Avatars').upload(path, nuAvatarFile, { upsert:true });
+    const { data: { publicUrl } } = sbAdmin.storage.from('Avatars').getPublicUrl(path);
     avatarUrl = publicUrl;
   }
 
@@ -1354,8 +1358,8 @@ async function uploadBibDoc(input) {
   const ext  = file.name.split('.').pop().toLowerCase();
   const tipo = ext==='pdf'?'pdf':['docx','doc'].includes(ext)?'docx':['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
   const path = role+'/'+Date.now()+'-'+file.name;
-  await sbAdmin.storage.from('documents').upload(path, file);
-  const { data: { publicUrl } } = sbAdmin.storage.from('documents').getPublicUrl(path);
+  await sbAdmin.storage.from('Documents').upload(path, file);
+  const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
   await sbAdmin.from('documents').insert({ role, nombre, url:publicUrl, tipo, categoria, autor_id:currentProfile.id });
   toast('Documento subido', 'success'); loadDocuments();
 }
@@ -1389,8 +1393,8 @@ async function uploadGallery(input) {
   toast('Subiendo '+files.length+' imagen(es)…');
   for (const file of files) {
     const path = role+'/'+Date.now()+'-'+file.name;
-    await sbAdmin.storage.from('gallery').upload(path, file);
-    const { data: { publicUrl } } = sbAdmin.storage.from('gallery').getPublicUrl(path);
+    await sbAdmin.storage.from('Gallery').upload(path, file);
+    const { data: { publicUrl } } = sbAdmin.storage.from('Gallery').getPublicUrl(path);
     await sbAdmin.from('gallery').insert({ role, url:publicUrl, author_id:currentProfile.id });
   }
   toast('Galería actualizada', 'success'); loadGalleryAdmin();
@@ -1406,40 +1410,62 @@ async function deleteGallery(id) {
 async function loadHeroes() {
   const { data } = await sbAdmin.from('hero_images').select('*');
   const grid = document.getElementById('heroes-grid'); grid.innerHTML='';
-  ['aprendiz','companero','maestro'].forEach(role => {
-    const h = (data||[]).find(x=>x.role===role) || {};
+  const heroRoles = ['aprendiz','companero','maestro'];
+  heroRoles.forEach(heroRole => {
+    const h = (data||[]).find(x=>x.role===heroRole) || {};
     const div = document.createElement('div');
     div.style.cssText='background:var(--dark-3);border:1px solid var(--border);padding:28px 24px;';
+    const imgHtml = h.url
+      ? `<img id="hero-img-preview-${heroRole}" src="${h.url}" style="width:100%;height:140px;object-fit:cover;margin-bottom:16px;">`
+      : `<img id="hero-img-preview-${heroRole}" src="" style="display:none;width:100%;height:140px;object-fit:cover;margin-bottom:16px;"><div style="width:100%;height:140px;background:var(--dark-5);margin-bottom:16px;display:flex;align-items:center;justify-content:center;font-size:28px;opacity:0.3;">◈</div>`;
     div.innerHTML=`
-      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">${ROLE_LABELS[role]}</div>
-      ${h.url?`<img src="${h.url}" style="width:100%;height:140px;object-fit:cover;margin-bottom:16px;">`:
-        `<div style="width:100%;height:140px;background:var(--dark-5);margin-bottom:16px;display:flex;align-items:center;justify-content:center;font-size:28px;opacity:0.3;">◈</div>`}
-      <div class="field"><label>Título</label><input id="hero-t-${role}" value="${h.titulo||''}" placeholder="Título de la portada"></div>
-      <div class="field"><label>Subtítulo</label><input id="hero-s-${role}" value="${h.subtitulo||''}" placeholder="Subtítulo"></div>
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">${ROLE_LABELS[heroRole]}</div>
+      ${imgHtml}
+      <div class="field"><label>Título</label><input id="hero-t-${heroRole}" value="${h.titulo||''}" placeholder="Título de la portada"></div>
+      <div class="field"><label>Subtítulo</label><input id="hero-s-${heroRole}" value="${h.subtitulo||''}" placeholder="Subtítulo"></div>
       <div style="display:flex;gap:10px;margin-top:12px;">
-        <button class="btn-secondary" style="flex:1;font-size:9px;padding:8px;" onclick="document.getElementById('hero-file-${role}').click()">Cambiar imagen</button>
-        <button class="btn-primary" style="flex:1;font-size:9px;padding:8px;" onclick="saveHero('${role}')">Guardar</button>
+        <button class="btn-secondary" style="flex:1;font-size:9px;padding:8px;" onclick="document.getElementById('hero-file-${heroRole}').click()">Cambiar imagen</button>
+        <button class="btn-primary" style="flex:1;font-size:9px;padding:8px;" onclick="saveHero('${heroRole}')">Guardar</button>
       </div>
-      <input type="file" id="hero-file-${role}" accept="image/*" style="display:none" onchange="uploadHeroAdmin(this,'${role}')">`;
+      <input type="file" id="hero-file-${heroRole}" accept="image/*" style="display:none" onchange="uploadHeroAdmin(this,'${heroRole}')">`;
     grid.appendChild(div);
   });
 }
+
 
 async function uploadHeroAdmin(input, role) {
   const file = input.files[0]; if(!file) return;
   toast('Subiendo portada…');
   const path = role+'/hero-'+Date.now()+'.'+file.name.split('.').pop();
-  await sbAdmin.storage.from('heroes').upload(path, file, {upsert:true});
-  const { data: { publicUrl } } = sbAdmin.storage.from('heroes').getPublicUrl(path);
-  await sbAdmin.from('hero_images').upsert({ role, url:publicUrl, updated_at:new Date() }, {onConflict:'role'});
-  toast('Portada actualizada', 'success'); loadHeroes();
+  const { error: upErr } = await sbAdmin.storage.from('Heroes').upload(path, file, {upsert:true});
+  if (upErr) { toast('Error al subir: ' + upErr.message, 'error'); return; }
+  const { data: { publicUrl } } = sbAdmin.storage.from('Heroes').getPublicUrl(path);
+  const titulo    = document.getElementById('hero-t-'+role)?.value.trim() || '';
+  const subtitulo = document.getElementById('hero-s-'+role)?.value.trim() || '';
+  const { error } = await sbAdmin.from('hero_images').upsert(
+    { role, url: publicUrl, titulo, subtitulo, updated_at: new Date() },
+    { onConflict: 'role' }
+  );
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+  // Actualizar solo la imagen en el DOM sin recargar todo
+  const preview = document.getElementById('hero-img-preview-'+role);
+  if (preview) { preview.src = publicUrl; preview.style.display = 'block'; }
+  toast('Portada actualizada correctamente', 'success');
 }
 
 async function saveHero(role) {
   const titulo    = document.getElementById('hero-t-'+role).value.trim();
   const subtitulo = document.getElementById('hero-s-'+role).value.trim();
-  await sbAdmin.from('hero_images').upsert({ role, titulo, subtitulo, updated_at:new Date() }, {onConflict:'role'});
-  toast('Portada guardada', 'success');
+  // Usar UPDATE para no sobreescribir la url existente
+  const { data: existing } = await sbAdmin.from('hero_images').select('id').eq('role', role).maybeSingle();
+  let error;
+  if (existing) {
+    ({ error } = await sbAdmin.from('hero_images').update({ titulo, subtitulo, updated_at: new Date() }).eq('role', role));
+  } else {
+    ({ error } = await sbAdmin.from('hero_images').insert({ role, titulo, subtitulo, updated_at: new Date() }));
+  }
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+  toast('Portada guardada correctamente', 'success');
 }
 
 // ── MENSAJERÍA ADMIN ──
@@ -1540,9 +1566,9 @@ async function saveNoticia(publish) {
   let imgUrl = '';
   if (noticiaImgFile) {
     const path = 'noticias/' + Date.now() + '-' + noticiaImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('gallery').upload(path, noticiaImgFile, {upsert:true});
+    const { error: upErr } = await sbAdmin.storage.from('Gallery').upload(path, noticiaImgFile, {upsert:true});
     if (!upErr) {
-      const { data: { publicUrl } } = sbAdmin.storage.from('gallery').getPublicUrl(path);
+      const { data: { publicUrl } } = sbAdmin.storage.from('Gallery').getPublicUrl(path);
       imgUrl = publicUrl;
     }
   }
@@ -1704,8 +1730,8 @@ async function saveCorpNoticia(publish) {
   let imgUrl = '';
   if (corpNoticiaImgFile) {
     const path = 'corp/'+Date.now()+'-'+corpNoticiaImgFile.name.replace(/\s/g,'_');
-    await sbAdmin.storage.from('gallery').upload(path, corpNoticiaImgFile, {upsert:true});
-    const { data: { publicUrl } } = sbAdmin.storage.from('gallery').getPublicUrl(path);
+    await sbAdmin.storage.from('Gallery').upload(path, corpNoticiaImgFile, {upsert:true});
+    const { data: { publicUrl } } = sbAdmin.storage.from('Gallery').getPublicUrl(path);
     imgUrl = publicUrl;
   }
   await sbAdmin.from('corp_noticias').insert({
