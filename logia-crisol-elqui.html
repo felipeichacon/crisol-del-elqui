@@ -590,10 +590,11 @@
         ? new Date(n.fecha_pub + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' })
         : '';
       const imgHtml = n.imagen_url
-        ? `<div class="news-photo"><img src="${n.imagen_url}" alt="${n.titulo}" onload="this.classList.add('loaded')" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.4s;"></div>`
+        ? `<div class="news-photo"><img src="${n.imagen_url}" alt="${n.titulo}" style="width:100%;height:100%;object-fit:cover;opacity:1;"></div>`
         : `<div class="news-photo" style="background:var(--dark-4);display:flex;align-items:center;justify-content:center;"><span style="font-size:32px;opacity:0.2;">◈</span></div>`;
       const card = document.createElement('div');
       card.className = 'news-card';
+      card.onclick = () => openNoticia(n);
       card.innerHTML = `
         ${imgHtml}
         <div class="news-card-body">
@@ -601,7 +602,7 @@
           <div class="news-date">${fecha}</div>
           <h3 class="news-title">${n.titulo}</h3>
           <p class="news-excerpt">${n.extracto||n.contenido.substring(0,160)+'…'}</p>
-          <a href="#" class="news-link">Leer más →</a>
+          <a href="#" class="news-link" onclick="event.stopPropagation()">Leer más →</a>
         </div>`;
       grid.appendChild(card);
     });
@@ -807,7 +808,7 @@
     data.forEach(n => {
       const fecha = n.fecha_pub ? new Date(n.fecha_pub+'T12:00:00').toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'}) : '';
       const imgHtml = n.imagen_url
-        ? `<div class="news-photo"><img src="${n.imagen_url}" alt="${n.titulo}" onload="this.classList.add('loaded')" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.4s;"></div>`
+        ? `<div class="news-photo"><img src="${n.imagen_url}" alt="${n.titulo}" style="width:100%;height:100%;object-fit:cover;opacity:1;"></div>`
         : `<div class="news-photo" style="background:var(--dark-4);display:flex;align-items:center;justify-content:center;"><span style="font-size:32px;opacity:0.2;">◈</span></div>`;
       const card = document.createElement('div');
       card.className = 'news-card';
@@ -869,6 +870,34 @@
   function selectEp(el,title) { document.getElementById('player-title').textContent=title; currentSec=0; playing=false; clearInterval(timerInterval); document.getElementById('play-btn').textContent='▶'; updateProgress(); }
 
   function loadCorpPhoto(input,idx) { const file=input.files[0]; if(!file)return; const r=new FileReader(); r.onload=e=>{const img=document.getElementById('corp-img-'+idx); img.src=e.target.result; img.onload=()=>{img.classList.add('loaded');img.closest('.news-photo').querySelector('.news-photo-placeholder').style.display='none';};}; r.readAsDataURL(file); }
+
+  // ── MODAL NOTICIA ──
+  function openNoticia(n) {
+    let modal = document.getElementById('modal-noticia');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-noticia';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,10,32,0.95);display:flex;align-items:center;justify-content:center;padding:24px;';
+      modal.onclick = e => { if(e.target===modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+    const fecha = n.fecha_pub
+      ? new Date(n.fecha_pub+'T12:00:00').toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'})
+      : '';
+    const imgHtml = n.imagen_url
+      ? `<img src="${n.imagen_url}" style="width:100%;max-height:320px;object-fit:cover;margin-bottom:28px;">`
+      : '';
+    modal.innerHTML = `
+      <div style="background:var(--dark-2);border:1px solid var(--border-bright);max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:48px;position:relative;">
+        <button onclick="document.getElementById('modal-noticia').remove()" style="position:absolute;top:16px;right:20px;background:transparent;border:none;color:var(--gold-dim);font-size:24px;cursor:pointer;line-height:1;">✕</button>
+        ${imgHtml}
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;">${n.tag||'Noticia'}</div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--text-dim);margin-bottom:20px;">${fecha}</div>
+        <h2 style="font-family:'Cinzel',serif;font-size:clamp(20px,3vw,28px);color:var(--cream);margin-bottom:24px;font-weight:400;line-height:1.3;">${n.titulo}</h2>
+        <div style="font-size:17px;color:var(--text-dim);line-height:1.9;white-space:pre-wrap;">${n.contenido}</div>
+      </div>`;
+    modal.style.display = 'flex';
+  }
 
   function handleContactForm() { const n=document.getElementById('cf-nombre').value; if(!n.trim()){alert('Por favor ingresa tu nombre completo.');return;} alert('Tu solicitud ha sido recibida con absoluta discreción, H∴ '+n.split(' ')[0]+'.\n\nNos pondremos en contacto contigo pronto.\n\nA∴L∴G∴D∴G∴A∴D∴U∴'); }
 </script>
