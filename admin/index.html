@@ -1565,12 +1565,14 @@ async function saveNoticia(publish) {
 
   let imgUrl = '';
   if (noticiaImgFile) {
-    const path = 'noticias/' + Date.now() + '-' + noticiaImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Gallery').upload(path, noticiaImgFile, {upsert:true});
-    if (!upErr) {
-      const { data: { publicUrl } } = sbAdmin.storage.from('Gallery').getPublicUrl(path);
-      imgUrl = publicUrl;
+    const path = Date.now() + '-' + noticiaImgFile.name.replace(/\s/g,'_');
+    const { error: upErr } = await sbAdmin.storage.from('Noticias').upload(path, noticiaImgFile, {upsert:true});
+    if (upErr) {
+      toast('Error al subir imagen: ' + upErr.message, 'error');
+      return;
     }
+    const { data: { publicUrl } } = sbAdmin.storage.from('Noticias').getPublicUrl(path);
+    imgUrl = publicUrl;
   }
 
   const { error } = await sbAdmin.from('noticias').insert({
