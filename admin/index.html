@@ -526,7 +526,21 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         </div>
         <div class="field" style="margin-bottom:16px;"><label>Título del episodio</label><input type="text" id="radio-titulo" placeholder="Título del episodio" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
         <div class="field" style="margin-bottom:16px;"><label>Descripción</label><textarea id="radio-desc" rows="4" placeholder="Descripción del episodio…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
-        <div class="field" style="margin-bottom:24px;"><label>URL del audio <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional — Spotify, SoundCloud, etc.)</span></label><input type="url" id="radio-url" placeholder="https://…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>Archivo de audio <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(MP3, M4A, OGG, WAV, AAC, FLAC)</span></label>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <button type="button" class="btn-secondary" style="white-space:nowrap;" onclick="document.getElementById('radio-audio-file').click()">Subir archivo</button>
+            <input type="file" id="radio-audio-file" accept=".mp3,.m4a,.ogg,.wav,.aac,.flac,audio/*" style="display:none" onchange="previewAudioFile(this)">
+            <span id="radio-audio-name" style="font-size:14px;color:var(--text-dim);font-style:italic;">Ningún archivo seleccionado</span>
+          </div>
+          <div id="radio-audio-player" style="display:none;margin-top:12px;">
+            <audio id="radio-audio-preview" controls style="width:100%;height:36px;"></audio>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:24px;">
+          <label>O pegar URL externa <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(Spotify, SoundCloud, etc. — opcional si subiste archivo)</span></label>
+          <input type="url" id="radio-url" placeholder="https://…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+        </div>
         <div style="display:flex;gap:12px;">
           <button class="btn-primary" onclick="saveEpisodio(true)">Publicar episodio</button>
           <button class="btn-secondary" onclick="saveEpisodio(false)">Guardar borrador</button>
@@ -1681,22 +1695,57 @@ async function loadEpisodios() {
   });
 }
 
+let radioAudioFile = null;
+
+function previewAudioFile(input) {
+  const file = input.files[0]; if(!file) return;
+  radioAudioFile = file;
+  document.getElementById('radio-audio-name').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+  document.getElementById('radio-audio-name').style.color = 'var(--gold)';
+  const url = URL.createObjectURL(file);
+  const player = document.getElementById('radio-audio-preview');
+  player.src = url;
+  document.getElementById('radio-audio-player').style.display = 'block';
+}
+
 async function saveEpisodio(publish) {
   const titulo = document.getElementById('radio-titulo').value.trim();
   const num    = parseInt(document.getElementById('radio-num').value);
   if (!titulo || !num) { toast('Número y título son obligatorios','error'); return; }
-  toast('Guardando episodio…');
-  await sbAdmin.from('episodios').insert({
+
+  let audioUrl = document.getElementById('radio-url').value.trim() || null;
+
+  // Subir archivo si fue seleccionado
+  if (radioAudioFile) {
+    toast('Subiendo audio… esto puede tardar unos momentos');
+    const ext  = radioAudioFile.name.split('.').pop().toLowerCase();
+    const path = 'episodios/ep-' + num + '-' + Date.now() + '.' + ext;
+    const { error: upErr } = await sbAdmin.storage.from('Audio').upload(path, radioAudioFile, { upsert: true });
+    if (upErr) { toast('Error al subir audio: ' + upErr.message, 'error'); return; }
+    const { data: { publicUrl } } = sbAdmin.storage.from('Audio').getPublicUrl(path);
+    audioUrl = publicUrl;
+    toast('Audio subido correctamente');
+  }
+
+  const { error } = await sbAdmin.from('episodios').insert({
     numero: num, titulo,
     descripcion: document.getElementById('radio-desc').value.trim()||null,
     duracion:    document.getElementById('radio-dur').value.trim()||null,
     categoria:   document.getElementById('radio-cat').value,
-    audio_url:   document.getElementById('radio-url').value.trim()||null,
+    audio_url:   audioUrl,
     autor_id:    currentProfile.id,
     publicado:   publish
   });
+
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+
   document.getElementById('radio-form').style.display='none';
   ['radio-titulo','radio-num','radio-dur','radio-url','radio-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('radio-audio-name').textContent = 'Ningún archivo seleccionado';
+  document.getElementById('radio-audio-name').style.color = 'var(--text-dim)';
+  document.getElementById('radio-audio-player').style.display = 'none';
+  document.getElementById('radio-audio-preview').src = '';
+  radioAudioFile = null;
   toast(publish?'Episodio publicado':'Borrador guardado','success');
   loadEpisodios();
 }
