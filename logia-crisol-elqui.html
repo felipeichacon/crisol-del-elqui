@@ -700,6 +700,7 @@
   // ── RADIO ÁGORA — episodios dinámicos ──
   let epData = [];
   let currentEpDuration = 0;
+  let allEpisodios = [];
 
   async function loadRadioAgora() {
     const list = document.getElementById('episode-list');
@@ -707,31 +708,88 @@
       .from('episodios')
       .select('*')
       .eq('publicado', true)
-      .order('numero', { ascending: true })
-      .limit(8);
+      .order('temporada', { ascending: true })
+      .order('numero', { ascending: true });
 
     if (!data?.length) {
       list.innerHTML = `<li class="episode-item" style="color:var(--text-dim);font-style:italic;padding:20px 0;">
-        Los episodios de Radio Ágora aparecerán aquí una vez publicados desde el panel de administración.
+        Aún no hay episodios publicados.
       </li>`;
       return;
     }
-    epData = data;
-    list.innerHTML = '';
-    data.forEach(ep => {
-      const li = document.createElement('li');
-      li.className = 'episode-item';
-      li.onclick = () => selectEpFromDB(ep);
-      li.innerHTML = `
-        <span class="ep-num">${String(ep.numero).padStart(2,'0')}</span>
-        <div>
-          <div class="ep-title">${ep.titulo}</div>
-          <div class="ep-meta">${ep.duracion||'—'} · ${ep.categoria||'Reflexión'}</div>
-        </div>`;
-      list.appendChild(li);
-    });
-    // Cargar primer episodio
+    allEpisodios = data;
+    renderEpisodioSelector(data);
     if (data[0]) selectEpFromDB(data[0]);
+  }
+
+  function renderEpisodioSelector(data) {
+    const list = document.getElementById('episode-list');
+    list.innerHTML = '';
+
+    // Agrupar por programa → temporada → episodios
+    const programas = {};
+    data.forEach(ep => {
+      const prog = ep.programa || 'Radio Ágora';
+      const temp = ep.temporada || 1;
+      if (!programas[prog]) programas[prog] = { desc: ep.descripcion_programa||'', temporadas: {} };
+      if (!programas[prog].temporadas[temp]) programas[prog].temporadas[temp] = [];
+      programas[prog].temporadas[temp].push(ep);
+    });
+
+    Object.entries(programas).forEach(([progNombre, progData], pi) => {
+      // Header del programa
+      const progHeader = document.createElement('li');
+      progHeader.style.cssText = 'list-style:none;padding:16px 0 8px;border-bottom:1px solid var(--border);margin-bottom:4px;cursor:pointer;';
+      progHeader.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;" onclick="togglePrograma('prog-${pi}')">
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:0.1em;">${progNombre}</div>
+            ${progData.desc ? `<div style="font-size:13px;color:var(--text-dim);margin-top:4px;font-style:italic;">${progData.desc}</div>` : ''}
+          </div>
+          <span id="prog-arrow-${pi}" style="color:var(--gold-dim);font-size:12px;transition:transform 0.3s;">▼</span>
+        </div>`;
+      list.appendChild(progHeader);
+
+      // Contenedor colapsable del programa
+      const progContainer = document.createElement('div');
+      progContainer.id = `prog-${pi}`;
+
+      Object.entries(progData.temporadas).forEach(([temp, eps]) => {
+        // Header de temporada
+        const tempHeader = document.createElement('li');
+        tempHeader.style.cssText = 'list-style:none;padding:8px 0 4px 12px;';
+        tempHeader.innerHTML = `<div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;">Temporada ${temp}</div>`;
+        progContainer.appendChild(tempHeader);
+
+        // Episodios de la temporada
+        eps.forEach(ep => {
+          const li = document.createElement('li');
+          li.className = 'episode-item';
+          li.style.paddingLeft = '24px';
+          li.onclick = () => selectEpFromDB(ep);
+          li.innerHTML = `
+            <span class="ep-num">${String(ep.numero).padStart(2,'0')}</span>
+            <div style="flex:1;">
+              <div class="ep-title">${ep.titulo}</div>
+              ${ep.descripcion ? `<div style="font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.5;">${ep.descripcion.substring(0,100)}${ep.descripcion.length>100?'…':''}</div>` : ''}
+              <div class="ep-meta" style="margin-top:4px;">${ep.duracion||'—'} · ${ep.categoria||'Reflexión'}</div>
+            </div>`;
+          progContainer.appendChild(li);
+        });
+      });
+
+      list.appendChild(progContainer);
+    });
+  }
+
+  function togglePrograma(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const idx = id.split('-')[1];
+    const arrow = document.getElementById('prog-arrow-'+idx);
+    const isHidden = el.style.display === 'none';
+    el.style.display = isHidden ? 'block' : 'none';
+    if (arrow) arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
   }
 
   function selectEpFromDB(ep) {
