@@ -215,6 +215,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <div class="sidebar-label">Contenido Logia</div>
     <div class="nav-item" onclick="showModule('noticias')"><span class="nav-icon">◫</span>Noticias</div>
     <div class="nav-item" onclick="showModule('blog')"><span class="nav-icon">✦</span>Blog Venerable</div>
+    <div class="nav-item" onclick="showModule('egregora')"><span class="nav-icon">◈</span>Revista Egrégora</div>
     <div class="nav-item" onclick="showModule('radio-agora')"><span class="nav-icon">◉</span>Radio Ágora</div>
     <div class="nav-item" onclick="showModule('biblioteca')"><span class="nav-icon">📄</span>Biblioteca</div>
     <div class="nav-item" onclick="showModule('galeria')"><span class="nav-icon">⊞</span>Galería</div>
@@ -505,6 +506,53 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       </div>
       <button class="btn-primary" style="margin-bottom:28px;" onclick="openPostModal()">+ Nueva entrada</button>
       <div class="content-grid" id="blog-grid"></div>
+    </div>
+
+
+    <!-- REVISTA EGRÉGORA -->
+    <div class="module hidden" id="mod-egregora">
+      <div class="module-title">Revista Egrégora</div>
+      <div class="module-sub">Gestión de artículos de la publicación institucional</div>
+      <div class="gold-line"></div>
+
+      <div id="egregora-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:32px;max-width:760px;">
+        <div style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo artículo</div>
+
+        <!-- Imagen -->
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Fotografía / Imagen</div>
+          <div style="display:flex;align-items:flex-start;gap:20px;">
+            <div id="egr-img-preview" style="width:200px;height:130px;background:var(--dark-5);border:2px dashed var(--border-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;cursor:pointer;" onclick="document.getElementById('egr-img-file').click()">
+              <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>
+            </div>
+            <div>
+              <button class="btn-secondary" style="margin-bottom:10px;display:block;" onclick="document.getElementById('egr-img-file').click()">Seleccionar imagen</button>
+              <input type="file" id="egr-img-file" accept="image/*" style="display:none" onchange="previewEgrImg(this)">
+              <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">JPG, PNG · Recomendado: 1200×800px</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-bottom:16px;">
+          <div class="field"><label>Edición / Número</label><input type="text" id="egr-edicion" placeholder="Ej: Edición N°3 · 2025" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+          <div class="field"><label>Categoría</label>
+            <select id="egr-categoria" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+              <option>Reflexión</option><option>Historia masónica</option><option>Filosofía</option>
+              <option>Ritual y simbolismo</option><option>Arte y cultura</option><option>Comunicado</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px;"><label>Título del artículo</label><input type="text" id="egr-titulo" placeholder="Título del artículo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+        <div class="field" style="margin-bottom:24px;"><label>Contenido</label><textarea id="egr-contenido" rows="8" placeholder="Escribe el contenido del artículo…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
+        <div style="display:flex;gap:12px;">
+          <button class="btn-primary" onclick="saveEgregoraArticulo(true)">Publicar artículo</button>
+          <button class="btn-secondary" onclick="saveEgregoraArticulo(false)">Guardar borrador</button>
+          <button class="btn-secondary" onclick="document.getElementById('egregora-form').style.display='none'">Cancelar</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="document.getElementById('egregora-form').style.display='block';document.getElementById('egregora-form').scrollIntoView({behavior:'smooth'})">+ Nuevo artículo</button>
+      <div class="content-grid" id="egregora-admin-grid"></div>
     </div>
 
     <!-- RADIO ÁGORA -->
@@ -798,7 +846,7 @@ async function doLogin() {
 async function doLogout() { await sb.auth.signOut(); location.reload(); }
 
 // ── MODULES ──
-const MODULES = ['dashboard','usuarios','nuevo-usuario','edit-user','noticias','blog','radio-agora','corp-noticias','corp-blog','biblioteca','galeria','heroes','mensajeria','broadcast'];
+const MODULES = ['dashboard','usuarios','nuevo-usuario','edit-user','noticias','blog','egregora','radio-agora','corp-noticias','corp-blog','biblioteca','galeria','heroes','mensajeria','broadcast'];
 function showModule(name) {
   MODULES.forEach(m => document.getElementById('mod-'+m)?.classList.toggle('hidden', m!==name));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
@@ -809,6 +857,7 @@ function showModule(name) {
   if (name==='corp-noticias') loadCorpNoticiasAdmin();
   if (name==='corp-blog')     loadCorpBlogAdmin();
   if (name==='blog')          loadPosts('blog');
+  if (name==='egregora')      loadEgregoraAdmin();
   if (name==='biblioteca')    loadDocuments();
   if (name==='galeria')       loadGalleryAdmin();
   if (name==='heroes')        loadHeroes();
@@ -1772,6 +1821,89 @@ async function deleteEpisodio(id) {
   if(!confirm('¿Eliminar este episodio?')) return;
   await sbAdmin.from('episodios').delete().eq('id',id);
   toast('Episodio eliminado'); loadEpisodios();
+}
+
+
+// ── REVISTA EGRÉGORA ──
+let egrImgFile = null;
+
+function previewEgrImg(input) {
+  const file = input.files[0]; if(!file) return;
+  egrImgFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('egr-img-preview');
+    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveEgregoraArticulo(publish) {
+  const titulo    = document.getElementById('egr-titulo').value.trim();
+  const contenido = document.getElementById('egr-contenido').value.trim();
+  if (!titulo || !contenido) { toast('Título y contenido son obligatorios', 'error'); return; }
+  toast('Guardando artículo…');
+
+  let imgUrl = null;
+  if (egrImgFile) {
+    const path = Date.now() + '-' + egrImgFile.name.replace(/\s/g,'_');
+    const { error: upErr } = await sbAdmin.storage.from('Egregora').upload(path, egrImgFile, {upsert:true});
+    if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
+    const { data: { publicUrl } } = sbAdmin.storage.from('Egregora').getPublicUrl(path);
+    imgUrl = publicUrl;
+  }
+
+  const { error } = await sbAdmin.from('egregora_articulos').insert({
+    titulo, contenido,
+    extracto:     contenido.substring(0, 240),
+    edicion:      document.getElementById('egr-edicion').value.trim() || null,
+    categoria:    document.getElementById('egr-categoria').value,
+    imagen_url:   imgUrl,
+    autor_id:     currentProfile.id,
+    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+    publicado:    publish
+  });
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+
+  egrImgFile = null;
+  document.getElementById('egr-img-preview').innerHTML = '<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>';
+  document.getElementById('egr-titulo').value = '';
+  document.getElementById('egr-contenido').value = '';
+  document.getElementById('egr-edicion').value = '';
+  document.getElementById('egregora-form').style.display = 'none';
+  toast(publish ? 'Artículo publicado' : 'Borrador guardado', 'success');
+  loadEgregoraAdmin();
+}
+
+async function loadEgregoraAdmin() {
+  const { data } = await sbAdmin.from('egregora_articulos').select('*').order('created_at', {ascending:false});
+  const grid = document.getElementById('egregora-admin-grid');
+  grid.innerHTML = '';
+  if (!data?.length) { grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;">No hay artículos aún.</div>'; return; }
+  data.forEach(a => {
+    const div = document.createElement('div'); div.className = 'content-card';
+    const imgHtml = a.imagen_url ? `<img src="${a.imagen_url}" style="width:100%;height:120px;object-fit:cover;margin-bottom:12px;">` : '';
+    div.innerHTML = `
+      ${imgHtml}
+      <div class="content-card-tag">${a.edicion||'Egrégora'} · ${a.categoria||'Reflexión'} · ${a.publicado?'Publicado':'Borrador'}</div>
+      <div class="content-card-title">${a.titulo}</div>
+      <div class="content-card-meta">${a.autor_nombre||'—'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div>
+      <div class="content-card-actions" style="margin-top:12px;">
+        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleEgregoraArticulo('${a.id}',${a.publicado})">${a.publicado?'Despublicar':'Publicar'}</button>
+        <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteEgregoraArticulo('${a.id}')">Eliminar</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+async function toggleEgregoraArticulo(id, pub) {
+  await sbAdmin.from('egregora_articulos').update({publicado:!pub}).eq('id',id);
+  toast(pub?'Despublicado':'Publicado','success'); loadEgregoraAdmin();
+}
+async function deleteEgregoraArticulo(id) {
+  if(!confirm('¿Eliminar este artículo?')) return;
+  await sbAdmin.from('egregora_articulos').delete().eq('id',id);
+  toast('Artículo eliminado'); loadEgregoraAdmin();
 }
 
 // ── CORPORACIÓN — NOTICIAS ──
