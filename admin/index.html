@@ -498,6 +498,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="gold-line"></div>
       <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
         <button class="filter-btn btn-secondary active" onclick="filterPosts('todos',this)">Todos</button>
+        <button class="filter-btn btn-secondary" onclick="filterPosts('venerable',this)">Venerable Maestro</button>
         <button class="filter-btn btn-secondary" onclick="filterPosts('aprendiz',this)">2° Vigilante</button>
         <button class="filter-btn btn-secondary" onclick="filterPosts('companero',this)">1° Vigilante</button>
         <button class="filter-btn btn-secondary" onclick="filterPosts('maestro',this)">Orador</button>
@@ -722,7 +723,7 @@ let activeConvUserId = null;
 let nuFamiliares = [];
 
 const ROLE_LABELS = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Administrador' };
-const BLOG_LABELS = { aprendiz:'2° Vigilante', companero:'1° Vigilante', maestro:'Orador' };
+const BLOG_LABELS = { aprendiz:'2° Vigilante', companero:'1° Vigilante', maestro:'Orador', venerable:'Venerable Maestro' };
 
 function toast(msg, type='') {
   const t = document.getElementById('toast');
@@ -1318,6 +1319,7 @@ function openPostModal() {
   document.getElementById('modal-body').innerHTML=`
     <div class="field"><label>Rol destino</label>
       <select id="mp-role">
+        <option value="venerable">Venerable Maestro (Landing page)</option>
         <option value="aprendiz">2° Vigilante (Aprendices)</option>
         <option value="companero">1° Vigilante (Compañeros)</option>
         <option value="maestro">Orador (Maestros)</option>
