@@ -618,7 +618,7 @@
     const { data } = await _sb
       .from('posts')
       .select('*')
-      .eq('role', 'maestro')
+      .eq('role', 'venerable')
       .eq('publicado', true)
       .order('created_at', { ascending: false })
       .limit(3);
