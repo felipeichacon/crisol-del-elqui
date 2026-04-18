@@ -1930,26 +1930,29 @@ async function saveCorpNoticia(publish) {
   const contenido = document.getElementById('corp-noticia-contenido').value.trim();
   if (!titulo||!contenido) { toast('Título y contenido son obligatorios','error'); return; }
   toast('Guardando…');
-  let imgUrl = '';
+  let imgUrl = null;
   if (corpNoticiaImgFile) {
-    const path = 'corp/'+Date.now()+'-'+corpNoticiaImgFile.name.replace(/\s/g,'_');
-    await sbAdmin.storage.from('Gallery').upload(path, corpNoticiaImgFile, {upsert:true});
-    const { data: { publicUrl } } = sbAdmin.storage.from('Gallery').getPublicUrl(path);
+    const path = 'corp/' + Date.now() + '-' + corpNoticiaImgFile.name.replace(/\s/g,'_');
+    const { error: upErr } = await sbAdmin.storage.from('Noticias').upload(path, corpNoticiaImgFile, {upsert:true});
+    if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
+    const { data: { publicUrl } } = sbAdmin.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
   }
-  await sbAdmin.from('corp_noticias').insert({
+  const { error } = await sbAdmin.from('corp_noticias').insert({
     titulo, contenido, extracto: contenido.substring(0,220),
     tag:       document.getElementById('corp-noticia-tag').value,
     fecha_pub: document.getElementById('corp-noticia-fecha').value || new Date().toISOString().split('T')[0],
-    imagen_url: imgUrl||null,
-    autor_id: currentProfile.id,
+    imagen_url: imgUrl,
+    autor_id:   currentProfile.id,
     autor_nombre: currentProfile.nombre+' '+(currentProfile.apellido||''),
-    publicado: publish
+    publicado:  publish
   });
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
   corpNoticiaImgFile = null;
   document.getElementById('corp-noticia-form').style.display='none';
   document.getElementById('corp-noticia-titulo').value='';
   document.getElementById('corp-noticia-contenido').value='';
+  document.getElementById('corp-noticia-img-preview').innerHTML = '<span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>';
   toast(publish?'Publicado':'Borrador guardado','success');
   loadCorpNoticiasAdmin();
 }
