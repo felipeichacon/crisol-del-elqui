@@ -339,8 +339,10 @@
       </div>
       <div class="player-widget">
         <div class="player-ep-label">Reproduciendo ahora</div>
-        <div class="player-ep-title" id="player-title">Radio Ágora</div>
+        <div class="player-ep-title" id="player-title">Selecciona un episodio</div>
         <div class="player-waveform" id="waveform"></div>
+        <div id="player-no-audio" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;display:none;">Sin archivo de audio disponible</div>
+        <audio id="real-audio-player" style="display:none;" preload="none"></audio>
         <div class="player-controls">
           <button class="btn-play" id="play-btn" onclick="togglePlay()">▶</button>
           <span class="player-time" id="current-time">00:00</span>
@@ -794,18 +796,21 @@
 
   function selectEpFromDB(ep) {
     document.getElementById('player-title').textContent = ep.titulo;
-    const durParts = (ep.duracion||'0:00').split(':');
-    currentEpDuration = durParts.length === 2
-      ? parseInt(durParts[0])*60 + parseInt(durParts[1])
-      : parseInt(durParts[0])*3600 + parseInt(durParts[1])*60 + parseInt(durParts[2]||0);
-    if (!currentEpDuration) currentEpDuration = 2520;
-    document.getElementById('player-duration').textContent = ep.duracion||'—';
-    currentSec = 0; playing = false; clearInterval(timerInterval);
+    document.getElementById('player-no-audio').style.display = 'none';
+    _audio.pause();
     document.getElementById('play-btn').textContent = '▶';
-    updateProgress();
-    // Si hay audio real, cargar
+    document.getElementById('progress-fill').style.width = '0%';
+    document.getElementById('current-time').textContent = '00:00';
+    document.querySelectorAll('.wf-bar').forEach(b => b.classList.remove('active'));
+
     if (ep.audio_url) {
-      window._currentAudioUrl = ep.audio_url;
+      _audio.src = ep.audio_url;
+      _audio.load();
+      document.getElementById('player-duration').textContent = ep.duracion || '—';
+    } else {
+      _audio.src = '';
+      document.getElementById('player-duration').textContent = ep.duracion || '00:00';
+      document.getElementById('player-no-audio').style.display = 'block';
     }
   }
 
@@ -921,11 +926,60 @@
   const bars = 52;
   for (let i=0; i<bars; i++) { const b=document.createElement('div'); b.className='wf-bar'+(i<18?' active':''); b.style.height=(12+Math.random()*36)+'px'; wf.appendChild(b); }
 
-  let playing=false, timerInterval=null, currentSec=0;
-  function togglePlay() { playing=!playing; document.getElementById('play-btn').textContent=playing?'⏸':'▶'; if(playing){timerInterval=setInterval(()=>{currentSec=Math.min(currentSec+1,currentEpDuration||2520);updateProgress();},1000);}else{clearInterval(timerInterval);} }
-  function updateProgress() { const dur=currentEpDuration||2520; const pct=(currentSec/dur)*100; document.getElementById('progress-fill').style.width=pct+'%'; const m=Math.floor(currentSec/60),s=String(currentSec%60).padStart(2,'0'); document.getElementById('current-time').textContent=m+':'+s; const active=Math.floor((pct/100)*bars); document.querySelectorAll('.wf-bar').forEach((b,i)=>b.classList.toggle('active',i<active)); }
-  function scrubProgress(e) { const rect=e.currentTarget.getBoundingClientRect(); currentSec=Math.floor(((e.clientX-rect.left)/rect.width)*(currentEpDuration||2520)); updateProgress(); }
-  function selectEp(el,title) { document.getElementById('player-title').textContent=title; currentSec=0; playing=false; clearInterval(timerInterval); document.getElementById('play-btn').textContent='▶'; updateProgress(); }
+  // ── REPRODUCTOR REAL ──
+  const _audio = document.getElementById('real-audio-player');
+
+  _audio.addEventListener('timeupdate', () => {
+    const dur = _audio.duration || 0;
+    const cur = _audio.currentTime || 0;
+    const pct = dur ? (cur/dur)*100 : 0;
+    document.getElementById('progress-fill').style.width = pct+'%';
+    const m = Math.floor(cur/60), s = String(Math.floor(cur%60)).padStart(2,'0');
+    document.getElementById('current-time').textContent = m+':'+s;
+    const active = Math.floor((pct/100)*bars);
+    document.querySelectorAll('.wf-bar').forEach((b,i)=>b.classList.toggle('active',i<active));
+  });
+
+  _audio.addEventListener('loadedmetadata', () => {
+    const dur = _audio.duration || 0;
+    const m = Math.floor(dur/60), s = String(Math.floor(dur%60)).padStart(2,'0');
+    document.getElementById('player-duration').textContent = m+':'+s;
+  });
+
+  _audio.addEventListener('ended', () => {
+    document.getElementById('play-btn').textContent = '▶';
+  });
+
+  function togglePlay() {
+    if (!_audio.src || _audio.src === window.location.href) {
+      document.getElementById('player-no-audio').style.display = 'block';
+      return;
+    }
+    if (_audio.paused) {
+      _audio.play();
+      document.getElementById('play-btn').textContent = '⏸';
+    } else {
+      _audio.pause();
+      document.getElementById('play-btn').textContent = '▶';
+    }
+  }
+
+  function updateProgress() {
+    const pct = _audio.duration ? (_audio.currentTime/_audio.duration)*100 : 0;
+    document.getElementById('progress-fill').style.width = pct+'%';
+  }
+
+  function scrubProgress(e) {
+    if (!_audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    _audio.currentTime = ((e.clientX-rect.left)/rect.width) * _audio.duration;
+  }
+
+  function selectEp(el, title) {
+    document.getElementById('player-title').textContent = title;
+    _audio.pause();
+    document.getElementById('play-btn').textContent = '▶';
+  }
 
   function loadCorpPhoto(input,idx) { const file=input.files[0]; if(!file)return; const r=new FileReader(); r.onload=e=>{const img=document.getElementById('corp-img-'+idx); img.src=e.target.result; img.onload=()=>{img.classList.add('loaded');img.closest('.news-photo').querySelector('.news-photo-placeholder').style.display='none';};}; r.readAsDataURL(file); }
 
