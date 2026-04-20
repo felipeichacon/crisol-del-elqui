@@ -653,11 +653,54 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <!-- BIBLIOTECA -->
     <div class="module hidden" id="mod-biblioteca">
       <div class="module-title">Biblioteca</div>
-      <div class="module-sub">Gestión de documentos por rol</div>
+      <div class="module-sub">Gestión de documentos y videos por rol</div>
       <div class="gold-line"></div>
-      <div style="display:flex;gap:12px;margin-bottom:28px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-primary" onclick="document.getElementById('bib-file').click()">+ Subir documento</button>
-        <input type="file" id="bib-file" style="display:none" accept=".pdf,.docx,.doc,.jpg,.png" onchange="uploadBibDoc(this)">
+
+      <!-- Formulario agregar recurso -->
+      <div id="bib-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:760px;">
+        <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo recurso</div>
+        <div class="form-grid" style="margin-bottom:16px;">
+          <div class="field"><label>Nombre del recurso</label><input type="text" id="bib-nombre" placeholder="Título o nombre del recurso" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+          <div class="field"><label>Categoría</label><input type="text" id="bib-cat" placeholder="Ej: Historia, Filosofía, Ritual…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+          <div class="field"><label>Rol de acceso</label>
+            <select id="bib-role-sel" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+              <option value="todos">Público (todos)</option>
+              <option value="aprendiz">Solo Aprendices</option>
+              <option value="companero">Solo Compañeros</option>
+              <option value="maestro">Solo Maestros</option>
+            </select>
+          </div>
+          <div class="field"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><input type="text" id="bib-desc" placeholder="Breve descripción" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+        </div>
+        <!-- Tipo: archivo o YouTube -->
+        <div style="margin-bottom:16px;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Tipo de recurso</div>
+          <div style="display:flex;gap:16px;margin-bottom:16px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+              <input type="radio" name="bib-tipo" value="archivo" checked onchange="toggleBibTipo(this.value)" style="accent-color:var(--gold);"> Archivo (PDF, DOCX, imagen)
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+              <input type="radio" name="bib-tipo" value="youtube" onchange="toggleBibTipo(this.value)" style="accent-color:var(--gold);"> Video de YouTube
+            </label>
+          </div>
+          <div id="bib-archivo-area">
+            <button type="button" class="btn-secondary" onclick="document.getElementById('bib-file-new').click()">Seleccionar archivo</button>
+            <input type="file" id="bib-file-new" style="display:none" accept=".pdf,.docx,.doc,.jpg,.png,.mp4" onchange="previewBibFile(this)">
+            <span id="bib-file-name" style="font-size:13px;color:var(--text-dim);margin-left:12px;">Ningún archivo seleccionado</span>
+          </div>
+          <div id="bib-youtube-area" style="display:none;">
+            <input type="url" id="bib-youtube-url" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button class="btn-primary" onclick="saveBibDoc()">Guardar recurso</button>
+          <button class="btn-secondary" onclick="document.getElementById('bib-form').style.display='none'">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Controles -->
+      <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-primary" onclick="document.getElementById('bib-form').style.display='block';document.getElementById('bib-form').scrollIntoView({behavior:'smooth'})">+ Nuevo recurso</button>
         <select id="bib-role-filter" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:10px 16px;outline:none;" onchange="loadDocuments()">
           <option value="todos">Todos los roles</option>
           <option value="aprendiz">Aprendices</option>
@@ -1399,6 +1442,65 @@ async function savePostModal(publish) {
 }
 
 // ── DOCUMENTOS ──
+let bibFileNew = null;
+
+function toggleBibTipo(val) {
+  document.getElementById('bib-archivo-area').style.display = val === 'archivo' ? 'block' : 'none';
+  document.getElementById('bib-youtube-area').style.display = val === 'youtube' ? 'block' : 'none';
+}
+
+function previewBibFile(input) {
+  const file = input.files[0]; if (!file) return;
+  bibFileNew = file;
+  document.getElementById('bib-file-name').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+  document.getElementById('bib-file-name').style.color = 'var(--gold)';
+}
+
+async function saveBibDoc() {
+  const nombre    = document.getElementById('bib-nombre').value.trim();
+  const categoria = document.getElementById('bib-cat').value.trim();
+  const role      = document.getElementById('bib-role-sel').value;
+  const desc      = document.getElementById('bib-desc').value.trim();
+  const tipo      = document.querySelector('input[name="bib-tipo"]:checked')?.value || 'archivo';
+  if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+
+  let url = null, youtubeUrl = null, tipoDoc = 'otro';
+
+  if (tipo === 'youtube') {
+    youtubeUrl = document.getElementById('bib-youtube-url').value.trim();
+    if (!youtubeUrl) { toast('Ingresa la URL de YouTube', 'error'); return; }
+    tipoDoc = 'youtube';
+  } else {
+    if (!bibFileNew) { toast('Selecciona un archivo', 'error'); return; }
+    toast('Subiendo archivo…');
+    const ext = bibFileNew.name.split('.').pop().toLowerCase();
+    tipoDoc = ext === 'pdf' ? 'pdf' : ['docx','doc'].includes(ext) ? 'docx' : ['jpg','jpeg','png'].includes(ext) ? 'jpg' : 'otro';
+    const path = role + '/' + Date.now() + '-' + bibFileNew.name.replace(/\s/g,'_');
+    const { error: upErr } = await sbAdmin.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
+    if (upErr) { toast('Error al subir: ' + upErr.message, 'error'); return; }
+    const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
+    url = publicUrl;
+  }
+
+  const { error } = await sbAdmin.from('documents').insert({
+    role, nombre, descripcion: desc || null,
+    url, youtube_url: youtubeUrl, tipo: tipoDoc,
+    categoria: categoria || null, autor_id: currentProfile.id
+  });
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+
+  bibFileNew = null;
+  document.getElementById('bib-nombre').value = '';
+  document.getElementById('bib-cat').value = '';
+  document.getElementById('bib-desc').value = '';
+  document.getElementById('bib-youtube-url').value = '';
+  document.getElementById('bib-file-name').textContent = 'Ningún archivo seleccionado';
+  document.getElementById('bib-file-name').style.color = 'var(--text-dim)';
+  document.getElementById('bib-form').style.display = 'none';
+  toast('Recurso guardado', 'success');
+  loadDocuments();
+}
+
 async function loadDocuments() {
   const roleFilter = document.getElementById('bib-role-filter')?.value || 'todos';
   let q = sbAdmin.from('documents').select('*').order('created_at',{ascending:false});
@@ -1406,13 +1508,17 @@ async function loadDocuments() {
   const { data } = await q;
   allDocs = data || [];
   const tbody = document.getElementById('docs-tbody'); tbody.innerHTML='';
-  const icons = { pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', otro:'📁' };
+  const icons = { pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', youtube:'▶️', otro:'📁' };
   allDocs.forEach(d => {
     const tr = document.createElement('tr');
     const date = new Date(d.created_at).toLocaleDateString('es-CL');
+    const linkHtml = d.youtube_url
+      ? `<a href="${d.youtube_url}" target="_blank" style="color:var(--gold);text-decoration:none;">▶️ ${d.nombre}</a>`
+      : d.url ? `<a href="${d.url}" target="_blank" style="color:var(--gold);text-decoration:none;">${icons[d.tipo]||'📁'} ${d.nombre}</a>`
+      : d.nombre;
     tr.innerHTML=`
-      <td><a href="${d.url}" target="_blank" style="color:var(--gold);text-decoration:none;">${icons[d.tipo]||'📁'} ${d.nombre}</a></td>
-      <td><span class="role-badge">${d.tipo?.toUpperCase()||'—'}</span></td>
+      <td>${linkHtml}</td>
+      <td><span class="role-badge">${(d.youtube_url?'YouTube':d.tipo?.toUpperCase())||'—'}</span></td>
       <td><span class="role-badge role-${d.role}">${ROLE_LABELS[d.role]||d.role}</span></td>
       <td style="font-size:14px;color:var(--text-dim);">${d.categoria||'—'}</td>
       <td style="font-size:14px;color:var(--text-dim);">${date}</td>
@@ -1421,26 +1527,14 @@ async function loadDocuments() {
   });
 }
 
-async function uploadBibDoc(input) {
-  const file = input.files[0]; if(!file) return;
-  const role     = prompt('¿Para qué rol?\n(aprendiz / companero / maestro / todos)', 'todos') || 'todos';
-  const nombre   = prompt('Nombre del documento:', file.name.replace(/\.[^.]+$/,'')) || file.name;
-  const categoria= prompt('Categoría (ej: Historia, Rituales):') || '';
-  toast('Subiendo…');
-  const ext  = file.name.split('.').pop().toLowerCase();
-  const tipo = ext==='pdf'?'pdf':['docx','doc'].includes(ext)?'docx':['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
-  const path = role+'/'+Date.now()+'-'+file.name;
-  await sbAdmin.storage.from('Documents').upload(path, file);
-  const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
-  await sbAdmin.from('documents').insert({ role, nombre, url:publicUrl, tipo, categoria, autor_id:currentProfile.id });
-  toast('Documento subido', 'success'); loadDocuments();
+async function deleteDoc(id) {
+  if (!confirm('¿Eliminar este recurso?')) return;
+  await sbAdmin.from('documents').delete().eq('id', id);
+  toast('Recurso eliminado'); loadDocuments();
 }
 
-async function deleteDoc(id) {
-  if (!confirm('¿Eliminar este documento?')) return;
-  await sbAdmin.from('documents').delete().eq('id', id);
-  toast('Documento eliminado'); loadDocuments();
-}
+// Mantener uploadBibDoc por compatibilidad (ya no se usa en UI)
+async function uploadBibDoc(input) { previewBibFile(input); }
 
 // ── GALERÍA ADMIN ──
 async function loadGalleryAdmin() {
