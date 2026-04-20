@@ -766,6 +766,16 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           </div>
           <div class="field"><label>Lugar</label><input type="text" id="cal-lugar" placeholder="Ej: Templo Logia N°189, La Serena" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
           <div class="field" style="grid-column:1/-1;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><textarea id="cal-desc" rows="3" placeholder="Detalles del evento…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
+          <div class="field"><label>Autor de la Plancha <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label>
+            <select id="cal-autor-plancha" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+              <option value="">— Sin designar —</option>
+            </select>
+          </div>
+          <div class="field"><label>Relator de la Plancha <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label>
+            <select id="cal-relator-plancha" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+              <option value="">— Sin designar —</option>
+            </select>
+          </div>
         </div>
         <!-- Roles destinatarios -->
         <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;">Visible para</div>
@@ -784,7 +794,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           </label>
         </div>
         <div style="display:flex;gap:12px;">
-          <button class="btn-primary" onclick="saveEvento()">Guardar evento</button>
+          <button class="btn-primary" id="cal-save-btn" onclick="saveEvento()">Guardar evento</button>
           <button class="btn-secondary" onclick="document.getElementById('cal-form').style.display='none'">Cancelar</button>
         </div>
       </div>
@@ -2305,8 +2315,25 @@ let _calMonth = new Date().getMonth();
 let _calEventos = [];
 
 async function loadCalendario() {
-  const rolFilter = document.getElementById('cal-filter-rol')?.value || 'todos';
+  const rolFilter  = document.getElementById('cal-filter-rol')?.value  || 'todos';
   const tipoFilter = document.getElementById('cal-filter-tipo')?.value || '';
+
+  // Cargar miembros en selects de plancha (solo primera vez o si están vacíos)
+  const autorSel   = document.getElementById('cal-autor-plancha');
+  const relatorSel = document.getElementById('cal-relator-plancha');
+  if (autorSel && autorSel.options.length <= 1) {
+    const { data: members } = await sbAdmin
+      .from('profiles')
+      .select('id,nombre,apellido,cargo')
+      .order('nombre');
+    const opts = (members||[]).map(m => {
+      const label = 'H∴ ' + (m.nombre||'') + ' ' + (m.apellido||'') + (m.cargo ? ' — ' + m.cargo : '');
+      return `<option value="${m.id}">${label.trim()}</option>`;
+    }).join('');
+    [autorSel, relatorSel].forEach(sel => {
+      if (sel) sel.innerHTML = '<option value="">— Sin designar —</option>' + opts;
+    });
+  }
 
   let q = sbAdmin.from('calendario').select('*').order('fecha_inicio', {ascending:true});
   if (tipoFilter) q = q.eq('tipo', tipoFilter);
@@ -2427,7 +2454,7 @@ function calNextMonth() {
   renderCalendario();
 }
 
-async function saveEvento() {
+async function saveEvento(editId = null) {
   const titulo = document.getElementById('cal-titulo').value.trim();
   const inicio = document.getElementById('cal-inicio').value;
   if (!titulo || !inicio) { toast('Título y fecha de inicio son obligatorios','error'); return; }
@@ -2435,7 +2462,15 @@ async function saveEvento() {
   const roles = ['aprendiz','companero','maestro','todos']
     .filter(r => document.getElementById('cal-rol-'+r)?.checked);
 
-  const { error } = await sbAdmin.from('calendario').insert({
+  // Plancha
+  const autorSel   = document.getElementById('cal-autor-plancha');
+  const relatorSel = document.getElementById('cal-relator-plancha');
+  const autorId    = autorSel?.value || null;
+  const relatorId  = relatorSel?.value || null;
+  const autorNombre   = autorId   ? autorSel.options[autorSel.selectedIndex]?.text : null;
+  const relatorNombre = relatorId ? relatorSel.options[relatorSel.selectedIndex]?.text : null;
+
+  const payload = {
     titulo,
     descripcion: document.getElementById('cal-desc').value.trim() || null,
     fecha_inicio: new Date(inicio).toISOString(),
@@ -2443,8 +2478,19 @@ async function saveEvento() {
     lugar:        document.getElementById('cal-lugar').value.trim() || null,
     tipo:         document.getElementById('cal-tipo').value,
     roles,
-    autor_id: currentProfile.id
-  });
+    autor_plancha_id:      autorId,
+    autor_plancha_nombre:  autorNombre,
+    relator_plancha_id:    relatorId,
+    relator_plancha_nombre: relatorNombre,
+  };
+
+  let error;
+  if (editId) {
+    ({ error } = await sbAdmin.from('calendario').update(payload).eq('id', editId));
+  } else {
+    payload.autor_id = currentProfile.id;
+    ({ error } = await sbAdmin.from('calendario').insert(payload));
+  }
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
 
   // Reset form
@@ -2455,8 +2501,12 @@ async function saveEvento() {
     const cb = document.getElementById('cal-rol-'+r); if(cb) cb.checked=true;
   });
   const todos = document.getElementById('cal-rol-todos'); if(todos) todos.checked=false;
+  if (autorSel) autorSel.value = '';
+  if (relatorSel) relatorSel.value = '';
   document.getElementById('cal-form').style.display='none';
-  toast('Evento guardado', 'success');
+  document.getElementById('cal-save-btn').onclick = () => saveEvento();
+  document.getElementById('cal-save-btn').textContent = 'Guardar evento';
+  toast(editId ? 'Evento actualizado' : 'Evento guardado', 'success');
   loadCalendario();
 }
 
@@ -2468,16 +2518,65 @@ function openEditEvento(e) {
   document.getElementById('modal-sub').textContent = CAL_TIPO_LABELS[e.tipo]||e.tipo;
   document.getElementById('modal-body').innerHTML = `
     <div style="display:flex;flex-direction:column;gap:12px;">
-      <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:80px;">Fecha</span><span style="font-size:15px;color:var(--text);">${fecha}</span></div>
-      <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:80px;">Hora</span><span style="font-size:15px;color:var(--text);">${hora}</span></div>
-      ${e.lugar ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:80px;">Lugar</span><span style="font-size:15px;color:var(--text);">${e.lugar}</span></div>` : ''}
-      <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:80px;">Grados</span><span style="font-size:15px;color:var(--text);">${rolesStr}</span></div>
+      <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Fecha</span><span style="font-size:15px;color:var(--text);">${fecha}</span></div>
+      <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Hora</span><span style="font-size:15px;color:var(--text);">${hora}</span></div>
+      ${e.lugar ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Lugar</span><span style="font-size:15px;color:var(--text);">${e.lugar}</span></div>` : ''}
+      <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Grados</span><span style="font-size:15px;color:var(--text);">${rolesStr}</span></div>
+      ${e.autor_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Autor Plancha</span><span style="font-size:15px;color:var(--text);">${e.autor_plancha_nombre}</span></div>` : ''}
+      ${e.relator_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Relator Plancha</span><span style="font-size:15px;color:var(--text);">${e.relator_plancha_nombre}</span></div>` : ''}
       ${e.descripcion ? `<div style="margin-top:8px;padding-top:16px;border-top:1px solid var(--border);font-size:15px;color:var(--text-dim);line-height:1.8;">${e.descripcion}</div>` : ''}
     </div>`;
   document.getElementById('modal-footer').innerHTML = `
-    <button class="btn-danger" onclick="deleteEvento('${e.id}')">Eliminar evento</button>
+    <button class="btn-primary" onclick="editEvento(${JSON.stringify(e).replace(/"/g,'&quot;')})">Editar evento</button>
+    <button class="btn-danger" onclick="deleteEvento('${e.id}')">Eliminar</button>
     <button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function editEvento(e) {
+  closeModal();
+  // Pre-llenar el formulario con los datos del evento
+  document.getElementById('cal-titulo').value  = e.titulo || '';
+  document.getElementById('cal-desc').value    = e.descripcion || '';
+  document.getElementById('cal-lugar').value   = e.lugar || '';
+  document.getElementById('cal-tipo').value    = e.tipo || 'tenida_ordinaria';
+
+  // Fechas — convertir a formato datetime-local
+  const toLocal = iso => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  document.getElementById('cal-inicio').value = toLocal(e.fecha_inicio);
+  document.getElementById('cal-fin').value    = toLocal(e.fecha_fin);
+
+  // Roles
+  ['aprendiz','companero','maestro','todos'].forEach(r => {
+    const cb = document.getElementById('cal-rol-'+r);
+    if (cb) cb.checked = (e.roles||[]).includes(r);
+  });
+
+  // Plancha — seleccionar valores en los selects una vez que están cargados
+  const setSelect = (id, val) => {
+    const sel = document.getElementById(id);
+    if (sel && val) {
+      for (const opt of sel.options) {
+        if (opt.value === val) { sel.value = val; break; }
+      }
+    }
+  };
+  setSelect('cal-autor-plancha',   e.autor_plancha_id);
+  setSelect('cal-relator-plancha', e.relator_plancha_id);
+
+  // Cambiar botón a "Actualizar"
+  const btn = document.getElementById('cal-save-btn');
+  btn.textContent = 'Actualizar evento';
+  btn.onclick = () => saveEvento(e.id);
+
+  // Mostrar formulario
+  document.getElementById('cal-form').style.display = 'block';
+  document.getElementById('cal-form').scrollIntoView({behavior:'smooth'});
 }
 
 async function deleteEvento(id) {
