@@ -756,6 +756,9 @@ tr:hover td { background: rgba(201,168,76,0.04); }
               <option value="tenida_ordinaria">Tenida Ordinaria</option>
               <option value="tenida_extraordinaria">Tenida Extraordinaria</option>
               <option value="tenida_administrativa">Tenida Administrativa</option>
+              <option value="tenida_constitucional">Tenida Constitucional</option>
+              <option value="tenida_conjunto">Tenida en Conjunto</option>
+              <option value="tenida_jurisdiccional">Tenida Jurisdiccional</option>
               <option value="iniciacion">Ceremonia de Iniciación</option>
               <option value="aumento_salario">Ceremonia de Aumento de Salario</option>
               <option value="exaltacion">Ceremonia de Exaltación</option>
@@ -822,6 +825,9 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           <option value="tenida_ordinaria">Tenida Ordinaria</option>
           <option value="tenida_extraordinaria">Tenida Extraordinaria</option>
           <option value="tenida_administrativa">Tenida Administrativa</option>
+          <option value="tenida_constitucional">Tenida Constitucional</option>
+          <option value="tenida_conjunto">Tenida en Conjunto</option>
+          <option value="tenida_jurisdiccional">Tenida Jurisdiccional</option>
           <option value="iniciacion">Ceremonia de Iniciación</option>
           <option value="aumento_salario">Aumento de Salario</option>
           <option value="exaltacion">Ceremonia de Exaltación</option>
@@ -2315,15 +2321,19 @@ async function showCalLinks() {
 // ── CALENDARIO ──
 const CAL_TIPO_LABELS = {
   tenida_ordinaria: 'Tenida Ordinaria', tenida_extraordinaria: 'Tenida Extraordinaria',
-  tenida_administrativa: 'Tenida Administrativa', iniciacion: 'Ceremonia de Iniciación',
-  aumento_salario: 'Ceremonia de Aumento de Salario', exaltacion: 'Ceremonia de Exaltación',
-  social: 'Eventos', corporacion: 'Corporación Elqui', otro: 'Otro'
+  tenida_administrativa: 'Tenida Administrativa', tenida_constitucional: 'Tenida Constitucional',
+  tenida_conjunto: 'Tenida en Conjunto', tenida_jurisdiccional: 'Tenida Jurisdiccional',
+  iniciacion: 'Ceremonia de Iniciación', aumento_salario: 'Ceremonia de Aumento de Salario',
+  exaltacion: 'Ceremonia de Exaltación', social: 'Eventos',
+  corporacion: 'Corporación Elqui', otro: 'Otro'
 };
 const CAL_TIPO_COLORS = {
   tenida_ordinaria: '#C9A84C', tenida_extraordinaria: '#E8C97A',
-  tenida_administrativa: '#a8c47a', iniciacion: '#7aaed4',
-  aumento_salario: '#d4c07a', exaltacion: '#c47ad4',
-  social: '#7ad47a', corporacion: '#d4a0c0', otro: '#8A7240'
+  tenida_administrativa: '#a8c47a', tenida_constitucional: '#7ac4c4',
+  tenida_conjunto: '#c4a07a', tenida_jurisdiccional: '#7a9ac4',
+  iniciacion: '#7aaed4', aumento_salario: '#d4c07a',
+  exaltacion: '#c47ad4', social: '#7ad47a',
+  corporacion: '#d4a0c0', otro: '#8A7240'
 };
 let _calYear = new Date().getFullYear();
 let _calMonth = new Date().getMonth();
