@@ -57,13 +57,13 @@
 
   /* PILLARS */
   .pillars { background: var(--dark-2); }
-  .pillars-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 60px; }
-  .pillar { background: var(--dark-3); padding: 48px 36px; border-top: 1px solid var(--border); transition: background 0.3s; position: relative; overflow: hidden; }
+  .pillars-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 60px; align-items: stretch; grid-auto-rows: 1fr; }
+  .pillar { background: var(--dark-3); padding: 48px 36px; border-top: 1px solid var(--border); transition: background 0.3s; position: relative; overflow: hidden; display: flex; flex-direction: column; height: 100%; }
   .pillar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gold), transparent); opacity: 0; transition: opacity 0.4s; }
   .pillar:hover { background: var(--dark-4); } .pillar:hover::before { opacity: 1; }
   .pillar-roman { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.3em; color: var(--gold-dim); margin-bottom: 20px; }
   .pillar-name { font-family: 'Cinzel', serif; font-size: 20px; color: var(--cream); margin-bottom: 16px; font-weight: 600; }
-  .pillar-text { font-size: 16px; color: var(--text-dim); line-height: 1.8; }
+  .pillar-text { font-size: 16px; color: var(--text-dim); line-height: 1.8; flex: 1; }
 
   /* NEWS */
   .noticias { background: var(--dark); }
@@ -237,16 +237,16 @@
 <nav id="navbar">
   <div class="nav-logo">Logia Crisol del Elqui · N°189</div>
   <ul class="nav-links">
-    <li><a href="#valores">Pilares</a></li>
+    <li><a href="#valores">¿Quiénes Somos?</a></li>
     <li><a href="#noticias">Noticias</a></li>
     <li><a href="#radio-agora">Radio Ágora</a></li>
-    <li><a href="#venerable">Venerable</a></li>
-    <li><a href="#egregora">Egrégora</a></li>
-    <li><a href="#corporacion">Corp. Elqui</a></li>
+    <li><a href="#venerable">Palabras del Venerable</a></li>
+    <li><a href="#egregora">Revista Egrégora</a></li>
+    <li><a href="#corporacion">Corp. Crisol</a></li>
     <li><a href="#biblioteca">Biblioteca</a></li>
-    <li><a href="#contacto">¿Pertenecer?</a></li>
+    <li><a href="#contacto">¿Quieres Pertenecer?</a></li>
   </ul>
-  <a href="/intranet" class="btn-intranet">Acceso a Pasos Perdidos</a>
+
 </nav>
 
 <!-- HERO -->
@@ -262,23 +262,23 @@
     <polygon points="200,10 208,40 238,30 220,55 248,68 218,70 218,100 200,78 182,100 182,70 152,68 180,55 162,30 192,40" stroke="#C9A84C" stroke-width="0.5" fill="none"/>
     <polygon points="200,80 100,330 300,330" stroke="#C9A84C" stroke-width="0.6" fill="none"/>
   </svg>
-  <p class="hero-eyebrow">Fundada bajo la Gran Logia de Chile</p>
+  <p class="hero-eyebrow">Fundada el 8 de marzo de 2021 &infin;</p>
   <h1 class="hero-title">Respetable Logia<br><span>Crisol del Elqui</span><br>N°189</h1>
   <div class="hero-divider"><div class="hero-divider-gem"></div></div>
   <p class="hero-subtitle">Libertad, Igualdad, Fraternidad.<br>Un espacio de reflexión, perfeccionamiento y servicio al hombre y a la sociedad.</p>
-  <a href="#valores" class="hero-badge">
+  <a href="#valores" class="hero-badge" style="margin-left:auto;margin-right:auto;">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="7,1 8.5,5.5 13,5.5 9.5,8.5 11,13 7,10 3,13 4.5,8.5 1,5.5 5.5,5.5" stroke="#C9A84C" stroke-width="0.8" fill="none"/></svg>
     Conoce nuestra logia
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="7,1 8.5,5.5 13,5.5 9.5,8.5 11,13 7,10 3,13 4.5,8.5 1,5.5 5.5,5.5" stroke="#C9A84C" stroke-width="0.8" fill="none"/></svg>
   </a>
-  <div class="hero-scroll"><div class="scroll-line"></div><span>desplazar</span></div>
+
 </section>
 
 <!-- PILARES -->
 <section class="pillars" id="valores">
   <div class="section-inner">
-    <p class="section-label">Los tres pilares</p>
-    <h2 class="section-title">Sobre lo que nos edificamos</h2>
+    <p class="section-label">¿Quiénes Somos?</p>
+    <h2 class="section-title">Nuestros Tres Pilares</h2>
     <div class="divider-line"></div>
     <div class="pillars-grid">
       <div class="pillar"><div class="pillar-roman">I</div><div class="pillar-name">Autonomía Reflexiva</div><p class="pillar-text">Proclamamos la Autonomía Reflexiva como el primer pilar fundamental que rige el trabajo de nuestras columnas y el crecimiento de sus miembros.</p></div>
@@ -412,27 +412,52 @@
 
 <!-- BIBLIOTECA PÚBLICA -->
 <section class="biblioteca" id="biblioteca">
-  <div class="bib-inner">
+  <div class="section-inner">
     <p class="section-label">Acceso abierto al conocimiento</p>
     <h2 class="section-title">Biblioteca Pública</h2>
     <div class="divider-line"></div>
-    <p style="font-size:17px;color:var(--text-dim);max-width:640px;line-height:1.9;">Colección de libre acceso en filosofía, historia, ciencia y humanidades. Disponible para todos los ciudadanos del Valle del Elqui sin necesidad de registro.</p>
-    <div class="bib-search">
-      <input type="text" placeholder="Buscar por título, autor o tema…">
-      <button>Buscar</button>
+    <p style="font-size:17px;color:var(--text-dim);max-width:640px;line-height:1.9;margin-bottom:32px;">Colección de libre acceso en filosofía, historia, ciencia y humanidades. Disponible para todos los ciudadanos del Valle del Elqui sin necesidad de registro.</p>
+
+    <!-- Buscador funcional -->
+    <div class="bib-search" style="margin-bottom:40px;">
+      <input type="text" id="bib-search-input" placeholder="Buscar por título, autor o tema…" oninput="filterBiblioteca(this.value)">
+      <button onclick="filterBiblioteca(document.getElementById('bib-search-input').value)">Buscar</button>
     </div>
-    <div class="bib-grid">
-      <div class="bib-category"><span class="bib-icon">📚</span><div class="bib-cat-name">Filosofía</div><div class="bib-cat-count">148 documentos</div><a href="#" class="btn-acceso">Explorar</a></div>
-      <div class="bib-category"><span class="bib-icon">🏛️</span><div class="bib-cat-name">Historia</div><div class="bib-cat-count">213 documentos</div><a href="#" class="btn-acceso">Explorar</a></div>
-      <div class="bib-category"><span class="bib-icon">🔭</span><div class="bib-cat-name">Ciencia</div><div class="bib-cat-count">97 documentos</div><a href="#" class="btn-acceso">Explorar</a></div>
-      <div class="bib-category"><span class="bib-icon">✍️</span><div class="bib-cat-name">Literatura</div><div class="bib-cat-count">176 documentos</div><a href="#" class="btn-acceso">Explorar</a></div>
+
+    <!-- Grid de resultados -->
+    <div id="bib-public-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px;margin-bottom:40px;">
+      <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">Cargando biblioteca…</div>
     </div>
+
+    <!-- Banner contacto biblioteca -->
     <div class="bib-banner">
       <div><div class="bib-banner-text">¿Quieres donar libros o documentos a nuestra biblioteca?</div><div class="bib-banner-sub">Aceptamos donaciones físicas y digitales. Todo aporte enriquece a la comunidad.</div></div>
-      <a href="#contacto" class="btn-corp primary">Contactar biblioteca</a>
+      <button onclick="openContactoBiblioteca()" class="btn-corp primary">Contactar biblioteca</button>
     </div>
   </div>
 </section>
+
+<!-- Modal contacto biblioteca -->
+<div id="modal-biblioteca-contacto" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,10,32,0.95);display:none;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--dark-2);border:1px solid var(--border-bright);max-width:560px;width:100%;padding:48px;position:relative;max-height:90vh;overflow-y:auto;">
+    <button onclick="document.getElementById('modal-biblioteca-contacto').style.display='none'" style="position:absolute;top:16px;right:20px;background:transparent;border:none;color:var(--gold-dim);font-size:24px;cursor:pointer;">✕</button>
+    <p style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.4em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Biblioteca Pública</p>
+    <h2 style="font-family:'Cinzel',serif;font-size:22px;color:var(--cream);margin-bottom:8px;font-weight:400;">Contactar Biblioteca</h2>
+    <div style="width:40px;height:1px;background:var(--gold);margin-bottom:28px;"></div>
+    <div class="form-field"><label>Nombre completo</label><input type="text" id="bib-cf-nombre" placeholder="Tu nombre"></div>
+    <div class="form-field"><label>Correo electrónico</label><input type="email" id="bib-cf-correo" placeholder="tu@correo.cl"></div>
+    <div class="form-field"><label>Asunto</label>
+      <select id="bib-cf-asunto" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:13px 16px;outline:none;">
+        <option>Donación de libros físicos</option>
+        <option>Donación de documentos digitales</option>
+        <option>Solicitud de material</option>
+        <option>Consulta general</option>
+      </select>
+    </div>
+    <div class="form-field"><label>Mensaje</label><textarea id="bib-cf-mensaje" rows="4" placeholder="Describe tu consulta o donación…"></textarea></div>
+    <button onclick="enviarContactoBiblioteca()" class="btn-submit">Enviar mensaje</button>
+  </div>
+</div>
 
 <!-- ACCESO A PASOS PERDIDOS -->
 <section class="intranet-cta" id="pasos-perdidos">
@@ -441,9 +466,9 @@
     <h2 class="section-title">Acceso a Pasos Perdidos</h2>
     <div class="divider-line"></div>
     <div class="intranet-grid">
-      <div class="intranet-group"><span class="intranet-symbol">🔷</span><div class="intranet-group-name">Aprendices</div><p class="intranet-group-desc">Área de formación, documentos de iniciación y recursos para el primer grado.</p><a href="#" class="btn-acceso">Ingresar</a></div>
-      <div class="intranet-group"><span class="intranet-symbol">🔶</span><div class="intranet-group-name">Compañeros</div><p class="intranet-group-desc">Recursos del segundo grado, galería, mensajería y calendario fraterno.</p><a href="#" class="btn-acceso">Ingresar</a></div>
-      <div class="intranet-group"><span class="intranet-symbol">⭐</span><div class="intranet-group-name">Maestros</div><p class="intranet-group-desc">Acceso completo a la administración, archivo histórico y gestión de la logia.</p><a href="#" class="btn-acceso">Ingresar</a></div>
+      <div class="intranet-group" onclick="window.location.href='/intranet'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 58 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="30" y1="46" x2="30" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Aprendices</div><p class="intranet-group-desc">Área de formación, documentos de iniciación y recursos para el primer grado.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" onclick="window.location.href='/intranet'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 38 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="46" x2="18" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="46" x2="42" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Compañeros</div><p class="intranet-group-desc">Recursos del segundo grado, galería, mensajería y calendario fraterno.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" onclick="window.location.href='/intranet'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 30 Q30 22 38 30" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="30" x2="18" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="30" x2="42" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Maestros</div><p class="intranet-group-desc">Acceso completo a la administración, archivo histórico y gestión de la logia.</p><span class="btn-acceso">Ingresar</span></div>
     </div>
   </div>
 </section>
@@ -462,12 +487,12 @@
     <div>
       <div class="form-field"><label>Nombre completo</label><input type="text" id="cf-nombre" placeholder="Tu nombre completo"></div>
       <div class="form-row">
-        <div class="form-field"><label>Edad</label><input type="number" placeholder="Edad" min="21"></div>
-        <div class="form-field"><label>Teléfono</label><input type="tel" placeholder="+56 9 …"></div>
+        <div class="form-field"><label>Edad</label><input type="number" id="cf-edad" placeholder="Edad" min="21"></div>
+        <div class="form-field"><label>Teléfono</label><input type="tel" id="cf-telefono" placeholder="+56 9 …"></div>
       </div>
-      <div class="form-field"><label>Correo electrónico</label><input type="email" placeholder="tu@correo.cl"></div>
-      <div class="form-field"><label>Profesión u oficio</label><input type="text" placeholder="Tu profesión"></div>
-      <div class="form-field"><label>¿Por qué deseas pertenecer?</label><textarea rows="4" placeholder="Cuéntanos brevemente qué te ha llevado a esta búsqueda…"></textarea></div>
+      <div class="form-field"><label>Correo electrónico</label><input type="email" id="cf-correo" placeholder="tu@correo.cl"></div>
+      <div class="form-field"><label>Profesión u oficio</label><input type="text" id="cf-profesion" placeholder="Tu profesión"></div>
+      <div class="form-field"><label>¿Por qué deseas pertenecer?</label><textarea id="cf-motivo" rows="4" placeholder="Cuéntanos brevemente qué te ha llevado a esta búsqueda…"></textarea></div>
       <button class="btn-submit" onclick="handleContactForm()">Enviar solicitud</button>
       <p class="form-note">Tu información es tratada con absoluta reserva y discreción.</p>
     </div>
@@ -478,7 +503,7 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
-      <div><div class="footer-brand">Logia Crisol<br>del Elqui N°189</div><p class="footer-tagline">Bajo el auspicio de la Gran Logia de Chile.<br>Valle de Coquimbo · Oriente de La Serena.</p></div>
+      <div><div class="footer-brand">Logia Crisol<br>del Elqui N°189</div><p class="footer-tagline">Jurisdicción de Coquimbo<br>Valle de La Serena.</p></div>
       <div>
         <div class="footer-col-title">Navegación</div>
         <ul class="footer-links"><li><a href="#valores">Pilares</a></li><li><a href="#noticias">Noticias</a></li><li><a href="#radio-agora">Radio Ágora</a></li><li><a href="#venerable">Venerable Maestro</a></li><li><a href="#egregora">Revista Egrégora</a></li></ul>
@@ -494,7 +519,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2025 Respetable Logia Crisol del Elqui N°189 · Todos los derechos reservados</span>
-      <span>Gran Logia de Chile · A∴L∴G∴D∴G∴A∴D∴U∴</span>
+
       <a href="https://crisoldelelqui.cl/admin" onclick="window.location.href='https://crisoldelelqui.cl/admin';return false;" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);text-decoration:none;border:1px solid var(--border);padding:6px 14px;transition:color 0.3s,border-color 0.3s;cursor:pointer;" onmouseover="this.style.color='var(--gold)';this.style.borderColor='var(--border-bright)'" onmouseout="this.style.color='var(--gold-dim)';this.style.borderColor='var(--border)'">⚙ Administración</a>
     </div>
   </div>
@@ -1138,6 +1163,122 @@
     modal.style.display = 'flex';
   }
 
+
+  // ── BIBLIOTECA PÚBLICA ──
+  let _bibData = [];
+
+  async function loadBibliotecaPublica() {
+    const grid = document.getElementById('bib-public-grid');
+    const { data } = await _sb
+      .from('documents')
+      .select('*')
+      .eq('publico', true)
+      .order('created_at', { ascending: false });
+
+    if (!data?.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">No hay documentos públicos disponibles aún.</div>';
+      return;
+    }
+    _bibData = data;
+    renderBiblioteca(data);
+  }
+
+  function renderBiblioteca(items) {
+    const grid = document.getElementById('bib-public-grid');
+    if (!items.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">No se encontraron resultados.</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    items.forEach(d => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:0;overflow:hidden;transition:border-color 0.3s;';
+      div.onmouseover = () => div.style.borderColor = 'var(--border-bright)';
+      div.onmouseout  = () => div.style.borderColor = 'var(--border)';
+
+      const isYoutube = !!d.youtube_url;
+      const youtubeId = isYoutube ? extractYoutubeId(d.youtube_url) : null;
+      const thumbHtml = youtubeId
+        ? `<div style="position:relative;cursor:pointer;" onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,'\'')}')">
+             <img src="https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg" style="width:100%;height:160px;object-fit:cover;display:block;">
+             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">
+               <div style="width:48px;height:48px;background:rgba(255,0,0,0.85);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                 <span style="color:#fff;font-size:18px;margin-left:4px;">▶</span>
+               </div>
+             </div>
+           </div>`
+        : `<div style="width:100%;height:160px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.3;">${d.tipo==='pdf'?'📄':d.tipo==='docx'?'📝':'📁'}</div>`;
+
+      div.innerHTML = `
+        ${thumbHtml}
+        <div style="padding:20px 24px;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">${d.categoria||'General'}</div>
+          <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--cream);margin-bottom:8px;font-weight:400;line-height:1.4;">${d.nombre}</div>
+          ${d.descripcion ? `<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;">${d.descripcion}</div>` : ''}
+          ${!isYoutube && d.url ? `<a href="${d.url}" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);text-decoration:none;text-transform:uppercase;border-bottom:1px solid var(--border-bright);padding-bottom:2px;">Descargar →</a>` : ''}
+          ${isYoutube ? `<button onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,'\'')}') " style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border-bright);padding-bottom:2px;cursor:pointer;text-transform:uppercase;">Ver video →</button>` : ''}
+        </div>`;
+      grid.appendChild(div);
+    });
+  }
+
+  function extractYoutubeId(url) {
+    if (!url) return null;
+    const m = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function filterBiblioteca(query) {
+    if (!query.trim()) { renderBiblioteca(_bibData); return; }
+    const q = query.toLowerCase();
+    renderBiblioteca(_bibData.filter(d =>
+      (d.nombre||'').toLowerCase().includes(q) ||
+      (d.descripcion||'').toLowerCase().includes(q) ||
+      (d.categoria||'').toLowerCase().includes(q)
+    ));
+  }
+
+  function openVideoModal(url, titulo) {
+    const youtubeId = extractYoutubeId(url);
+    if (!youtubeId) { window.open(url, '_blank'); return; }
+    let modal = document.getElementById('modal-video');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-video';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;';
+      modal.onclick = e => { if(e.target===modal) modal.style.display='none'; };
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="width:100%;max-width:860px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);">${titulo}</div>
+          <button onclick="document.getElementById('modal-video').style.display='none'" style="background:transparent;border:none;color:var(--gold-dim);font-size:24px;cursor:pointer;">✕</button>
+        </div>
+        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+          <iframe src="https://www.youtube.com/embed/${youtubeId}?autoplay=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>`;
+    modal.style.display = 'flex';
+  }
+
+  function openContactoBiblioteca() {
+    document.getElementById('modal-biblioteca-contacto').style.display = 'flex';
+  }
+
+  function enviarContactoBiblioteca() {
+    const nombre  = document.getElementById('bib-cf-nombre').value.trim();
+    const correo  = document.getElementById('bib-cf-correo').value.trim();
+    const asunto  = document.getElementById('bib-cf-asunto').value;
+    const mensaje = document.getElementById('bib-cf-mensaje').value.trim();
+    if (!nombre || !correo) { alert('Por favor completa nombre y correo.'); return; }
+    const sub = encodeURIComponent('Biblioteca Pública — ' + asunto + ' — ' + nombre);
+    const body = encodeURIComponent('Nombre: ' + nombre + '\nCorreo: ' + correo + '\nAsunto: ' + asunto + '\n\n' + mensaje);
+    window.location.href = 'mailto:secretario.rl189@gmail.com?subject=' + sub + '&body=' + body;
+  }
+
+  loadBibliotecaPublica();
+
   // ── EGRÉGORA — botones portada ──
   function abrirUltimaEdicion() {
     if (!_egregoraData?.length) {
@@ -1200,7 +1341,26 @@
     modal.style.display = 'flex';
   }
 
-    function handleContactForm() { const n=document.getElementById('cf-nombre').value; if(!n.trim()){alert('Por favor ingresa tu nombre completo.');return;} alert('Tu solicitud ha sido recibida con absoluta discreción, H∴ '+n.split(' ')[0]+'.\n\nNos pondremos en contacto contigo pronto.\n\nA∴L∴G∴D∴G∴A∴D∴U∴'); }
+    async function handleContactForm() {
+    const nombre    = document.getElementById('cf-nombre')?.value.trim() || '';
+    const edad      = document.getElementById('cf-edad')?.value || '';
+    const telefono  = document.getElementById('cf-telefono')?.value || '';
+    const correo    = document.getElementById('cf-correo')?.value.trim() || '';
+    const profesion = document.getElementById('cf-profesion')?.value.trim() || '';
+    const motivo    = document.getElementById('cf-motivo')?.value.trim() || '';
+    if (!nombre) { alert('Por favor ingresa tu nombre completo.'); return; }
+    if (!correo) { alert('Por favor ingresa tu correo electrónico.'); return; }
+    const asunto = encodeURIComponent('Solicitud de Postulación — ' + nombre);
+    const cuerpo = encodeURIComponent(
+      'Nombre completo: ' + nombre + '\n' +
+      'Edad: ' + edad + '\n' +
+      'Teléfono: ' + telefono + '\n' +
+      'Correo: ' + correo + '\n' +
+      'Profesión: ' + profesion + '\n\n' +
+      '¿Por qué desea pertenecer?\n' + motivo
+    );
+    window.location.href = 'mailto:secretario.rl189@gmail.com?subject=' + asunto + '&body=' + cuerpo;
+  }
 </script>
 </body>
 </html>
