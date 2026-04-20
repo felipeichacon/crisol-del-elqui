@@ -789,6 +789,15 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         </div>
       </div>
 
+      <!-- Banner info iCal -->
+      <div style="background:var(--dark-3);border:1px solid var(--border);padding:20px 28px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">Suscripción a Google Calendar / iCal</div>
+          <div style="font-size:14px;color:var(--text-dim);line-height:1.7;">Cada miembro tiene un enlace personal. Al añadirlo a Google Calendar, Apple Calendar u Outlook, los eventos se sincronizan automáticamente según su grado.</div>
+        </div>
+        <button class="btn-secondary" onclick="showCalLinks()" style="white-space:nowrap;">Ver enlaces de suscripción</button>
+      </div>
+
       <!-- Filtros y botón -->
       <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap;">
         <button class="btn-primary" onclick="document.getElementById('cal-form').style.display='block';document.getElementById('cal-form').scrollIntoView({behavior:'smooth'})">+ Nuevo evento</button>
@@ -1056,6 +1065,7 @@ function renderUsers(users) {
       <td><div class="actions">
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="editUser('${u.id}')">Editar</button>
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="changeRole('${u.id}','${u.role}')">Rol</button>
+        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" title="Copiar enlace de calendario" onclick="copyCalLink('${u.calendar_token||''}','${u.nombre||''} ${u.apellido||''}')">📅 iCal</button>
         <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="toggleUser('${u.id}',${u.activo})">${u.activo?'Desactivar':'Activar'}</button>
       </div></td>`;
     tbody.appendChild(tr);
@@ -2233,6 +2243,49 @@ async function saveCorpPost(publish) {
 async function toggleCorpPost(id,pub) { await sbAdmin.from('corp_posts').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicado':'Publicado','success'); loadCorpBlogAdmin(); }
 async function deleteCorpPost(id) { if(!confirm('¿Eliminar?')) return; await sbAdmin.from('corp_posts').delete().eq('id',id); toast('Eliminado'); loadCorpBlogAdmin(); }
 
+
+
+// ── ICAL / GOOGLE CALENDAR ──
+const ICAL_BASE = 'https://rpzigsvocrychahsrzfj.supabase.co/functions/v1/ical-feed';
+
+function copyCalLink(token, nombre) {
+  if (!token) { toast('Este miembro no tiene token de calendario', 'error'); return; }
+  const url = ICAL_BASE + '?token=' + token;
+  navigator.clipboard.writeText(url).then(() => {
+    toast('Enlace iCal copiado para ' + nombre.trim(), 'success');
+  }).catch(() => {
+    prompt('Copia este enlace:', url);
+  });
+}
+
+async function showCalLinks() {
+  const { data: profiles } = await sbAdmin
+    .from('profiles')
+    .select('id,nombre,apellido,role,calendar_token')
+    .order('nombre');
+  if (!profiles?.length) { toast('No hay miembros', 'error'); return; }
+
+  const roles = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Admin' };
+  document.getElementById('modal-title').textContent = 'Enlaces de suscripción iCal';
+  document.getElementById('modal-sub').textContent = 'Comparte el enlace personal con cada hermano para que sincronice su calendario';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:16px;font-size:14px;color:var(--text-dim);line-height:1.8;">
+      Cada enlace es único e intransferible. El miembro debe añadirlo como <strong style="color:var(--gold);">calendario por URL</strong> en Google Calendar, Apple Calendar o Outlook. Los eventos se actualizan automáticamente.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      ${profiles.map(p => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--dark-4);border:1px solid var(--border);">
+          <div style="flex:1;">
+            <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);">H∴ ${p.nombre||''} ${p.apellido||''}</div>
+            <div style="font-size:11px;color:var(--gold-dim);font-family:'Cinzel',serif;letter-spacing:0.15em;">${roles[p.role]||p.role}</div>
+          </div>
+          <button onclick="copyCalLink('${p.calendar_token}','${p.nombre||''} ${p.apellido||''}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:8px 14px;cursor:pointer;white-space:nowrap;">📅 Copiar enlace</button>
+          <a href="${ICAL_BASE}?token=${p.calendar_token}" target="_blank" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);text-decoration:none;border:1px solid var(--border);padding:8px 14px;white-space:nowrap;">Previsualizar</a>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
 
 // ── CALENDARIO ──
 const CAL_TIPO_LABELS = {
