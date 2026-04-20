@@ -1007,13 +1007,13 @@
   }
 
   // Cargar corp al abrir la página de corporación
-  const _origShowCorpPage = showCorpPage;
   function showCorpPage() {
-    _origShowCorpPage();
+    document.getElementById('page-landing').style.display='none';
+    document.getElementById('page-corp').style.display='block';
+    window.scrollTo(0,0);
     loadCorpNoticias();
     loadCorpBlog();
   }
-  function showCorpPage() { document.getElementById('page-landing').style.display='none'; document.getElementById('page-corp').style.display='block'; window.scrollTo(0,0); }
   function showLanding() { document.getElementById('page-corp').style.display='none'; document.getElementById('page-landing').style.display='block'; window.scrollTo(0,0); }
 
   const navbar = document.getElementById('navbar');
