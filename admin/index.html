@@ -936,6 +936,21 @@ let allUsers = [], allPosts = [], allDocs = [], allGallery = [];
 let activeConvUserId = null;
 let nuFamiliares = [];
 
+
+// ── FORMATO DE NOMBRE MASÓNICO ──
+// Q∴H∴ Primer Nombre Primer Apellido
+function qh(nombre, apellido) {
+  const n = (nombre||'').trim().split(' ')[0];
+  const a = (apellido||'').trim().split(' ')[0];
+  return 'Q∴H∴ ' + [n, a].filter(Boolean).join(' ');
+}
+function qhFull(nombre, apellido) {
+  // Para campos autor_nombre guardados en BD: sin prenombre, solo nombre + apellido
+  const n = (nombre||'').trim().split(' ')[0];
+  const a = (apellido||'').trim().split(' ')[0];
+  return [n, a].filter(Boolean).join(' ');
+}
+
 const ROLE_LABELS = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Administrador' };
 const BLOG_LABELS = { aprendiz:'2° Vigilante', companero:'1° Vigilante', maestro:'Orador', venerable:'Venerable Maestro' };
 
@@ -986,7 +1001,7 @@ async function loadProfile() {
     await sb.auth.signOut(); return;
   }
   currentProfile = data;
-  document.getElementById('topbar-name').textContent = 'H∴ ' + data.nombre;
+  document.getElementById('topbar-name').textContent = qh(data.nombre, data.apellido);
   document.getElementById('screen-login').classList.add('hidden');
   document.getElementById('screen-app').classList.remove('hidden');
   showModule('dashboard');
@@ -1067,7 +1082,7 @@ function renderUsers(users) {
     const date = u.fecha_ingreso ? new Date(u.fecha_ingreso).toLocaleDateString('es-CL') : '—';
     tr.innerHTML=`
       <td><span class="status-dot ${u.activo?'status-active':'status-inactive'}"></span>${u.activo?'Activo':'Inactivo'}</td>
-      <td><strong style="color:var(--cream)">${u.nombre||''} ${u.apellido||''}</strong></td>
+      <td><strong style="color:var(--cream)">${qh(u.nombre, u.apellido)}</strong></td>
       <td style="color:var(--text-dim);font-size:14px;">${u.email||''}</td>
       <td><span class="role-badge role-${u.role}">${ROLE_LABELS[u.role]||u.role}</span></td>
       <td style="font-size:14px;color:var(--text-dim);">${u.profesion||'—'}</td>
@@ -1170,7 +1185,7 @@ function editUser(id) {
 
   document.getElementById('mod-edit-user').innerHTML = `
     <div class="module-title">Editar miembro</div>
-    <div class="module-sub" style="margin-bottom:8px;">H∴ ${S(u.nombre)} ${S(u.apellido)}</div>
+    <div class="module-sub" style="margin-bottom:8px;">${qh(u.nombre, u.apellido)}</div>
     <div class="gold-line"></div>
     <div style="max-width:760px;">
 
@@ -1503,7 +1518,7 @@ function renderPostsGrid(posts, gridId) {
     div.innerHTML=`
       <div class="content-card-tag">${BLOG_LABELS[p.role]||p.role} · ${p.publicado?'Publicado':'Borrador'}</div>
       <div class="content-card-title">${p.titulo}</div>
-      <div class="content-card-meta">${p.autor_nombre||'—'} · ${date}</div>
+      <div class="content-card-meta">${p.autor_nombre ? 'Q∴H∴ '+p.autor_nombre : '—'} · ${date}</div>
       <div class="content-card-actions">
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="togglePost('${p.id}',${p.publicado})">${p.publicado?'Despublicar':'Publicar'}</button>
         <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deletePost('${p.id}')">Eliminar</button>
@@ -1559,7 +1574,7 @@ async function savePostModal(publish) {
   await sbAdmin.from('posts').insert({
     role, titulo, contenido, extracto: contenido.substring(0,200),
     autor_id: currentProfile.id,
-    autor_nombre: currentProfile.nombre+' '+(currentProfile.apellido||''),
+    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado: publish
   });
   toast(publish?'Publicado':'Borrador guardado', 'success');
@@ -1765,14 +1780,14 @@ async function loadConversations() {
   const list = document.getElementById('admin-conv-list'); list.innerHTML='';
   (profiles||[]).forEach(p => {
     const div = document.createElement('div'); div.className='msg-item'; div.onclick=()=>openAdminConv(p);
-    div.innerHTML=`<div class="msg-item-name">H∴ ${p.nombre||''} ${p.apellido||''}</div><div class="msg-item-preview">${ROLE_LABELS[p.role]||p.role}</div>`;
+    div.innerHTML=`<div class="msg-item-name">${qh(p.nombre, p.apellido)}</div><div class="msg-item-preview">${ROLE_LABELS[p.role]||p.role}</div>`;
     list.appendChild(div);
   });
 }
 
 async function openAdminConv(profile) {
   activeConvUserId = profile.id;
-  document.getElementById('admin-conv-name').textContent = 'H∴ '+profile.nombre+' '+(profile.apellido||'');
+  document.getElementById('admin-conv-name').textContent = qh(profile.nombre, profile.apellido);
   document.getElementById('admin-conv-role').textContent = ROLE_LABELS[profile.role]||profile.role;
   const { data: msgs } = await sbAdmin.from('messages').select('*')
     .or(`and(from_id.eq.${currentProfile.id},to_id.eq.${profile.id}),and(from_id.eq.${profile.id},to_id.eq.${currentProfile.id})`)
@@ -1874,7 +1889,7 @@ async function saveNoticia(publish) {
     fecha_pub:  fecha,
     imagen_url: imgUrl || null,
     autor_id:   currentProfile.id,
-    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado:  publish
   });
 
@@ -1886,7 +1901,7 @@ async function saveNoticia(publish) {
       contenido,
       extracto:    contenido.substring(0, 220),
       autor_id:    currentProfile.id,
-      autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+      autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
       publicado:   publish
     });
   }
@@ -1928,7 +1943,7 @@ async function loadNoticias() {
       ${imgHtml}
       <div class="content-card-tag">${n.tag||'Noticia'} · ${n.publicado?'Publicado':'Borrador'}</div>
       <div class="content-card-title">${n.titulo}</div>
-      <div class="content-card-meta">${n.autor_nombre||'—'} · ${dateStr}</div>
+      <div class="content-card-meta">${n.autor_nombre ? 'Q∴H∴ '+n.autor_nombre : '—'} · ${dateStr}</div>
       <div class="content-card-actions" style="margin-top:12px;">
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleNoticia('${n.id}',${n.publicado})">${n.publicado?'Despublicar':'Publicar'}</button>
         <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteNoticia('${n.id}')">Eliminar</button>
@@ -2079,7 +2094,7 @@ async function saveEgregoraArticulo(publish) {
     categoria:    document.getElementById('egr-categoria').value,
     imagen_url:   imgUrl,
     autor_id:     currentProfile.id,
-    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado:    publish
   });
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
@@ -2111,7 +2126,7 @@ async function loadEgregoraAdmin() {
       <div style="padding:20px 24px;">
         <div class="content-card-tag">${a.edicion||'Egrégora'} · ${a.categoria||'Reflexión'} · ${a.publicado?'<span style="color:#4caf50;">Publicado</span>':'<span style="color:var(--gold-dim);">Borrador</span>'}</div>
         <div class="content-card-title">${a.titulo}</div>
-        <div class="content-card-meta">${a.autor_nombre||'—'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div>
+        <div class="content-card-meta">${a.autor_nombre ? 'Q∴H∴ '+a.autor_nombre : '—'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div>
         <div class="content-card-actions" style="margin-top:12px;">
           <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleEgregoraArticulo('${a.id}',${a.publicado})">${a.publicado?'Despublicar':'Publicar'}</button>
           <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteEgregoraArticulo('${a.id}')">Eliminar</button>
@@ -2163,7 +2178,7 @@ async function saveCorpNoticia(publish) {
     fecha_pub: document.getElementById('corp-noticia-fecha').value || new Date().toISOString().split('T')[0],
     imagen_url: imgUrl,
     autor_id:   currentProfile.id,
-    autor_nombre: currentProfile.nombre+' '+(currentProfile.apellido||''),
+    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado:  publish
   });
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
@@ -2208,7 +2223,7 @@ async function loadCorpBlogAdmin() {
     div.innerHTML=`
       <div class="content-card-tag">${p.categoria||'Cultura'} · ${p.publicado?'Publicado':'Borrador'}</div>
       <div class="content-card-title">${p.titulo}</div>
-      <div class="content-card-meta">${p.autor_nombre||'—'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
+      <div class="content-card-meta">${p.autor_nombre ? 'Q∴H∴ '+p.autor_nombre : '—'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
       <div class="content-card-actions" style="margin-top:12px;">
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleCorpPost('${p.id}',${p.publicado})">${p.publicado?'Despublicar':'Publicar'}</button>
         <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteCorpPost('${p.id}')">Eliminar</button>
@@ -2243,7 +2258,7 @@ async function saveCorpPost(publish) {
     titulo, contenido, extracto: contenido.substring(0,200),
     categoria: document.getElementById('cp-cat').value,
     autor_id: currentProfile.id,
-    autor_nombre: currentProfile.nombre+' '+(currentProfile.apellido||''),
+    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado: publish
   });
   toast(publish?'Publicado':'Borrador guardado','success');
@@ -2262,7 +2277,7 @@ function copyCalLink(token, nombre) {
   if (!token) { toast('Este miembro no tiene token de calendario', 'error'); return; }
   const url = ICAL_BASE + '?token=' + token;
   navigator.clipboard.writeText(url).then(() => {
-    toast('Enlace iCal copiado para ' + nombre.trim(), 'success');
+    toast('Enlace iCal copiado — ' + nombre.trim(), 'success');
   }).catch(() => {
     prompt('Copia este enlace:', url);
   });
@@ -2286,7 +2301,7 @@ async function showCalLinks() {
       ${profiles.map(p => `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--dark-4);border:1px solid var(--border);">
           <div style="flex:1;">
-            <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);">H∴ ${p.nombre||''} ${p.apellido||''}</div>
+            <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);">Q\u2234H\u2234 ${(p.nombre||'').trim().split(' ')[0]} ${(p.apellido||'').trim().split(' ')[0]}</div>
             <div style="font-size:11px;color:var(--gold-dim);font-family:'Cinzel',serif;letter-spacing:0.15em;">${roles[p.role]||p.role}</div>
           </div>
           <button onclick="copyCalLink('${p.calendar_token}','${p.nombre||''} ${p.apellido||''}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:8px 14px;cursor:pointer;white-space:nowrap;">📅 Copiar enlace</button>
@@ -2328,7 +2343,8 @@ async function loadCalendario() {
       .select('id,nombre,apellido,cargo')
       .order('nombre');
     const opts = (members||[]).map(m => {
-      const label = 'H∴ ' + (m.nombre||'') + ' ' + (m.apellido||'') + (m.cargo ? ' — ' + m.cargo : '');
+      const n1 = (m.nombre||'').split(' ')[0]; const a1 = (m.apellido||'').split(' ')[0];
+      const label = 'Q∴H∴ ' + [n1,a1].filter(Boolean).join(' ') + (m.cargo ? ' — ' + m.cargo : '');
       return `<option value="${m.id}">${label.trim()}</option>`;
     }).join('');
     [autorSel, relatorSel].forEach(sel => {
@@ -2523,8 +2539,8 @@ function openEditEvento(e) {
       <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Hora</span><span style="font-size:15px;color:var(--text);">${hora}</span></div>
       ${e.lugar ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Lugar</span><span style="font-size:15px;color:var(--text);">${e.lugar}</span></div>` : ''}
       <div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Grados</span><span style="font-size:15px;color:var(--text);">${rolesStr}</span></div>
-      ${e.autor_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Autor Plancha</span><span style="font-size:15px;color:var(--text);">${e.autor_plancha_nombre}</span></div>` : ''}
-      ${e.relator_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Relator Plancha</span><span style="font-size:15px;color:var(--text);">${e.relator_plancha_nombre}</span></div>` : ''}
+      ${e.autor_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Autor Plancha</span><span style="font-size:15px;color:var(--text);">Q∴H∴ ${e.autor_plancha_nombre}</span></div>` : ''}
+      ${e.relator_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Relator Plancha</span><span style="font-size:15px;color:var(--text);">Q∴H∴ ${e.relator_plancha_nombre}</span></div>` : ''}
       ${e.descripcion ? `<div style="margin-top:8px;padding-top:16px;border-top:1px solid var(--border);font-size:15px;color:var(--text-dim);line-height:1.8;">${e.descripcion}</div>` : ''}
     </div>`;
   _editingEvento = e;
