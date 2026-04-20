@@ -831,13 +831,13 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <button onclick="calNextMonth()" style="background:transparent;border:1px solid var(--border);color:var(--gold);padding:8px 14px;cursor:pointer;font-size:16px;">›</button>
           </div>
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:1px;">
-            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Dom</div>
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Lun</div>
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Mar</div>
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Mié</div>
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Jue</div>
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Vie</div>
             <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Sáb</div>
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-align:center;padding:8px 0;text-transform:uppercase;">Dom</div>
           </div>
           <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;"></div>
         </div>
@@ -2331,7 +2331,7 @@ function renderCalendario() {
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   title.textContent = meses[_calMonth] + ' ' + _calYear;
 
-  const firstDay = new Date(_calYear, _calMonth, 1).getDay();
+  const firstDay = (new Date(_calYear, _calMonth, 1).getDay() + 6) % 7; // Lunes=0
   const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
   const today = new Date();
 
@@ -2340,14 +2340,14 @@ function renderCalendario() {
   // Celdas vacías al inicio
   for (let i = 0; i < firstDay; i++) {
     const cell = document.createElement('div');
-    cell.style.cssText = 'min-height:52px;background:var(--dark-4);opacity:0.3;';
+    cell.style.cssText = 'height:72px;background:var(--dark-4);opacity:0.3;box-sizing:border-box;';
     grid.appendChild(cell);
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
     const cell = document.createElement('div');
     const isToday = today.getFullYear()===_calYear && today.getMonth()===_calMonth && today.getDate()===d;
-    cell.style.cssText = `min-height:52px;background:${isToday?'rgba(201,168,76,0.1)':'var(--dark-4)'};border:${isToday?'1px solid var(--gold-dim)':'1px solid transparent'};padding:4px;cursor:pointer;transition:background 0.2s;position:relative;`;
+    cell.style.cssText = `height:72px;overflow:hidden;background:${isToday?'rgba(201,168,76,0.1)':'var(--dark-4)'};border:${isToday?'1px solid var(--gold-dim)':'1px solid transparent'};padding:4px;cursor:pointer;transition:background 0.2s;position:relative;box-sizing:border-box;`;
     cell.onmouseover = () => cell.style.background = 'rgba(201,168,76,0.07)';
     cell.onmouseout  = () => cell.style.background = isToday ? 'rgba(201,168,76,0.1)' : 'var(--dark-4)';
 
@@ -2366,7 +2366,7 @@ function renderCalendario() {
 
     dayEvts.slice(0, 2).forEach(e => {
       const dot = document.createElement('div');
-      dot.style.cssText = `font-size:9px;color:${CAL_TIPO_COLORS[e.tipo]||'var(--gold)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;`;
+      dot.style.cssText = `font-size:9px;color:${CAL_TIPO_COLORS[e.tipo]||'var(--gold)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;max-width:100%;display:block;`;
       dot.textContent = '● ' + e.titulo;
       dot.onclick = ev => { ev.stopPropagation(); openEditEvento(e); };
       cell.appendChild(dot);
