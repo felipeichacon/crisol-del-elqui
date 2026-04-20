@@ -2313,6 +2313,7 @@ const CAL_TIPO_COLORS = {
 let _calYear = new Date().getFullYear();
 let _calMonth = new Date().getMonth();
 let _calEventos = [];
+let _editingEvento = null;
 
 async function loadCalendario() {
   const rolFilter  = document.getElementById('cal-filter-rol')?.value  || 'todos';
@@ -2526,8 +2527,9 @@ function openEditEvento(e) {
       ${e.relator_plancha_nombre ? `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:100px;">Relator Plancha</span><span style="font-size:15px;color:var(--text);">${e.relator_plancha_nombre}</span></div>` : ''}
       ${e.descripcion ? `<div style="margin-top:8px;padding-top:16px;border-top:1px solid var(--border);font-size:15px;color:var(--text-dim);line-height:1.8;">${e.descripcion}</div>` : ''}
     </div>`;
+  _editingEvento = e;
   document.getElementById('modal-footer').innerHTML = `
-    <button class="btn-primary" onclick="editEvento(${JSON.stringify(e).replace(/"/g,'&quot;')})">Editar evento</button>
+    <button class="btn-primary" onclick="editEvento(_editingEvento)">Editar evento</button>
     <button class="btn-danger" onclick="deleteEvento('${e.id}')">Eliminar</button>
     <button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
   document.getElementById('modal-overlay').classList.remove('hidden');
