@@ -278,7 +278,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <table>
           <thead><tr>
             <th>Estado</th><th>Nombre</th><th>Correo</th><th>Rol</th>
-            <th>Profesión</th><th>Ingreso</th><th>Acciones</th>
+            <th>RUT</th><th>Cargo en la Logia</th><th>Acciones</th>
           </tr></thead>
           <tbody id="users-tbody"></tbody>
         </table>
@@ -1125,7 +1125,7 @@ async function loadDashboard() {
 
 // ── USERS ──
 async function loadUsers() {
-  const { data } = await sbAdmin.from('profiles').select('*').order('nombre');
+  const { data } = await sbAdmin.from('profiles').select('*').order('apellido').order('nombre');
   allUsers = data || [];
   renderUsers(allUsers);
 }
@@ -1135,14 +1135,13 @@ function renderUsers(users) {
   tbody.innerHTML = '';
   users.forEach(u => {
     const tr = document.createElement('tr');
-    const date = u.fecha_ingreso ? new Date(u.fecha_ingreso).toLocaleDateString('es-CL') : '—';
     tr.innerHTML=`
       <td><span class="status-dot ${u.activo?'status-active':'status-inactive'}"></span>${u.activo?'Activo':'Inactivo'}</td>
       <td><strong style="color:var(--cream)">${qh(u.nombre, u.apellido)}</strong></td>
       <td style="color:var(--text-dim);font-size:14px;">${u.email||''}</td>
       <td><span class="role-badge role-${u.role}">${ROLE_LABELS[u.role]||u.role}</span></td>
-      <td style="font-size:14px;color:var(--text-dim);">${u.profesion||'—'}</td>
-      <td style="font-size:14px;color:var(--text-dim);">${date}</td>
+      <td style="font-size:14px;color:var(--text-dim);">${u.rut||''}</td>
+      <td style="font-size:14px;color:var(--text-dim);">${u.cargo||''}</td>
       <td><div class="actions">
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="editUser('${u.id}')">Editar</button>
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="changeRole('${u.id}','${u.role}')">Rol</button>
