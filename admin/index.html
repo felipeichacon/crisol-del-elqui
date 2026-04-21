@@ -267,12 +267,13 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="module-title">Miembros</div>
       <div class="module-sub">Gestión completa de usuarios y roles</div>
       <div class="gold-line"></div>
-      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center;">
         <button class="filter-btn btn-secondary active" onclick="filterUsers('todos',this)">Todos</button>
         <button class="filter-btn btn-secondary" onclick="filterUsers('aprendiz',this)">Aprendices</button>
         <button class="filter-btn btn-secondary" onclick="filterUsers('companero',this)">Compañeros</button>
         <button class="filter-btn btn-secondary" onclick="filterUsers('maestro',this)">Maestros</button>
         <button class="filter-btn btn-secondary" onclick="filterUsers('admin',this)">Admins</button>
+        <button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;white-space:nowrap;">⬇ Exportar Excel</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -1401,7 +1402,9 @@ function previewEuAvatar(input) {
 
 async function saveEditUser(id) {
   toast('Guardando…');
-  let avatarUrl = allUsers.find(u=>u.id===id)?.avatar_url || null;
+  // Leer perfil actual para no perder datos que no están en el formulario
+  const { data: current } = await sbAdmin.from('profiles').select('*').eq('id', id).maybeSingle();
+  let avatarUrl = current?.avatar_url || null;
   if (window.euAvatarFile) {
     const ext  = window.euAvatarFile.name.split('.').pop();
     const path = id + '/avatar.' + ext;
@@ -1410,7 +1413,8 @@ async function saveEditUser(id) {
     avatarUrl = publicUrl;
   }
   const corpChecked = document.getElementById('eu-corp')?.checked || false;
-  const updates = {
+  // Merge: partir de los datos actuales y solo pisar los campos del formulario
+  const updates = Object.assign({}, current, {
     nombre:             document.getElementById('eu-nombre').value.trim(),
     apellido:           document.getElementById('eu-apellido').value.trim(),
     rut:                document.getElementById('eu-rut').value.trim() || null,
@@ -1459,13 +1463,72 @@ async function saveEditUser(id) {
       correo:    document.getElementById('eu-em2-correo')?.value.trim()||null,
       direccion: document.getElementById('eu-em2-direccion')?.value.trim()||null
     }
-  };
+  });
+  // Limpiar campos que no deben enviarse al UPDATE
+  // Eliminar campos que NO se pueden enviar al UPDATE de profiles
+  ['id','created_at','updated_at','calendar_token','email',
+   'email_confirmed_at','last_sign_in_at','raw_app_meta_data',
+   'raw_user_meta_data','is_super_admin','encrypted_password',
+   'confirmation_token','recovery_token','aud','role_auth'
+  ].forEach(k => delete updates[k]);
   const { error } = await sbAdmin.from('profiles').update(updates).eq('id', id);
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
   toast('Perfil actualizado correctamente', 'success');
   await loadUsers();
   showModule('usuarios');
 }
+
+
+// ── EXPORTAR EXCEL ──
+function exportarExcel() {
+  if (!allUsers.length) { toast('No hay miembros para exportar', 'error'); return; }
+
+  const primerApellido  = u => (u.apellido||'').trim().split(' ')[0] || '';
+  const segundoApellido = u => (u.apellido||'').trim().split(' ').slice(1).join(' ') || '';
+  const nombres         = u => (u.nombre||'').trim();
+
+  const fmtFecha = iso => {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleDateString('es-CL'); } catch(e) { return iso; }
+  };
+
+  const headers = [
+    'RUT','Apellido Paterno','Apellido Materno','Nombres',
+    'Fecha de Nacimiento','Grado','Telefono','Correo',
+    'Fecha Iniciacion','Fecha Aumento de Salario',
+    'Fecha Exaltacion','Fecha Testamento Masonico'
+  ];
+
+  const rows = allUsers.map(u => [
+    u.rut || '',
+    primerApellido(u),
+    segundoApellido(u),
+    nombres(u),
+    fmtFecha(u.fecha_nacimiento),
+    u.grado || '',
+    u.telefono || '',
+    u.email || '',
+    fmtFecha(u.fecha_iniciacion),
+    fmtFecha(u.fecha_aumento),
+    fmtFecha(u.fecha_exaltacion),
+    fmtFecha(u.fecha_testamento)
+  ]);
+
+  const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const sep = '\r\n';
+  const bom = String.fromCharCode(0xFEFF);
+  const csv = bom + [headers].concat(rows).map(r => r.map(esc).join(',')).join(sep);
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'miembros-logia-crisol-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Excel exportado correctamente', 'success');
+}
+
 
 // ── CREAR USUARIO ──
 function addNuFamiliar() { nuFamiliares.push({nombre:'',parentesco:''}); renderNuFamiliares(); }
