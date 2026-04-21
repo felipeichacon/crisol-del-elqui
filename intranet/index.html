@@ -333,8 +333,6 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
     <div class="module" id="mod-hero">
       <div class="hero-bg"><img id="hero-img" src="" alt=""></div>
       <div class="hero-overlay"></div>
-      <button class="hero-upload-btn" onclick="document.getElementById('hero-file').click()">Cambiar portada</button>
-      <input type="file" id="hero-file" accept="image/*" style="display:none" onchange="uploadHeroImage(this)">
       <div class="hero-content">
         <div class="hero-greeting" id="hero-greeting">Bienvenido</div>
         <div class="hero-title" id="hero-title">Pasos Perdidos</div>
@@ -348,13 +346,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <h2>Galería</h2>
         <div class="gold-line"></div>
       </div>
-      <div class="gallery-grid" id="gallery-grid">
-        <div class="upload-zone" onclick="document.getElementById('gallery-file').click()">
-          <span style="font-size:28px;color:var(--gold-dim)">+</span>
-          <span>Subir foto</span>
-        </div>
-        <input type="file" id="gallery-file" accept="image/*" multiple style="display:none" onchange="uploadGalleryImages(this)">
-      </div>
+      <div class="gallery-grid" id="gallery-grid"></div>
     </div>
 
     <!-- BLOG MODULE -->
@@ -362,7 +354,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
       <div class="module-header">
         <h2 id="blog-title-heading">Blog</h2>
         <div class="gold-line"></div>
-        <button class="btn-new-post" onclick="showNewPostForm()">+ Nueva entrada</button>
+        <button class="btn-new-post" id="btn-nueva-entrada" onclick="showNewPostForm()" style="display:none">+ Nueva entrada</button>
       </div>
       <!-- New post form (hidden by default) -->
       <div id="new-post-form" class="hidden" style="padding:0 48px 32px;max-width:720px;">
@@ -389,17 +381,8 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <h2>Calendario</h2>
         <div class="gold-line"></div>
       </div>
-      <div class="calendar-wrap">
-        <div class="gcal-instructions">
-          <p>Para vincular tu Google Calendar, obtén el enlace de inserción de tu calendario en <strong style="color:var(--gold)">Google Calendar → Configuración → Integrar calendario → URL de inserción</strong> y pégalo aquí:</p>
-          <input class="gcal-input" type="text" id="gcal-url" placeholder="https://calendar.google.com/calendar/embed?src=...">
-          <br><button class="btn-gcal" onclick="loadCalendar()">Conectar calendario</button>
-        </div>
-        <iframe id="gcal-frame" class="gcal-embed hidden" frameborder="0" scrolling="no" style="border:none;color-scheme:normal;"></iframe>
-        <div id="gcal-placeholder" style="background:var(--dark-3);border:1px solid var(--border);height:500px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
-          <div style="font-size:40px;opacity:0.3">◷</div>
-          <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;">Calendario no vinculado</div>
-        </div>
+      <div style="padding:0 48px 48px;">
+        <div id="cal-eventos-list" style="display:flex;flex-direction:column;gap:2px;"></div>
       </div>
     </div>
 
@@ -423,8 +406,6 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <button class="filter-btn" onclick="filterDocs('pdf',this)">PDF</button>
         <button class="filter-btn" onclick="filterDocs('docx',this)">Word</button>
         <button class="filter-btn" onclick="filterDocs('jpg',this)">Imágenes</button>
-        <button class="filter-btn" onclick="document.getElementById('doc-file').click()">+ Subir documento</button>
-        <input type="file" id="doc-file" style="display:none" accept=".pdf,.docx,.doc,.jpg,.png" onchange="uploadDocument(this)">
       </div>
       <div class="docs-grid" id="docs-grid"></div>
     </div>
@@ -508,6 +489,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 <div id="modal-profile" class="hidden" onclick="if(event.target===this)this.classList.add('hidden')">
   <div class="modal-card">
     <button class="modal-close" onclick="document.getElementById('modal-profile').classList.add('hidden')">✕</button>
+    <button id="modal-btn-edit" onclick="document.getElementById('modal-profile').classList.add('hidden');showModule('mi-perfil')" style="display:none;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:8px 20px;cursor:pointer;position:absolute;top:16px;right:60px;">Editar mi perfil</button>
     <img class="modal-avatar" id="modal-avatar" src="" alt="">
     <div class="modal-name" id="modal-name">—</div>
     <div class="modal-role" id="modal-role-badge">—</div>
@@ -532,6 +514,12 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 // Dashboard → Settings → API → Project URL y anon key
 // ═══════════════════════════════════════════════════════
 const SUPABASE_URL  = 'https://rpzigsvocrychahsrzfj.supabase.co';
+// ── PRENOMBRE MASÓNICO ──
+function qh(nombre, apellido) {
+  const n = (nombre||'').trim().split(' ')[0];
+  const a = (apellido||'').trim().split(' ')[0];
+  return 'Q∴H∴ ' + [n,a].filter(Boolean).join(' ');
+}
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODYzNzAsImV4cCI6MjA5MTI2MjM3MH0.RCtxrM0KzzBjeijgSTomlFPCDKiu9SzutUgpb6PPwUo';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -640,7 +628,7 @@ function showApp() {
   document.getElementById('screen-app').classList.remove('hidden');
   const role = currentProfile.role;
   document.getElementById('topbar-role-label').textContent = ROLE_LABELS[role] || role;
-  document.getElementById('topbar-name').textContent = 'H∴ ' + (currentProfile.nombre || '');
+  document.getElementById('topbar-name').textContent = qh(currentProfile.nombre, currentProfile.apellido);
   document.getElementById('nav-blog-label').textContent = BLOG_LABELS[role] || 'Blog';
   document.getElementById('blog-title-heading').textContent = BLOG_LABELS[role] || 'Blog';
   document.getElementById('chat-role-badge').textContent = ROLE_LABELS[role] || role;
@@ -679,7 +667,7 @@ async function loadHero() {
     document.getElementById('hero-subtitle').textContent = data.subtitulo || '';
   }
   document.getElementById('hero-greeting').textContent =
-    'Bienvenido, H∴ ' + (currentProfile.nombre || '') + ' — ' + (ROLE_LABELS[currentProfile.role] || '');
+    'Bienvenido, ' + qh(currentProfile.nombre, currentProfile.apellido) + ' — ' + (ROLE_LABELS[currentProfile.role] || '');
 }
 
 async function uploadHeroImage(input) {
@@ -701,10 +689,6 @@ async function loadGallery() {
   const grid = document.getElementById('gallery-grid');
   const uploadZone = grid.querySelector('.upload-zone').parentElement ? grid.querySelector('.upload-zone') : null;
   grid.innerHTML = '';
-  // Re-add upload zone
-  const uz = document.createElement('div'); uz.className='upload-zone'; uz.onclick=()=>document.getElementById('gallery-file').click();
-  uz.innerHTML='<span style="font-size:28px;color:var(--gold-dim)">+</span><span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;">Subir foto</span>';
-  grid.appendChild(uz);
   data.forEach(img => {
     const div = document.createElement('div'); div.className='gallery-item';
     div.innerHTML=`<img src="${img.url}" alt="" loading="lazy"><div class="caption">${img.caption||''}</div>`;
@@ -727,17 +711,39 @@ async function uploadGalleryImages(input) {
 }
 
 // ── BLOG / POSTS ──
+// Cargos que pueden escribir en cada rol
+const BLOG_CARGO_MAP = {
+  aprendiz:  'Segundo Vigilante',
+  companero: 'Primer Vigilante',
+  maestro:   'Orador',
+  admin:     'Orador'
+};
+
 async function loadPosts() {
-  const { data } = await sb.from('posts').select('*').order('created_at', { ascending: false });
+  const rol = currentProfile.role;
+  // Mostrar botón solo si el perfil tiene el cargo correcto
+  const cargoReq = BLOG_CARGO_MAP[rol];
+  const puedeEscribir = currentProfile.cargo === cargoReq || currentProfile.role === 'admin';
+  const btnPost = document.getElementById('btn-nueva-entrada');
+  if (btnPost) btnPost.style.display = puedeEscribir ? '' : 'none';
+
+  // Cargar posts filtrados por rol — solo publicados (o propios borradores)
+  const { data } = await sb.from('posts')
+    .select('*')
+    .eq('role', rol === 'admin' ? 'maestro' : rol)
+    .order('created_at', { ascending: false });
+
   const grid = document.getElementById('blog-posts-grid');
   grid.innerHTML = '';
-  if (!data || !data.length) {
+  const posts = (data||[]).filter(p => p.publicado || p.autor_id === currentProfile.id);
+  if (!posts.length) {
     grid.innerHTML = '<div style="padding:32px 48px;color:var(--text-dim);font-style:italic;">No hay publicaciones aún.</div>'; return;
   }
-  data.forEach(post => {
+  posts.forEach(post => {
     const div = document.createElement('div'); div.className='blog-post-card';
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
-    div.innerHTML=`<div class="post-meta">${post.autor_nombre||'Hermano'} · ${date} ${!post.publicado?'· Borrador':''}</div><div class="post-title">${post.titulo}</div><div class="post-excerpt">${post.extracto||post.contenido.substring(0,180)+'…'}</div>`;
+    const autorDisplay = 'Q∴H∴ ' + (post.autor_nombre||'Hermano');
+    div.innerHTML=`<div class="post-meta">${autorDisplay} · ${date}${!post.publicado?' · Borrador':''}</div><div class="post-title">${post.titulo}</div><div class="post-excerpt">${post.extracto||post.contenido.substring(0,180)+'…'}</div>`;
     grid.appendChild(div);
   });
 }
@@ -755,7 +761,7 @@ async function savePost(publish) {
     role: currentProfile.role, titulo, contenido,
     extracto: contenido.substring(0, 200),
     autor_id: currentProfile.id,
-    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+    autor_nombre: (currentProfile.nombre||'').trim().split(' ')[0] + ' ' + ((currentProfile.apellido||'').trim().split(' ')[0]),
     publicado: publish
   });
   if (error) { toast('Error al guardar', 'error'); return; }
@@ -767,21 +773,66 @@ async function savePost(publish) {
 }
 
 // ── CALENDAR ──
-function loadCalendar() {
-  const url = document.getElementById('gcal-url').value.trim();
-  if (!url || !url.includes('calendar.google.com')) { toast('URL de Google Calendar inválida', 'error'); return; }
-  document.getElementById('gcal-placeholder').style.display='none';
-  const frame = document.getElementById('gcal-frame');
-  frame.src = url + '&ctz=America/Santiago&bgcolor=%23002058&color=%23C9A84C&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0';
-  frame.style.colorScheme = 'dark';
-  frame.classList.remove('hidden');
-  toast('Calendario vinculado');
+const CAL_TIPO_LABELS = {
+  tenida_ordinaria:'Tenida Ordinaria', tenida_extraordinaria:'Tenida Extraordinaria',
+  tenida_administrativa:'Tenida Administrativa', tenida_constitucional:'Tenida Constitucional',
+  tenida_conjunto:'Tenida en Conjunto', tenida_jurisdiccional:'Tenida Jurisdiccional',
+  iniciacion:'Ceremonia de Iniciación', aumento_salario:'Ceremonia de Aumento de Salario',
+  exaltacion:'Ceremonia de Exaltación', social:'Eventos', corporacion:'Corporación Elqui', otro:'Otro'
+};
+const CAL_TIPO_COLORS = {
+  tenida_ordinaria:'#C9A84C', tenida_extraordinaria:'#E8C97A',
+  tenida_administrativa:'#a8c47a', tenida_constitucional:'#7ac4c4',
+  tenida_conjunto:'#c4a07a', tenida_jurisdiccional:'#7a9ac4',
+  iniciacion:'#7aaed4', aumento_salario:'#d4c07a', exaltacion:'#c47ad4',
+  social:'#7ad47a', corporacion:'#d4a0c0', otro:'#8A7240'
+};
+
+async function loadCalendar() {
+  const rol = currentProfile.role;
+  const { data } = await sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
+  const list = document.getElementById('cal-eventos-list');
+  list.innerHTML = '';
+
+  const hoy = new Date();
+  const eventos = (data||[]).filter(e => {
+    const fe = new Date(e.fecha_inicio);
+    if (fe < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) return false;
+    if (!e.roles || !e.roles.length) return false;
+    return e.roles.includes('todos') || e.roles.includes(rol);
+  });
+
+  if (!eventos.length) {
+    list.innerHTML = '<div style="padding:32px;color:var(--text-dim);font-style:italic;">No hay eventos próximos para tu grado.</div>';
+    return;
+  }
+
+  eventos.forEach(e => {
+    const fecha = new Date(e.fecha_inicio).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const hora  = new Date(e.fecha_inicio).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const color = CAL_TIPO_COLORS[e.tipo] || 'var(--gold)';
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);border-left:3px solid '+color+';padding:20px 28px;display:flex;flex-direction:column;gap:6px;';
+    div.innerHTML = `
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.3em;color:${color};text-transform:uppercase;">${CAL_TIPO_LABELS[e.tipo]||e.tipo}</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:var(--cream);">${e.titulo}</div>
+      <div style="font-size:14px;color:var(--text-dim);">${fecha} · ${hora}${e.lugar?'  &nbsp;·&nbsp; '+e.lugar:''}</div>
+      ${e.autor_plancha_nombre?`<div style="font-size:13px;color:var(--text-dim);">Autor de la Plancha: Q∴H∴ ${e.autor_plancha_nombre}</div>`:''}
+      ${e.relator_plancha_nombre?`<div style="font-size:13px;color:var(--text-dim);">Relator de la Plancha: Q∴H∴ ${e.relator_plancha_nombre}</div>`:''}
+      ${e.descripcion?`<div style="font-size:15px;color:var(--text-dim);margin-top:4px;line-height:1.7;">${e.descripcion}</div>`:''}
+    `;
+    list.appendChild(div);
+  });
 }
 
 // ── PROFILES ──
 async function loadProfiles() {
-  const { data } = await sb.from('profiles').select('*').eq('activo', true).order('nombre');
-  allProfiles = data || [];
+  const { data } = await sb.from('profiles').select('*').eq('activo', true).order('apellido');
+  allProfiles = (data||[]).sort((a,b) => {
+    const ap = (a.apellido||'').split(' ')[0].toLowerCase();
+    const bp = (b.apellido||'').split(' ')[0].toLowerCase();
+    return ap.localeCompare(bp,'es');
+  });
   renderProfiles();
 }
 
@@ -793,20 +844,32 @@ function renderProfiles() {
     const avatar = p.avatar_url
       ? `<img class="profile-avatar" src="${p.avatar_url}" alt="">`
       : `<div class="profile-avatar" style="display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:20px;color:var(--gold);">${ROLE_ICONS[p.role]||'◉'}</div>`;
-    div.innerHTML=`${avatar}<div class="profile-name">${p.nombre||''} ${p.apellido||''}</div><div class="profile-role-badge">${ROLE_LABELS[p.role]||p.role}</div><div class="profile-info">${p.profesion||''}</div>`;
+    const nombre = qh(p.nombre, p.apellido);
+    div.innerHTML=`${avatar}<div class="profile-name">${nombre}</div><div class="profile-role-badge">${ROLE_LABELS[p.role]||p.role}</div><div class="profile-info">${p.cargo||p.profesion||''}</div>`;
     grid.appendChild(div);
   });
 }
 
 function openProfileModal(p) {
+  const esPropio = p.id === currentProfile.id;
   document.getElementById('modal-avatar').src = p.avatar_url || '';
-  document.getElementById('modal-name').textContent = (p.nombre||'') + ' ' + (p.apellido||'');
-  document.getElementById('modal-role-badge').textContent = ROLE_LABELS[p.role] || p.role;
+  document.getElementById('modal-name').textContent = qh(p.nombre, p.apellido);
+  document.getElementById('modal-role-badge').textContent = (p.cargo ? p.cargo + ' · ' : '') + (ROLE_LABELS[p.role] || p.role);
   document.getElementById('modal-bio').textContent = p.biografia || 'Sin biografía registrada.';
+
+  const fmtFecha = iso => iso ? new Date(iso).toLocaleDateString('es-CL') : null;
   const fields = [
-    ['Profesión', p.profesion], ['Lugar de trabajo', p.lugar_trabajo],
-    ['Estado civil', p.estado_civil], ['Fecha de ingreso', p.fecha_ingreso ? new Date(p.fecha_ingreso).toLocaleDateString('es-CL') : null],
-    ['Grado', p.grado], ['Teléfono', p.telefono]
+    ['Grado', p.grado],
+    ['Cargo en la Logia', p.cargo],
+    ['Profesión', p.profesion],
+    ['Lugar de trabajo', p.lugar_trabajo],
+    ['Puesto de trabajo', p.puesto_trabajo],
+    ['Estado civil', p.estado_civil],
+    ['Ciudad', p.ciudad],
+    ['Teléfono', p.telefono],
+    ['Fecha de iniciación', fmtFecha(p.fecha_iniciacion)],
+    ['Fecha de aumento de salario', fmtFecha(p.fecha_aumento)],
+    ['Fecha de exaltación', fmtFecha(p.fecha_exaltacion)],
   ];
   const grid = document.getElementById('modal-info-grid');
   grid.innerHTML = '';
@@ -814,18 +877,28 @@ function openProfileModal(p) {
     const d = document.createElement('div'); d.className='info-field';
     d.innerHTML=`<label>${label}</label><p>${val}</p>`; grid.appendChild(d);
   });
+
   const familiares = p.familiares || [];
   const famWrap = document.getElementById('modal-familiares-wrap');
   if (familiares.length) {
-    document.getElementById('modal-familiares').innerHTML = familiares.map(f=>`${f.nombre} — ${f.parentesco}`).join('<br>');
+    document.getElementById('modal-familiares').innerHTML = familiares.map(f=>`${f.nombre||''} — ${f.parentesco||''}`).join('<br>');
     famWrap.classList.remove('hidden');
   } else { famWrap.classList.add('hidden'); }
+
+  // Botón editar solo en perfil propio
+  const btnEdit = document.getElementById('modal-btn-edit');
+  if (btnEdit) btnEdit.style.display = esPropio ? '' : 'none';
+
   document.getElementById('modal-profile').classList.remove('hidden');
 }
 
 // ── BIBLIOTECA ──
 async function loadDocuments() {
-  const { data } = await sb.from('documents').select('*').order('created_at', { ascending: false });
+  const rol = currentProfile.role;
+  const { data } = await sb.from('documents')
+    .select('*')
+    .in('role', [rol, 'todos'])
+    .order('created_at', { ascending: false });
   allDocs = data || [];
   renderDocs(allDocs);
 }
@@ -834,10 +907,13 @@ function renderDocs(docs) {
   const grid = document.getElementById('docs-grid');
   grid.innerHTML = '';
   if (!docs.length) { grid.innerHTML='<div style="padding:32px;color:var(--text-dim);font-style:italic;">No hay documentos aún.</div>'; return; }
-  const icons = { pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', otro:'📁' };
+  const icons = { pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', youtube:'▶', otro:'📁' };
   docs.forEach(doc => {
-    const div = document.createElement('div'); div.className='doc-card'; div.onclick=()=>window.open(doc.url,'_blank');
-    div.innerHTML=`<div class="doc-icon">${icons[doc.tipo]||'📁'}</div><div><div class="doc-name">${doc.nombre}</div><div class="doc-meta">${doc.tipo?.toUpperCase()||''} · ${doc.categoria||''}</div></div>`;
+    const url = doc.youtube_url || doc.url;
+    const div = document.createElement('div'); div.className='doc-card';
+    div.onclick = () => url ? window.open(url,'_blank') : null;
+    div.style.cursor = url ? 'pointer' : 'default';
+    div.innerHTML=`<div class="doc-icon">${doc.youtube_url?'▶':(icons[doc.tipo]||'📁')}</div><div><div class="doc-name">${doc.nombre}</div><div class="doc-meta">${doc.youtube_url?'YouTube':(doc.tipo?.toUpperCase()||'')}${doc.categoria?' · '+doc.categoria:''}</div></div>`;
     grid.appendChild(div);
   });
 }
@@ -883,14 +959,14 @@ async function loadConversations() {
   allProfiles.forEach(p => {
     if (p.id === currentProfile.id) return;
     const div = document.createElement('div'); div.className='conv-item'; div.onclick=()=>openConversation(p);
-    div.innerHTML=`<div class="conv-name">H∴ ${p.nombre||''} ${p.apellido||''}</div><div class="conv-preview">${ROLE_LABELS[p.role]||p.role}</div>`;
+    div.innerHTML=`<div class="conv-name">${qh(p.nombre,p.apellido)}</div><div class="conv-preview">${ROLE_LABELS[p.role]||p.role}</div>`;
     list.appendChild(div);
   });
 }
 
 async function openConversation(profile) {
   activeConvId = profile.id;
-  document.getElementById('msg-contact-name').textContent = 'H∴ ' + profile.nombre + ' ' + (profile.apellido||'');
+  document.getElementById('msg-contact-name').textContent = qh(profile.nombre, profile.apellido);
   document.getElementById('msg-contact-role').textContent = ROLE_LABELS[profile.role] || profile.role;
   const { data: msgs } = await sb.from('messages')
     .select('*')
@@ -970,7 +1046,7 @@ async function sendChatMessage() {
   await sb.from('chat_messages').insert({
     role: currentProfile.role,
     author_id: currentProfile.id,
-    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+    autor_nombre: (currentProfile.nombre||'').trim().split(' ')[0] + ' ' + ((currentProfile.apellido||'').trim().split(' ')[0]),
     contenido: text
   });
   input.value = '';
