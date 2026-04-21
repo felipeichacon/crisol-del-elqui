@@ -1126,6 +1126,15 @@ async function loadDashboard() {
 // ── USERS ──
 async function loadUsers() {
   const { data } = await sbAdmin.from('profiles').select('*').order('apellido').order('nombre');
+  // Ordenar por primer apellido, luego primer nombre
+  if (data) data.sort((a,b) => {
+    const ap1 = (a.apellido||'').trim().split(' ')[0].toLowerCase();
+    const bp1 = (b.apellido||'').trim().split(' ')[0].toLowerCase();
+    if (ap1 !== bp1) return ap1.localeCompare(bp1, 'es');
+    const an1 = (a.nombre||'').trim().split(' ')[0].toLowerCase();
+    const bn1 = (b.nombre||'').trim().split(' ')[0].toLowerCase();
+    return an1.localeCompare(bn1, 'es');
+  });
   allUsers = data || [];
   renderUsers(allUsers);
 }
@@ -1137,7 +1146,7 @@ function renderUsers(users) {
     const tr = document.createElement('tr');
     tr.innerHTML=`
       <td><span class="status-dot ${u.activo?'status-active':'status-inactive'}"></span>${u.activo?'Activo':'Inactivo'}</td>
-      <td><strong style="color:var(--cream)">${qh(u.nombre, u.apellido)}</strong></td>
+      <td style="white-space:nowrap;"><strong style="color:var(--cream)">${((u.apellido||'').trim()+' '+(u.nombre||'').trim()).trim()}</strong></td>
       <td style="color:var(--text-dim);font-size:14px;">${u.email||''}</td>
       <td><span class="role-badge role-${u.role}">${ROLE_LABELS[u.role]||u.role}</span></td>
       <td style="font-size:14px;color:var(--text-dim);">${u.rut||''}</td>
