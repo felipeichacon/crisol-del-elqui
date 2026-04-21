@@ -424,6 +424,56 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Biografía</div>
         <div class="field" style="margin-bottom:32px;"><textarea id="nu-bio" rows="4" placeholder="Breve biografía del hermano…"></textarea></div>
 
+        <!-- RINCÓN DEL HOSPITALARIO -->
+        <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Rincón del Hospitalario</div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;margin-top:-8px;">Estado de Salud</div>
+        <div class="form-grid" style="margin-bottom:16px;">
+          <div class="field"><label>Edad</label><input type="number" id="nu-salud-edad" placeholder="Años" min="0" max="120"></div>
+          <div class="field"><label>Peso (kg)</label><input type="number" id="nu-salud-peso" placeholder="Ej: 75.5" step="0.1"></div>
+          <div class="field"><label>Estatura (cm)</label><input type="number" id="nu-salud-estatura" placeholder="Ej: 175" step="0.1"></div>
+          <div class="field"><label>Grupo Sanguíneo</label>
+            <select id="nu-salud-grupo">
+              <option value="">—</option>
+              <option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option>
+              <option>O+</option><option>O-</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px;"><label>Últimas operaciones <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><textarea id="nu-salud-operaciones" rows="2" placeholder="Describe las últimas operaciones o intervenciones…"></textarea></div>
+        <div class="field" style="margin-bottom:16px;"><label>Enfermedades que padece actualmente <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><textarea id="nu-salud-enfermedades" rows="2" placeholder="Enumera las enfermedades actuales…"></textarea></div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>¿Está recibiendo tratamiento médico actualmente?</label>
+          <div style="display:flex;gap:24px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+              <input type="radio" name="nu-tratamiento" id="nu-tratamiento-si" value="true" style="accent-color:var(--gold);"> Sí
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+              <input type="radio" name="nu-tratamiento" id="nu-tratamiento-no" value="false" checked style="accent-color:var(--gold);"> No
+            </label>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px;"><label>Medicamentos actuales <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><textarea id="nu-salud-medicamentos" rows="2" placeholder="Lista los medicamentos que consume actualmente…"></textarea></div>
+        <div class="field" style="margin-bottom:28px;"><label>¿Es alérgico? ¿A cuáles? <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><textarea id="nu-salud-alergias" rows="2" placeholder="Describe alergias conocidas…"></textarea></div>
+
+        <!-- CONTACTOS DE EMERGENCIA -->
+        <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Contactos de Emergencia</div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;">Contacto 1</div>
+        <div class="form-grid" style="margin-bottom:20px;">
+          <div class="field"><label>Nombre completo</label><input type="text" id="nu-em1-nombre" placeholder="Nombre y apellido"></div>
+          <div class="field"><label>Teléfono</label><input type="tel" id="nu-em1-telefono" placeholder="+56 9 …"></div>
+          <div class="field"><label>Correo electrónico</label><input type="email" id="nu-em1-correo" placeholder="correo@ejemplo.cl"></div>
+          <div class="field"><label>Dirección</label><input type="text" id="nu-em1-direccion" placeholder="Dirección de residencia"></div>
+        </div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;">Contacto 2</div>
+        <div class="form-grid" style="margin-bottom:32px;">
+          <div class="field"><label>Nombre completo</label><input type="text" id="nu-em2-nombre" placeholder="Nombre y apellido"></div>
+          <div class="field"><label>Teléfono</label><input type="tel" id="nu-em2-telefono" placeholder="+56 9 …"></div>
+          <div class="field"><label>Correo electrónico</label><input type="email" id="nu-em2-correo" placeholder="correo@ejemplo.cl"></div>
+          <div class="field"><label>Dirección</label><input type="text" id="nu-em2-direccion" placeholder="Dirección de residencia"></div>
+        </div>
+
         <div style="display:flex;gap:12px;">
           <button class="btn-primary" onclick="createUser()">Crear miembro</button>
           <button class="btn-secondary" onclick="showModule('usuarios')">Cancelar</button>
@@ -1266,6 +1316,53 @@ function editUser(id) {
         <textarea id="eu-bio" rows="5" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;">${S(u.biografia)}</textarea>
       </div>
 
+      ${sec('Rincón del Hospitalario')}
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;margin-top:-8px;">Estado de Salud</div>
+      <div class="form-grid" style="margin-bottom:16px;">
+        ${field('Edad', `<input type="number" id="eu-salud-edad" value="${S(u.salud_edad)}" placeholder="Años" min="0" max="120" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Peso (kg)', `<input type="number" id="eu-salud-peso" value="${S(u.salud_peso)}" placeholder="Ej: 75.5" step="0.1" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Estatura (cm)', `<input type="number" id="eu-salud-estatura" value="${S(u.salud_estatura)}" placeholder="Ej: 175" step="0.1" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Grupo Sanguíneo', `<select id="eu-salud-grupo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"><option value="">—</option><option ${u.salud_grupo_sanguineo==="A+"?"selected":""}>A+</option>
+<option ${u.salud_grupo_sanguineo==="A-"?"selected":""}>A-</option>
+<option ${u.salud_grupo_sanguineo==="B+"?"selected":""}>B+</option>
+<option ${u.salud_grupo_sanguineo==="B-"?"selected":""}>B-</option>
+<option ${u.salud_grupo_sanguineo==="AB+"?"selected":""}>AB+</option>
+<option ${u.salud_grupo_sanguineo==="AB-"?"selected":""}>AB-</option>
+<option ${u.salud_grupo_sanguineo==="O+"?"selected":""}>O+</option>
+<option ${u.salud_grupo_sanguineo==="O-"?"selected":""}>O-</option></select>`)}
+      </div>
+      <div class="field" style="margin-bottom:16px;">${field('Últimas operaciones', `<textarea id="eu-salud-operaciones" rows="2" placeholder="Describe las últimas operaciones…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;">${S(u.salud_operaciones)}</textarea>`, true)}</div>
+      <div class="field" style="margin-bottom:16px;">${field('Enfermedades actuales', `<textarea id="eu-salud-enfermedades" rows="2" placeholder="Enumera las enfermedades actuales…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;">${S(u.salud_enfermedades)}</textarea>`, true)}</div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>¿Está recibiendo tratamiento médico actualmente?</label>
+        <div style="display:flex;gap:24px;margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+            <input type="radio" name="eu-tratamiento" id="eu-tratamiento-si" value="true" ${u.salud_tratamiento?"checked":""} style="accent-color:var(--gold);"> Sí
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+            <input type="radio" name="eu-tratamiento" id="eu-tratamiento-no" value="false" ${!u.salud_tratamiento?"checked":""} style="accent-color:var(--gold);"> No
+          </label>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">${field('Medicamentos actuales', `<textarea id="eu-salud-medicamentos" rows="2" placeholder="Lista los medicamentos actuales…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;">${S(u.salud_medicamentos)}</textarea>`, true)}</div>
+      <div class="field" style="margin-bottom:28px;">${field('¿Es alérgico? ¿A cuáles?', `<textarea id="eu-salud-alergias" rows="2" placeholder="Describe alergias conocidas…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;">${S(u.salud_alergias)}</textarea>`, true)}</div>
+
+      ${sec('Contactos de Emergencia')}
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;">Contacto 1</div>
+      <div class="form-grid" style="margin-bottom:20px;">
+        ${field('Nombre completo', inp('eu-em1-nombre', (u.emergencia_1||{}).nombre, 'Nombre y apellido'))}
+        ${field('Teléfono', `<input type="tel" id="eu-em1-telefono" value="${S((u.emergencia_1||{}).telefono)}" placeholder="+56 9 …" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Correo electrónico', `<input type="email" id="eu-em1-correo" value="${S((u.emergencia_1||{}).correo)}" placeholder="correo@ejemplo.cl" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Dirección', inp('eu-em1-direccion', (u.emergencia_1||{}).direccion, 'Dirección de residencia'))}
+      </div>
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:14px;">Contacto 2</div>
+      <div class="form-grid" style="margin-bottom:32px;">
+        ${field('Nombre completo', inp('eu-em2-nombre', (u.emergencia_2||{}).nombre, 'Nombre y apellido'))}
+        ${field('Teléfono', `<input type="tel" id="eu-em2-telefono" value="${S((u.emergencia_2||{}).telefono)}" placeholder="+56 9 …" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Correo electrónico', `<input type="email" id="eu-em2-correo" value="${S((u.emergencia_2||{}).correo)}" placeholder="correo@ejemplo.cl" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">`)}
+        ${field('Dirección', inp('eu-em2-direccion', (u.emergencia_2||{}).direccion, 'Dirección de residencia'))}
+      </div>
+
       <div style="display:flex;gap:12px;padding-bottom:48px;">
         <button class="btn-primary" onclick="saveEditUser('${id}')">Guardar cambios</button>
         <button class="btn-secondary" onclick="showModule('usuarios')">Cancelar</button>
@@ -1332,7 +1429,28 @@ async function saveEditUser(id) {
     familiares:         window.euFam,
     biografia:          document.getElementById('eu-bio').value.trim() || null,
     avatar_url:         avatarUrl,
-    updated_at:         new Date()
+    updated_at:         new Date(),
+    salud_edad:          document.getElementById('eu-salud-edad')?.value ? parseInt(document.getElementById('eu-salud-edad').value) : null,
+    salud_peso:          document.getElementById('eu-salud-peso')?.value ? parseFloat(document.getElementById('eu-salud-peso').value) : null,
+    salud_estatura:      document.getElementById('eu-salud-estatura')?.value ? parseFloat(document.getElementById('eu-salud-estatura').value) : null,
+    salud_grupo_sanguineo: document.getElementById('eu-salud-grupo')?.value || null,
+    salud_operaciones:   document.getElementById('eu-salud-operaciones')?.value.trim() || null,
+    salud_enfermedades:  document.getElementById('eu-salud-enfermedades')?.value.trim() || null,
+    salud_tratamiento:   document.getElementById('eu-tratamiento-si')?.checked || false,
+    salud_medicamentos:  document.getElementById('eu-salud-medicamentos')?.value.trim() || null,
+    salud_alergias:      document.getElementById('eu-salud-alergias')?.value.trim() || null,
+    emergencia_1: {
+      nombre:    document.getElementById('eu-em1-nombre')?.value.trim()||null,
+      telefono:  document.getElementById('eu-em1-telefono')?.value.trim()||null,
+      correo:    document.getElementById('eu-em1-correo')?.value.trim()||null,
+      direccion: document.getElementById('eu-em1-direccion')?.value.trim()||null
+    },
+    emergencia_2: {
+      nombre:    document.getElementById('eu-em2-nombre')?.value.trim()||null,
+      telefono:  document.getElementById('eu-em2-telefono')?.value.trim()||null,
+      correo:    document.getElementById('eu-em2-correo')?.value.trim()||null,
+      direccion: document.getElementById('eu-em2-direccion')?.value.trim()||null
+    }
   };
   const { error } = await sbAdmin.from('profiles').update(updates).eq('id', id);
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
@@ -1472,6 +1590,18 @@ async function createUser() {
 
   const corpElqui = document.getElementById('nu-corp-elqui').checked;
 
+  const em1 = {
+    nombre:    document.getElementById('nu-em1-nombre')?.value.trim()||null,
+    telefono:  document.getElementById('nu-em1-telefono')?.value.trim()||null,
+    correo:    document.getElementById('nu-em1-correo')?.value.trim()||null,
+    direccion: document.getElementById('nu-em1-direccion')?.value.trim()||null
+  };
+  const em2 = {
+    nombre:    document.getElementById('nu-em2-nombre')?.value.trim()||null,
+    telefono:  document.getElementById('nu-em2-telefono')?.value.trim()||null,
+    correo:    document.getElementById('nu-em2-correo')?.value.trim()||null,
+    direccion: document.getElementById('nu-em2-direccion')?.value.trim()||null
+  };
   await sbAdmin.from('profiles').update({
     role, nombre, apellido, email,
     grado:               document.getElementById('nu-grado').value,
@@ -1497,7 +1627,18 @@ async function createUser() {
     biografia:           document.getElementById('nu-bio').value.trim() || null,
     avatar_url:          avatarUrl || null,
     activo:              true,
-    updated_at:          new Date()
+    updated_at:          new Date(),
+    salud_edad:          document.getElementById('nu-salud-edad')?.value ? parseInt(document.getElementById('nu-salud-edad').value) : null,
+    salud_peso:          document.getElementById('nu-salud-peso')?.value ? parseFloat(document.getElementById('nu-salud-peso').value) : null,
+    salud_estatura:      document.getElementById('nu-salud-estatura')?.value ? parseFloat(document.getElementById('nu-salud-estatura').value) : null,
+    salud_grupo_sanguineo: document.getElementById('nu-salud-grupo')?.value || null,
+    salud_operaciones:   document.getElementById('nu-salud-operaciones')?.value.trim() || null,
+    salud_enfermedades:  document.getElementById('nu-salud-enfermedades')?.value.trim() || null,
+    salud_tratamiento:   document.getElementById('nu-tratamiento-si')?.checked || false,
+    salud_medicamentos:  document.getElementById('nu-salud-medicamentos')?.value.trim() || null,
+    salud_alergias:      document.getElementById('nu-salud-alergias')?.value.trim() || null,
+    emergencia_1:        em1,
+    emergencia_2:        em2
   }).eq('id', userId);
 
   toast('Miembro creado correctamente', 'success');
