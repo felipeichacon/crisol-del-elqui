@@ -227,6 +227,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <div class="sidebar-label">Comunicación</div>
     <div class="nav-item" onclick="showModule('mensajeria')"><span class="nav-icon">✉</span>Mensajería<span class="nav-badge hidden" id="badge-msg">0</span></div>
     <div class="nav-item" onclick="showModule('broadcast')"><span class="nav-icon">⬡</span>Broadcast</div>
+    <div class="nav-item" onclick="showModule('grupos')"><span class="nav-icon">◈</span>Grupos</div>
     <div class="sidebar-label">Sistema</div>
     <div class="nav-item" onclick="window.open('/intranet','_blank')"><span class="nav-icon">↗</span>Ir a intranet</div>
     <div class="nav-item" onclick="window.open('/','_blank')"><span class="nav-icon">↗</span>Ir al sitio</div>
@@ -940,6 +941,20 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       </div>
     </div>
 
+    <!-- GRUPOS -->
+    <div class="module hidden" id="mod-grupos">
+      <div class="module-title">Grupos de Mensajería</div>
+      <div class="module-sub">Crea y administra grupos para la intranet</div>
+      <div class="gold-line"></div>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="abrirModalNuevoGrupo()">+ Nuevo grupo</button>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Descripción</th><th>Miembros</th><th>Creado</th><th>Acciones</th></tr></thead>
+          <tbody id="grupos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- BROADCAST -->
     <div class="module hidden" id="mod-broadcast">
       <div class="module-title">Broadcast</div>
@@ -1019,6 +1034,117 @@ function toast(msg, type='') {
   setTimeout(()=>el.remove(), 4000);
 }
 
+
+// ── ADMIN: GRUPOS ──
+async function loadGruposAdmin() {
+  const { data: grupos } = await sbAdmin.from('grupos').select('*').order('created_at', {ascending:false});
+  const tbody = document.getElementById('grupos-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  if (!grupos?.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-dim);font-style:italic;padding:24px;">No hay grupos aún.</td></tr>';
+    return;
+  }
+  for (const g of grupos) {
+    const {count} = await sbAdmin.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('grupo_id',g.id);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong style="color:var(--cream);">${g.nombre}</strong></td>
+      <td style="font-size:14px;color:var(--text-dim);">${g.descripcion||'—'}</td>
+      <td style="font-size:14px;">${count||0}</td>
+      <td style="font-size:14px;color:var(--text-dim);">${new Date(g.created_at).toLocaleDateString('es-CL')}</td>
+      <td><div class="actions">
+        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="editarGrupo('${g.id}')">Editar</button>
+        <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="eliminarGrupo('${g.id}')">Eliminar</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+function abrirModalNuevoGrupo() {
+  document.getElementById('modal-grupos-titulo').textContent = 'Nuevo grupo';
+  document.getElementById('modal-grupos-body').innerHTML = buildGrupoForm(null, []);
+  document.getElementById('modal-overlay-grupos').classList.remove('hidden');
+  cargarMiembrosGrupoForm([]);
+}
+
+async function editarGrupo(grupoId) {
+  const {data: grupo} = await sbAdmin.from('grupos').select('*').eq('id',grupoId).single();
+  const {data: miembros} = await sbAdmin.from('grupo_miembros').select('perfil_id').eq('grupo_id',grupoId);
+  const miembroIds = (miembros||[]).map(m=>m.perfil_id);
+  document.getElementById('modal-grupos-titulo').textContent = 'Editar grupo';
+  document.getElementById('modal-grupos-body').innerHTML = buildGrupoForm(grupo, miembroIds);
+  document.getElementById('modal-overlay-grupos').classList.remove('hidden');
+  cargarMiembrosGrupoForm(miembroIds);
+  document.getElementById('grupo-edit-id').value = grupoId;
+}
+
+function buildGrupoForm(grupo, miembroIds) {
+  return `
+    <input type="hidden" id="grupo-edit-id" value="">
+    <div class="field" style="margin-bottom:16px;"><label>Nombre del grupo</label>
+      <input type="text" id="grupo-nombre" value="${grupo?.nombre||''}" placeholder="Ej: Consejo de Maestros" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+    </div>
+    <div class="field" style="margin-bottom:20px;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+      <input type="text" id="grupo-desc" value="${grupo?.descripcion||''}" placeholder="Descripción del grupo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Miembros</div>
+    <div id="grupo-miembros-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--border);padding:8px;background:var(--dark-4);"></div>
+    <div style="display:flex;gap:12px;">
+      <button class="btn-primary" onclick="guardarGrupo()">Guardar grupo</button>
+      <button class="btn-secondary" onclick="document.getElementById('modal-overlay-grupos').classList.add('hidden')">Cancelar</button>
+    </div>`;
+}
+
+async function cargarMiembrosGrupoForm(seleccionados) {
+  const {data} = await sbAdmin.from('profiles').select('id,nombre,apellido,role,cargo').order('apellido');
+  const list = document.getElementById('grupo-miembros-list');
+  if (!list || !data) return;
+  list.innerHTML = '';
+  data.forEach(m => {
+    const checked = seleccionados.includes(m.id);
+    const row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,0.08);';
+    row.innerHTML = `<input type="checkbox" value="${m.id}" ${checked?'checked':''} style="accent-color:var(--gold);width:16px;height:16px;">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);">${qh(m.nombre,m.apellido)}</span>
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);margin-left:auto;">${m.cargo||ROLE_LABELS[m.role]||m.role}</span>`;
+    list.appendChild(row);
+  });
+}
+
+async function guardarGrupo() {
+  const nombre = document.getElementById('grupo-nombre').value.trim();
+  if (!nombre) { toast('El nombre es obligatorio','error'); return; }
+  const desc   = document.getElementById('grupo-desc').value.trim()||null;
+  const editId = document.getElementById('grupo-edit-id').value;
+  const checkboxes = document.querySelectorAll('#grupo-miembros-list input[type=checkbox]:checked');
+  const miembroIds = Array.from(checkboxes).map(cb=>cb.value);
+
+  let grupoId = editId;
+  if (!editId) {
+    const {data, error} = await sbAdmin.from('grupos').insert({nombre, descripcion:desc, creado_por:currentProfile.id}).select().single();
+    if (error) { toast('Error: '+error.message,'error'); return; }
+    grupoId = data.id;
+  } else {
+    await sbAdmin.from('grupos').update({nombre, descripcion:desc}).eq('id',editId);
+    await sbAdmin.from('grupo_miembros').delete().eq('grupo_id',editId);
+  }
+
+  if (miembroIds.length) {
+    await sbAdmin.from('grupo_miembros').insert(miembroIds.map(pid=>({grupo_id:grupoId,perfil_id:pid,es_admin:false})));
+  }
+
+  document.getElementById('modal-overlay-grupos').classList.add('hidden');
+  toast(editId?'Grupo actualizado':'Grupo creado','success');
+  loadGruposAdmin();
+}
+
+async function eliminarGrupo(grupoId) {
+  if (!confirm('¿Eliminar este grupo y todos sus mensajes?')) return;
+  await sbAdmin.from('grupos').delete().eq('id',grupoId);
+  toast('Grupo eliminado');
+  loadGruposAdmin();
+}
 // ── INIT ──
 async function init() {
   sb.auth.onAuthStateChange(async(_e, session) => {
@@ -1084,7 +1210,7 @@ async function doLogin() {
 async function doLogout() { await sb.auth.signOut(); location.reload(); }
 
 // ── MODULES ──
-const MODULES = ['dashboard','usuarios','nuevo-usuario','edit-user','noticias','blog','egregora','radio-agora','corp-noticias','corp-blog','biblioteca','galeria','heroes','calendario','mensajeria','broadcast'];
+const MODULES = ['dashboard','usuarios','nuevo-usuario','edit-user','noticias','blog','egregora','radio-agora','corp-noticias','corp-blog','biblioteca','galeria','heroes','calendario','mensajeria','broadcast','grupos'];
 function showModule(name) {
   MODULES.forEach(m => document.getElementById('mod-'+m)?.classList.toggle('hidden', m!==name));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
@@ -1101,6 +1227,7 @@ function showModule(name) {
   if (name==='heroes')        loadHeroes();
   if (name==='calendario')    loadCalendario();
   if (name==='mensajeria')    loadConversations();
+  if (name==='grupos')       loadGruposAdmin();
   if (name==='nuevo-usuario') { nuFamiliares=[]; resetNuForm(); }
 }
 
