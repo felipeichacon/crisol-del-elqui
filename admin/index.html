@@ -305,6 +305,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <button class="filter-btn btn-secondary" onclick="filterUsers('companero',this)">Compañeros</button>
         <button class="filter-btn btn-secondary" onclick="filterUsers('maestro',this)">Maestros</button>
         <button class="filter-btn btn-secondary" onclick="filterUsers('admin',this)">Admins</button>
+        <button class="filter-btn btn-secondary" onclick="filterUsers('oficialidad',this)">Oficialidad</button>
         <button class="btn-secondary" onclick="exportarExcel()" style="margin-left:auto;white-space:nowrap;">⬇ Exportar Excel</button>
       </div>
       <div class="table-wrap">
@@ -876,6 +877,9 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <input type="checkbox" id="cal-rol-maestro" value="maestro" checked style="accent-color:var(--gold);width:16px;height:16px;"> Maestros
           </label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+            <input type="checkbox" id="cal-rol-oficialidad" value="oficialidad" style="accent-color:var(--gold);width:16px;height:16px;"> Oficialidad
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
             <input type="checkbox" id="cal-rol-todos" value="todos" style="accent-color:var(--gold);width:16px;height:16px;"> Público (todos)
           </label>
         </div>
@@ -902,6 +906,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           <option value="aprendiz">Aprendices</option>
           <option value="companero">Compañeros</option>
           <option value="maestro">Maestros</option>
+          <option value="oficialidad">Oficialidad</option>
         </select>
         <select id="cal-filter-tipo" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:10px 16px;outline:none;" onchange="loadCalendario()">
           <option value="">Todos los tipos</option>
@@ -1083,7 +1088,7 @@ function qhFull(nombre, apellido) {
   return [n, a].filter(Boolean).join(' ');
 }
 
-const ROLE_LABELS = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Administrador' };
+const ROLE_LABELS = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Administrador', oficialidad:'Oficialidad' };
 const BLOG_LABELS = { aprendiz:'2° Vigilante', companero:'1° Vigilante', maestro:'Orador', venerable:'Venerable Maestro' };
 
 function toast(msg, type='') {
@@ -1382,7 +1387,7 @@ function buildGrupoForm(grupo, miembroIds) {
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;" id="grupo-roles-checks">
         ${(function(){
           const gRoles = grupo?.roles || ['todos'];
-          const opts = [{v:'todos',l:'Todos los grados'},{v:'aprendiz',l:'Aprendices'},{v:'companero',l:'Compañeros'},{v:'maestro',l:'Maestros'}];
+          const opts = [{v:'todos',l:'Todos los grados'},{v:'aprendiz',l:'Aprendices'},{v:'companero',l:'Compañeros'},{v:'maestro',l:'Maestros'},{v:'oficialidad',l:'Oficialidad'}];
           return opts.map(o => '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:Cinzel,serif;font-size:11px;color:var(--text-dim);">'
             + '<input type="checkbox" name="grupo-rol" value="'+o.v+'" '+(gRoles.includes(o.v)?'checked':'')+' style="accent-color:var(--gold);width:15px;height:15px;"> '+o.l
             + '</label>').join('');
@@ -1698,7 +1703,9 @@ function renderUsers(users) {
 function filterUsers(role, btn) {
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderUsers(role==='todos' ? allUsers : allUsers.filter(u=>u.role===role));
+  if (role === 'todos') renderUsers(allUsers);
+  else if (role === 'oficialidad') renderUsers(allUsers.filter(u => u.cargo));
+  else renderUsers(allUsers.filter(u=>u.role===role));
 }
 
 async function toggleUser(id, active) {
@@ -2027,7 +2034,7 @@ function exportarExcel() {
 
   const headers = [
     'RUT','Apellido Paterno','Apellido Materno','Nombres',
-    'Fecha de Nacimiento','Grado','Telefono','Correo',
+    'Fecha de Nacimiento','Grado','Cargo en la Logia','Telefono','Correo',
     'Fecha Iniciacion','Fecha Aumento de Salario',
     'Fecha Exaltacion','Fecha Testamento Masonico'
   ];
@@ -2039,6 +2046,7 @@ function exportarExcel() {
     nombres(u),
     fmtFecha(u.fecha_nacimiento),
     u.grado || '',
+    u.cargo || '',
     u.telefono || '',
     u.email || '',
     fmtFecha(u.fecha_iniciacion),
@@ -3440,7 +3448,10 @@ async function loadCalendario() {
   const { data } = await q;
   let eventos = data || [];
 
-  if (rolFilter !== 'todos') {
+  if (rolFilter === 'oficialidad') {
+    // Oficialidad: eventos marcados para 'oficialidad'
+    eventos = eventos.filter(e => e.roles && e.roles.includes('oficialidad'));
+  } else if (rolFilter !== 'todos') {
     eventos = eventos.filter(e => e.roles && (e.roles.includes(rolFilter) || e.roles.includes('todos')));
   }
 
@@ -3578,6 +3589,8 @@ function openNewEventoOnDay(year, month, day) {
     const cb = document.getElementById('cal-rol-'+r);
     if (cb) cb.checked = true;
   });
+  const ofic = document.getElementById('cal-rol-oficialidad');
+  if (ofic) ofic.checked = false;
   const todos = document.getElementById('cal-rol-todos');
   if (todos) todos.checked = false;
 
@@ -3601,7 +3614,7 @@ async function saveEvento(editId = null) {
   const inicio = document.getElementById('cal-inicio').value;
   if (!titulo || !inicio) { toast('Título y fecha de inicio son obligatorios','error'); return; }
 
-  const roles = ['aprendiz','companero','maestro','todos']
+  const roles = ['aprendiz','companero','maestro','oficialidad','todos']
     .filter(r => document.getElementById('cal-rol-'+r)?.checked);
 
   // Plancha
@@ -3695,7 +3708,7 @@ function editEvento(e) {
   document.getElementById('cal-fin').value    = toLocal(e.fecha_fin);
 
   // Roles
-  ['aprendiz','companero','maestro','todos'].forEach(r => {
+  ['aprendiz','companero','maestro','oficialidad','todos'].forEach(r => {
     const cb = document.getElementById('cal-rol-'+r);
     if (cb) cb.checked = (e.roles||[]).includes(r);
   });
