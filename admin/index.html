@@ -975,7 +975,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <button class="btn-primary" style="margin-bottom:28px;" onclick="abrirModalNuevoGrupo()">+ Nuevo grupo</button>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nombre</th><th>Descripción</th><th>Miembros</th><th>Creado</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Descripción</th><th>Modo</th><th>Miembros</th><th>Creado</th><th>Acciones</th></tr></thead>
           <tbody id="grupos-tbody"></tbody>
         </table>
       </div>
@@ -1004,6 +1004,15 @@ tr:hover td { background: rgba(201,168,76,0.04); }
   </div>
 </div>
 
+
+<!-- MODAL GRUPOS -->
+<div id="modal-overlay-grupos" class="hidden" onclick="if(event.target===this)this.classList.add('hidden')" style="position:fixed;inset:0;z-index:600;background:rgba(0,10,32,0.94);display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:var(--dark-2);border:1px solid var(--border-bright);max-width:680px;width:100%;padding:40px;position:relative;max-height:92vh;overflow-y:auto;">
+    <button onclick="document.getElementById('modal-overlay-grupos').classList.add('hidden')" style="position:absolute;top:14px;right:18px;background:transparent;border:none;color:var(--gold-dim);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    <div id="modal-grupos-titulo" style="font-family:'Cinzel',serif;font-size:18px;color:var(--cream);margin-bottom:28px;font-weight:400;"></div>
+    <div id="modal-grupos-body"></div>
+  </div>
+</div>
 <!-- MODAL -->
 <div id="modal-overlay" class="hidden" onclick="if(event.target===this)closeModal()">
   <div class="modal-card">
@@ -1150,9 +1159,13 @@ async function loadGruposAdmin() {
   for (const g of grupos) {
     const {count} = await sbAdmin.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('grupo_id',g.id);
     const tr = document.createElement('tr');
+    const modoLabel = g.modo_escritura === 'restringido'
+      ? `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:#c47ad4;border:1px solid rgba(196,122,212,0.4);padding:3px 8px;">Restringido</span>`
+      : `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:var(--gold);border:1px solid var(--border-bright);padding:3px 8px;">Libre</span>`;
     tr.innerHTML = `
       <td><strong style="color:var(--cream);">${g.nombre}</strong></td>
       <td style="font-size:14px;color:var(--text-dim);">${g.descripcion||'—'}</td>
+      <td>${modoLabel}</td>
       <td style="font-size:14px;">${count||0}</td>
       <td style="font-size:14px;color:var(--text-dim);">${new Date(g.created_at).toLocaleDateString('es-CL')}</td>
       <td><div class="actions">
@@ -1167,49 +1180,119 @@ function abrirModalNuevoGrupo() {
   document.getElementById('modal-grupos-titulo').textContent = 'Nuevo grupo';
   document.getElementById('modal-grupos-body').innerHTML = buildGrupoForm(null, []);
   document.getElementById('modal-overlay-grupos').classList.remove('hidden');
-  cargarMiembrosGrupoForm([]);
+  // Esperar al próximo tick para que el DOM esté renderizado
+  setTimeout(() => cargarMiembrosGrupoForm([], []), 50);
 }
 
 async function editarGrupo(grupoId) {
   const {data: grupo} = await sbAdmin.from('grupos').select('*').eq('id',grupoId).single();
-  const {data: miembros} = await sbAdmin.from('grupo_miembros').select('perfil_id').eq('grupo_id',grupoId);
-  const miembroIds = (miembros||[]).map(m=>m.perfil_id);
-  document.getElementById('modal-grupos-titulo').textContent = 'Editar grupo';
+  const {data: miembros} = await sbAdmin.from('grupo_miembros').select('perfil_id,puede_escribir').eq('grupo_id',grupoId);
+  const miembroIds  = (miembros||[]).map(m=>m.perfil_id);
+  const escritorIds = (miembros||[]).filter(m=>m.puede_escribir).map(m=>m.perfil_id);
+  document.getElementById('modal-grupos-titulo').textContent = 'Editar grupo — ' + (grupo?.nombre||'');
   document.getElementById('modal-grupos-body').innerHTML = buildGrupoForm(grupo, miembroIds);
   document.getElementById('modal-overlay-grupos').classList.remove('hidden');
-  cargarMiembrosGrupoForm(miembroIds);
-  document.getElementById('grupo-edit-id').value = grupoId;
+  await cargarMiembrosGrupoForm(miembroIds, escritorIds);
 }
 
 function buildGrupoForm(grupo, miembroIds) {
+  const modoEscritura = grupo?.modo_escritura || 'libre';
   return `
-    <input type="hidden" id="grupo-edit-id" value="">
+    <input type="hidden" id="grupo-edit-id" value="${grupo?.id||''}">
+
     <div class="field" style="margin-bottom:16px;"><label>Nombre del grupo</label>
-      <input type="text" id="grupo-nombre" value="${grupo?.nombre||''}" placeholder="Ej: Consejo de Maestros" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+      <input type="text" id="grupo-nombre" value="${grupo?.nombre||''}" placeholder="Ej: Consejo de Maestros"
+        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
     </div>
+
     <div class="field" style="margin-bottom:20px;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
-      <input type="text" id="grupo-desc" value="${grupo?.descripcion||''}" placeholder="Descripción del grupo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+      <input type="text" id="grupo-desc" value="${grupo?.descripcion||''}" placeholder="Descripción del grupo"
+        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
     </div>
-    <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Miembros</div>
-    <div id="grupo-miembros-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto;margin-bottom:20px;border:1px solid var(--border);padding:8px;background:var(--dark-4);"></div>
+
+    <div class="field" style="margin-bottom:20px;">
+      <label>Modo de escritura</label>
+      <div style="display:flex;gap:0;margin-top:8px;border:1px solid var(--border);overflow:hidden;">
+        <label id="modo-libre-lbl" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;background:${modoEscritura==='libre'?'rgba(201,168,76,0.12)':'var(--dark-3)'};border-right:1px solid var(--border);transition:background 0.2s;" onclick="setModoEscritura('libre')">
+          <input type="radio" name="grupo-modo" id="modo-libre" value="libre" ${modoEscritura==='libre'?'checked':''} style="accent-color:var(--gold);">
+          <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--text);text-transform:uppercase;letter-spacing:0.1em;">Libre</span>
+          <span style="font-size:12px;color:var(--text-dim);margin-left:4px;">— Todos los miembros pueden escribir</span>
+        </label>
+        <label id="modo-rest-lbl" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;background:${modoEscritura==='restringido'?'rgba(201,168,76,0.12)':'var(--dark-3)'};transition:background 0.2s;" onclick="setModoEscritura('restringido')">
+          <input type="radio" name="grupo-modo" id="modo-restringido" value="restringido" ${modoEscritura==='restringido'?'checked':''} style="accent-color:var(--gold);">
+          <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--text);text-transform:uppercase;letter-spacing:0.1em;">Restringido</span>
+          <span style="font-size:12px;color:var(--text-dim);margin-left:4px;">— Solo quienes tengan permiso</span>
+        </label>
+      </div>
+    </div>
+
+    <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:6px;">Miembros del grupo</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;" id="grupo-modo-hint">
+      ${modoEscritura==='restringido'?'Marca ✎ para dar permiso de escritura a cada miembro':'Todos los miembros marcados podrán escribir libremente'}
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:8px;">
+      <button onclick="marcarTodosMiembros(true)" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:6px 12px;cursor:pointer;">✓ Todos</button>
+      <button onclick="marcarTodosMiembros(false)" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);background:transparent;border:1px solid var(--border);padding:6px 12px;cursor:pointer;">✗ Ninguno</button>
+    </div>
+    <div id="grupo-miembros-list" style="display:flex;flex-direction:column;gap:2px;max-height:300px;overflow-y:auto;margin-bottom:24px;border:1px solid var(--border);background:var(--dark-4);"></div>
+
     <div style="display:flex;gap:12px;">
       <button class="btn-primary" onclick="guardarGrupo()">Guardar grupo</button>
       <button class="btn-secondary" onclick="document.getElementById('modal-overlay-grupos').classList.add('hidden')">Cancelar</button>
     </div>`;
 }
 
-async function cargarMiembrosGrupoForm(seleccionados) {
+function setModoEscritura(modo) {
+  document.getElementById('modo-libre').checked      = modo === 'libre';
+  document.getElementById('modo-restringido').checked = modo === 'restringido';
+  document.getElementById('modo-libre-lbl').style.background     = modo==='libre'?'rgba(201,168,76,0.12)':'var(--dark-3)';
+  document.getElementById('modo-rest-lbl').style.background      = modo==='restringido'?'rgba(201,168,76,0.12)':'var(--dark-3)';
+  const hint = document.getElementById('grupo-modo-hint');
+  if (hint) hint.textContent = modo==='restringido'
+    ? 'Marca ✎ para dar permiso de escritura a cada miembro'
+    : 'Todos los miembros marcados podrán escribir libremente';
+  // Mostrar/ocultar columna de escritura
+  document.querySelectorAll('.col-escritura').forEach(el => {
+    el.style.display = modo==='restringido' ? '' : 'none';
+  });
+}
+
+function marcarTodosMiembros(checked) {
+  document.querySelectorAll('#grupo-miembros-list input[type=checkbox][data-tipo=miembro]').forEach(cb => {
+    cb.checked = checked;
+  });
+}
+
+async function cargarMiembrosGrupoForm(seleccionados, escritores = []) {
   const {data} = await sbAdmin.from('profiles').select('id,nombre,apellido,role,cargo').order('apellido');
   const list = document.getElementById('grupo-miembros-list');
   if (!list || !data) return;
   list.innerHTML = '';
+
+  const modoRestringido = document.getElementById('modo-restringido')?.checked;
+
+  // Encabezado con columnas
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--border);background:var(--dark-5);';
+  header.innerHTML = `
+    <span style="width:20px;"></span>
+    <span style="flex:1;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Miembro</span>
+    <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;width:100px;text-align:center;">Cargo</span>
+    <span class="col-escritura" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;width:60px;text-align:center;display:${modoRestringido?'':'none'};">✎ Escribe</span>`;
+  list.appendChild(header);
+
   data.forEach(m => {
-    const checked = seleccionados.includes(m.id);
-    const row = document.createElement('label');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;border-bottom:1px solid rgba(201,168,76,0.08);';
-    row.innerHTML = `<input type="checkbox" value="${m.id}" ${checked?'checked':''} style="accent-color:var(--gold);width:16px;height:16px;">
-      <span style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);">${qh(m.nombre,m.apellido)}</span>
-      <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);margin-left:auto;">${m.cargo||ROLE_LABELS[m.role]||m.role}</span>`;
+    const checked   = seleccionados.includes(m.id);
+    const canWrite  = escritores.includes(m.id);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid rgba(201,168,76,0.06);';
+    row.innerHTML = `
+      <input type="checkbox" data-tipo="miembro" value="${m.id}" ${checked?'checked':''} style="accent-color:var(--gold);width:16px;height:16px;cursor:pointer;">
+      <span style="flex:1;font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);">${qh(m.nombre,m.apellido)}</span>
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);width:100px;text-align:center;">${m.cargo||ROLE_LABELS[m.role]||m.role}</span>
+      <span class="col-escritura" style="width:60px;text-align:center;display:${modoRestringido?'':'none'};">
+        <input type="checkbox" data-tipo="escritor" value="${m.id}" ${canWrite?'checked':''} title="Puede escribir" style="accent-color:var(--gold-light);width:16px;height:16px;cursor:pointer;">
+      </span>`;
     list.appendChild(row);
   });
 }
@@ -1217,24 +1300,44 @@ async function cargarMiembrosGrupoForm(seleccionados) {
 async function guardarGrupo() {
   const nombre = document.getElementById('grupo-nombre').value.trim();
   if (!nombre) { toast('El nombre es obligatorio','error'); return; }
-  const desc   = document.getElementById('grupo-desc').value.trim()||null;
-  const editId = document.getElementById('grupo-edit-id').value;
-  const checkboxes = document.querySelectorAll('#grupo-miembros-list input[type=checkbox]:checked');
-  const miembroIds = Array.from(checkboxes).map(cb=>cb.value);
+  const desc    = document.getElementById('grupo-desc').value.trim()||null;
+  const editId  = document.getElementById('grupo-edit-id').value;
+  const modo    = document.querySelector('input[name="grupo-modo"]:checked')?.value || 'libre';
+
+  // Miembros seleccionados
+  const miembroIds = Array.from(
+    document.querySelectorAll('#grupo-miembros-list input[data-tipo="miembro"]:checked')
+  ).map(cb => cb.value);
+
+  if (!miembroIds.length) { toast('Agrega al menos un miembro','error'); return; }
+
+  // Escritores (solo relevante en modo restringido)
+  const escritorIds = modo === 'restringido'
+    ? Array.from(document.querySelectorAll('#grupo-miembros-list input[data-tipo="escritor"]:checked')).map(cb=>cb.value)
+    : miembroIds; // en modo libre, todos escriben
 
   let grupoId = editId;
   if (!editId) {
-    const {data, error} = await sbAdmin.from('grupos').insert({nombre, descripcion:desc, creado_por:currentProfile.id}).select().single();
+    const {data, error} = await sbAdmin.from('grupos').insert({
+      nombre, descripcion: desc,
+      creado_por: currentProfile.id,
+      modo_escritura: modo
+    }).select().single();
     if (error) { toast('Error: '+error.message,'error'); return; }
     grupoId = data.id;
   } else {
-    await sbAdmin.from('grupos').update({nombre, descripcion:desc}).eq('id',editId);
+    await sbAdmin.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo}).eq('id',editId);
     await sbAdmin.from('grupo_miembros').delete().eq('grupo_id',editId);
   }
 
-  if (miembroIds.length) {
-    await sbAdmin.from('grupo_miembros').insert(miembroIds.map(pid=>({grupo_id:grupoId,perfil_id:pid,es_admin:false})));
-  }
+  await sbAdmin.from('grupo_miembros').insert(
+    miembroIds.map(pid => ({
+      grupo_id:  grupoId,
+      perfil_id: pid,
+      es_admin:  false,
+      puede_escribir: escritorIds.includes(pid)
+    }))
+  );
 
   document.getElementById('modal-overlay-grupos').classList.add('hidden');
   toast(editId?'Grupo actualizado':'Grupo creado','success');
