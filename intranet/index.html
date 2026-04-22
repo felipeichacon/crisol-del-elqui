@@ -363,6 +363,11 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
     <div class="nav-item" onclick="showModule('mi-perfil')">
       <span class="nav-icon">◎</span> Mi perfil
     </div>
+    <!-- Sección Administración — visible solo si tiene permisos -->
+    <div id="nav-admin-section" style="display:none;">
+      <div class="sidebar-label" style="color:var(--gold);">Administración</div>
+      <div id="nav-admin-items"></div>
+    </div>
   </div>
 
   <!-- MAIN -->
@@ -735,6 +740,11 @@ async function loadProfile() {
     toast('Error al cargar perfil. Contacta al administrador.', 'error'); return;
   }
   currentProfile = data;
+
+  // Cargar permisos de administración
+  const { data: perm } = await sb.from('permisos_admin')
+    .select('modulos').eq('perfil_id', data.id).maybeSingle();
+  currentProfile._permisos = perm?.modulos || [];
 }
 
 // ── SHOW APP ──
@@ -753,10 +763,290 @@ function showApp() {
   subscribeChat();
   subscribeMessages();
   loadUnreadCount();
+  inyectarModulosAdmin();
+}
+
+// ── MÓDULOS DE ADMINISTRACIÓN EN LA INTRANET ──
+const ADM_MODULOS_CONFIG = {
+  'noticias':      { id:'adm-noticias',      icon:'◫', label:'Noticias',       fn:'loadAdmNoticias'      },
+  'blog':          { id:'adm-blog',          icon:'✦', label:'Blog',           fn:'loadAdmBlog'          },
+  'egregora':      { id:'adm-egregora',      icon:'◈', label:'Rev. Egrégora',  fn:'loadAdmEgregora'      },
+  'radio-agora':   { id:'adm-radio-agora',   icon:'◉', label:'Radio Ágora',    fn:'loadAdmRadio'         },
+  'biblioteca':    { id:'adm-biblioteca',    icon:'◫', label:'Biblioteca',     fn:'loadAdmBiblioteca'    },
+  'galeria':       { id:'adm-galeria',       icon:'⊞', label:'Galería',        fn:'loadAdmGaleria'       },
+  'calendario':    { id:'adm-calendario',    icon:'◷', label:'Calendario',     fn:'loadAdmCalendario'    },
+  'corp-noticias': { id:'adm-corp-noticias', icon:'◫', label:'Corp. Noticias', fn:'loadAdmCorpNoticias'  },
+  'corp-blog':     { id:'adm-corp-blog',     icon:'✦', label:'Corp. Blog',     fn:'loadAdmCorpBlog'      },
+  'mensajeria':    { id:'adm-mensajeria',    icon:'✉', label:'Mensajería',     fn:'loadAdmMensajeria'    },
+};
+
+function inyectarModulosAdmin() {
+  const permisos = currentProfile._permisos || [];
+  const section  = document.getElementById('nav-admin-section');
+  const items    = document.getElementById('nav-admin-items');
+  if (!permisos.length) { section.style.display = 'none'; return; }
+
+  section.style.display = '';
+  items.innerHTML = '';
+  permisos.forEach(mod => {
+    const cfg = ADM_MODULOS_CONFIG[mod];
+    if (!cfg) return;
+    const div = document.createElement('div');
+    div.className = 'nav-item';
+    div.id = 'nav-' + cfg.id;
+    div.onclick = () => showModule(cfg.id);
+    div.innerHTML = `<span class="nav-icon">${cfg.icon}</span> ${cfg.label}`;
+    items.appendChild(div);
+
+    // Crear el módulo en el DOM si no existe
+    if (!document.getElementById('mod-' + cfg.id)) {
+      const modDiv = document.createElement('div');
+      modDiv.className = 'module hidden';
+      modDiv.id = 'mod-' + cfg.id;
+      modDiv.innerHTML = `
+        <div class="module-header">
+          <h2>${cfg.label}</h2>
+          <div class="gold-line"></div>
+        </div>
+        <div id="${cfg.id}-content" style="padding:0 48px 48px;">
+          <div style="color:var(--text-dim);font-style:italic;padding:32px 0;">Cargando…</div>
+        </div>`;
+      document.getElementById('main').appendChild(modDiv);
+    }
+  });
+}
+
+// ── CARGA DE MÓDULOS ADMIN DENTRO DE LA INTRANET ──
+// Cada función carga la UI correspondiente del admin
+// usando el cliente Supabase anon del miembro logueado
+
+async function loadAdmNoticias() {
+  const content = document.getElementById('adm-noticias-content');
+  if (!content) return;
+  content.innerHTML = admFormNoticia();
+  await admLoadNoticiasList(content);
+}
+
+function admFormNoticia() {
+  return `
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
+      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nueva noticia</div>
+      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
+        <input id="admn-titulo" type="text" placeholder="Título de la noticia" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
+      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
+        <textarea id="admn-contenido" rows="5" placeholder="Contenido de la noticia…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="admPublicarNoticia(true)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
+        <button onclick="admPublicarNoticia(false)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
+      </div>
+    </div>
+    <div id="admn-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
+}
+
+async function admPublicarNoticia(publish) {
+  const titulo    = document.getElementById('admn-titulo')?.value.trim();
+  const contenido = document.getElementById('admn-contenido')?.value.trim();
+  if (!titulo || !contenido) { toast('Completa título y contenido','error'); return; }
+  const { error } = await sb.from('noticias').insert({
+    titulo, contenido, extracto: contenido.substring(0,220),
+    tag: 'General',
+    fecha_pub: new Date().toISOString().split('T')[0],
+    autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    publicado: publish
+  });
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  toast(publish?'Noticia publicada':'Borrador guardado','success');
+  document.getElementById('admn-titulo').value = '';
+  document.getElementById('admn-contenido').value = '';
+  const content = document.getElementById('adm-noticias-content');
+  if (content) await admLoadNoticiasList(content);
+}
+
+async function admLoadNoticiasList(content) {
+  const lista = document.getElementById('admn-lista');
+  if (!lista) return;
+  const { data } = await sb.from('noticias').select('*').eq('autor_id',currentProfile.id).order('created_at',{ascending:false}).limit(20);
+  lista.innerHTML = '';
+  if (!data?.length) { lista.innerHTML='<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado noticias aún.</div>'; return; }
+  data.forEach(n => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
+    div.innerHTML = `<div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${n.titulo}</div>
+      <div style="font-size:12px;color:var(--text-dim);">${n.publicado?'Publicada':'Borrador'} · ${new Date(n.created_at).toLocaleDateString('es-CL')}</div>
+    </div>
+    <button onclick="admEliminarNoticia('${n.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
+    lista.appendChild(div);
+  });
+}
+
+async function admEliminarNoticia(id) {
+  if (!confirm('¿Eliminar esta noticia?')) return;
+  await sb.from('noticias').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  toast('Noticia eliminada');
+  const content = document.getElementById('adm-noticias-content');
+  if (content) await admLoadNoticiasList(content);
+}
+
+async function loadAdmBlog() {
+  const content = document.getElementById('adm-blog-content');
+  if (!content) return;
+  // Solo puede publicar si tiene el cargo correspondiente
+  const CARGO_ROL = {'Orador':'maestro','Primer Vigilante':'companero','Segundo Vigilante':'aprendiz','Venerable Maestro':'venerable'};
+  const rolBlog = CARGO_ROL[currentProfile.cargo] || currentProfile.role;
+  const BLOG_LABELS_MAP = {maestro:'Blog del Orador',companero:'Blog del Primer Vigilante',aprendiz:'Blog del Segundo Vigilante',venerable:'Palabras del Venerable'};
+  content.innerHTML = `
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
+      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nueva entrada — ${BLOG_LABELS_MAP[rolBlog]||'Blog'}</div>
+      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
+        <input id="admblog-titulo" type="text" placeholder="Título de la entrada" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
+      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
+        <textarea id="admblog-contenido" rows="8" placeholder="Escribe aquí…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="admPublicarBlog(true,'${rolBlog}')" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
+        <button onclick="admPublicarBlog(false,'${rolBlog}')" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
+      </div>
+    </div>
+    <div id="admblog-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
+  await admLoadBlogLista(rolBlog);
+}
+
+async function admPublicarBlog(publish, rolBlog) {
+  const titulo    = document.getElementById('admblog-titulo')?.value.trim();
+  const contenido = document.getElementById('admblog-contenido')?.value.trim();
+  if (!titulo || !contenido) { toast('Completa título y contenido','error'); return; }
+  const { error } = await sb.from('posts').insert({
+    role: rolBlog, titulo, contenido, extracto: contenido.substring(0,200),
+    autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    publicado: publish
+  });
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  toast(publish?'Publicado':'Borrador guardado','success');
+  document.getElementById('admblog-titulo').value = '';
+  document.getElementById('admblog-contenido').value = '';
+  await admLoadBlogLista(rolBlog);
+}
+
+async function admLoadBlogLista(rolBlog) {
+  const lista = document.getElementById('admblog-lista');
+  if (!lista) return;
+  const { data } = await sb.from('posts').select('*').eq('autor_id',currentProfile.id).order('created_at',{ascending:false}).limit(20);
+  lista.innerHTML = '';
+  if (!data?.length) { lista.innerHTML='<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado entradas aún.</div>'; return; }
+  data.forEach(p => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
+    div.innerHTML = `<div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${p.titulo}</div>
+      <div style="font-size:12px;color:var(--text-dim);">${p.publicado?'Publicado':'Borrador'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
+    </div>
+    <button onclick="admEliminarBlog('${p.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
+    lista.appendChild(div);
+  });
+}
+
+async function admEliminarBlog(id) {
+  if (!confirm('¿Eliminar esta entrada?')) return;
+  await sb.from('posts').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  toast('Entrada eliminada');
+  const CARGO_ROL = {'Orador':'maestro','Primer Vigilante':'companero','Segundo Vigilante':'aprendiz','Venerable Maestro':'venerable'};
+  await admLoadBlogLista(CARGO_ROL[currentProfile.cargo]||currentProfile.role);
+}
+
+async function loadAdmEgregora() {
+  const content = document.getElementById('adm-egregora-content');
+  if (!content) return;
+  content.innerHTML = `
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
+      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nuevo artículo — Revista Egrégora</div>
+      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
+        <input id="admegr-titulo" type="text" placeholder="Título del artículo" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
+      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
+        <textarea id="admegr-contenido" rows="8" placeholder="Escribe el artículo…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="admPublicarEgregora(true)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
+        <button onclick="admPublicarEgregora(false)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
+      </div>
+    </div>
+    <div id="admegr-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
+  const { data } = await sb.from('egregora_articulos').select('*').eq('autor_id',currentProfile.id).order('created_at',{ascending:false}).limit(20);
+  const lista = document.getElementById('admegr-lista');
+  if (!data?.length) { lista.innerHTML='<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado artículos aún.</div>'; return; }
+  data.forEach(a => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
+    div.innerHTML = `<div><div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${a.titulo}</div>
+      <div style="font-size:12px;color:var(--text-dim);">${a.publicado?'Publicado':'Borrador'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div></div>
+    <button onclick="admEliminarEgregora('${a.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
+    lista.appendChild(div);
+  });
+}
+
+async function admPublicarEgregora(publish) {
+  const titulo    = document.getElementById('admegr-titulo')?.value.trim();
+  const contenido = document.getElementById('admegr-contenido')?.value.trim();
+  if (!titulo || !contenido) { toast('Completa los campos','error'); return; }
+  const { error } = await sb.from('egregora_articulos').insert({
+    titulo, contenido, extracto: contenido.substring(0,240),
+    categoria: 'Reflexión', autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    publicado: publish
+  });
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  toast(publish?'Artículo publicado':'Borrador guardado','success');
+  document.getElementById('admegr-titulo').value = '';
+  document.getElementById('admegr-contenido').value = '';
+  loadAdmEgregora();
+}
+
+async function admEliminarEgregora(id) {
+  if (!confirm('¿Eliminar este artículo?')) return;
+  await sb.from('egregora_articulos').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  toast('Artículo eliminado'); loadAdmEgregora();
+}
+
+// Módulos más simples — redirigen con mensaje informativo
+async function loadAdmRadio() {
+  document.getElementById('adm-radio-agora-content').innerHTML = admMsgModulo('Radio Ágora', 'Sube episodios del podcast desde este módulo.', 'radio-agora');
+}
+async function loadAdmBiblioteca() {
+  document.getElementById('adm-biblioteca-content').innerHTML = admMsgModulo('Biblioteca', 'Gestiona los documentos de la biblioteca.', 'biblioteca');
+}
+async function loadAdmGaleria() {
+  document.getElementById('adm-galeria-content').innerHTML = admMsgModulo('Galería', 'Sube imágenes a la galería de la intranet.', 'galeria');
+}
+async function loadAdmCalendario() {
+  document.getElementById('adm-calendario-content').innerHTML = admMsgModulo('Calendario', 'Crea y gestiona eventos del calendario.', 'calendario');
+}
+async function loadAdmCorpNoticias() {
+  document.getElementById('adm-corp-noticias-content').innerHTML = admMsgModulo('Noticias Corporación', 'Gestiona las noticias de la Corporación Elqui.', 'corp-noticias');
+}
+async function loadAdmCorpBlog() {
+  document.getElementById('adm-corp-blog-content').innerHTML = admMsgModulo('Blog Corporación', 'Publica entradas en el blog de la Corporación.', 'corp-blog');
+}
+async function loadAdmMensajeria() {
+  document.getElementById('adm-mensajeria-content').innerHTML = admMsgModulo('Mensajería', 'Accede al módulo de mensajería de administración.', 'mensajeria');
+}
+
+function admMsgModulo(nombre, desc, modKey) {
+  return `<div style="max-width:560px;">
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:20px;">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:10px;">${nombre}</div>
+      <div style="font-size:15px;color:var(--text-dim);line-height:1.8;margin-bottom:20px;">${desc}</div>
+      <a href="/admin" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);padding:12px 22px;text-decoration:none;display:inline-block;">
+        Abrir en el panel de administración →
+      </a>
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
+      Inicia sesión con tu misma cuenta en <strong style="color:var(--gold);">crisoldelelqui.cl/admin</strong> para acceder al módulo de ${nombre.toLowerCase()}.
+    </div>
+  </div>`;
 }
 
 // ── MODULES ──
-const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','chat','mi-perfil'];
+const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','chat','mi-perfil','adm-noticias','adm-blog','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   MODULES.forEach(m => {
     const el = document.getElementById('mod-'+m);
@@ -766,6 +1056,17 @@ function showModule(name) {
   currentModule = name;
   if (name === 'hero')       { loadHero(); }
   if (name === 'calendar')   { loadCalendar(); }
+  // Módulos de administración dentro de la intranet
+  if (name === 'adm-noticias')      loadAdmNoticias();
+  if (name === 'adm-blog')          loadAdmBlog();
+  if (name === 'adm-egregora')      loadAdmEgregora();
+  if (name === 'adm-radio-agora')   loadAdmRadio();
+  if (name === 'adm-biblioteca')    loadAdmBiblioteca();
+  if (name === 'adm-galeria')       loadAdmGaleria();
+  if (name === 'adm-calendario')    loadAdmCalendario();
+  if (name === 'adm-corp-noticias') loadAdmCorpNoticias();
+  if (name === 'adm-corp-blog')     loadAdmCorpBlog();
+  if (name === 'adm-mensajeria')    loadAdmMensajeria();
   if (name === 'blog')       { loadPosts(); }
   if (name === 'profiles')   { renderProfiles(); }
   if (name === 'biblioteca') { loadDocuments(); }
