@@ -1378,6 +1378,19 @@ function buildGrupoForm(grupo, miembroIds) {
     </div>
 
     <div class="field" style="margin-bottom:20px;">
+      <label>Visible para los grados</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;" id="grupo-roles-checks">
+        ${(function(){
+          const gRoles = grupo?.roles || ['todos'];
+          const opts = [{v:'todos',l:'Todos los grados'},{v:'aprendiz',l:'Aprendices'},{v:'companero',l:'Compañeros'},{v:'maestro',l:'Maestros'}];
+          return opts.map(o => '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:Cinzel,serif;font-size:11px;color:var(--text-dim);">'
+            + '<input type="checkbox" name="grupo-rol" value="'+o.v+'" '+(gRoles.includes(o.v)?'checked':'')+' style="accent-color:var(--gold);width:15px;height:15px;"> '+o.l
+            + '</label>').join('');
+        })()}
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:20px;">
       <label>Modo de escritura</label>
       <div style="display:flex;gap:0;margin-top:8px;border:1px solid var(--border);overflow:hidden;">
         <label id="modo-libre-lbl" style="flex:1;display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;background:${modoEscritura==='libre'?'rgba(201,168,76,0.12)':'var(--dark-3)'};border-right:1px solid var(--border);transition:background 0.2s;" onclick="setModoEscritura('libre')">
@@ -1470,6 +1483,8 @@ async function guardarGrupo() {
   const desc    = document.getElementById('grupo-desc').value.trim()||null;
   const editId  = document.getElementById('grupo-edit-id').value;
   const modo    = document.querySelector('input[name="grupo-modo"]:checked')?.value || 'libre';
+  const roles   = Array.from(document.querySelectorAll('input[name="grupo-rol"]:checked')).map(cb=>cb.value);
+  const rolesF  = roles.length ? roles : ['todos'];
 
   // Miembros seleccionados
   const miembroIds = Array.from(
@@ -1488,12 +1503,13 @@ async function guardarGrupo() {
     const {data, error} = await sbAdmin.from('grupos').insert({
       nombre, descripcion: desc,
       creado_por: currentProfile.id,
-      modo_escritura: modo
+      modo_escritura: modo,
+      roles: rolesF
     }).select().single();
     if (error) { toast('Error: '+error.message,'error'); return; }
     grupoId = data.id;
   } else {
-    await sbAdmin.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo}).eq('id',editId);
+    await sbAdmin.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo, roles:rolesF}).eq('id',editId);
     await sbAdmin.from('grupo_miembros').delete().eq('grupo_id',editId);
   }
 
