@@ -1026,7 +1026,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="gold-line"></div>
       <div style="background:var(--dark-3);border:1px solid var(--border);padding:16px 24px;margin-bottom:28px;font-size:14px;color:var(--text-dim);line-height:1.8;display:flex;align-items:center;gap:16px;">
         <span style="font-size:22px;">🔑</span>
-        <span>Los hermanos con permisos pueden acceder a <strong style="color:var(--gold);">crisoldelelqui.cl/admin</strong> con su cuenta normal y verán solo los módulos autorizados. El cargo del miembro se muestra como referencia.</span>
+        <span>Los módulos autorizados aparecen directamente en <strong style="color:var(--gold);">Pasos Perdidos</strong> dentro del perfil del hermano, en una sección "Administración" en su barra lateral. Los módulos de Noticias, Blog y Egrégora permiten publicar contenido directamente desde la intranet.</span>
       </div>
       <div id="permisos-container"></div>
     </div>
@@ -1570,31 +1570,15 @@ async function loadProfile() {
   if (error) { toast('Error al conectar con la base de datos: ' + error.message, 'error'); return; }
   if (!data) { toast('Perfil no encontrado. Contacta al administrador.', 'error'); return; }
   if (data.role !== 'admin') {
-    // Verificar si tiene permisos específicos
-    const { data: perm } = await sbAdmin.from('permisos_admin')
-      .select('modulos').eq('perfil_id', data.id).maybeSingle();
-    if (!perm || !perm.modulos || perm.modulos.length === 0) {
-      document.getElementById('screen-login').classList.remove('hidden');
-      document.getElementById('screen-app').classList.add('hidden');
-      toast('Acceso denegado. Sin permisos de administración.', 'error');
-      currentUser = null;
-      await sb.auth.signOut(); return;
-    }
-    // Tiene permisos limitados — restringir sidebar
-    data._modulos_permitidos = perm.modulos;
+    document.getElementById('screen-login').classList.remove('hidden');
+    document.getElementById('screen-app').classList.add('hidden');
+    toast('Acceso denegado. Solo administradores.', 'error');
+    currentUser = null;
+    await sb.auth.signOut(); return;
   }
   currentProfile = data;
   document.getElementById('topbar-name').textContent = qh(data.nombre, data.apellido);
-  // Si tiene permisos limitados, ocultar items del sidebar no permitidos
-  if (data._modulos_permitidos) {
-    const allowed = new Set(data._modulos_permitidos);
-    document.querySelectorAll('.nav-item[onclick]').forEach(el => {
-      const m = el.getAttribute('onclick').match(/showModule\('([^']+)'\)/);
-      if (m && !['dashboard'].includes(m[1]) && !allowed.has(m[1])) {
-        el.style.display = 'none';
-      }
-    });
-  }
+
   document.getElementById('screen-login').classList.add('hidden');
   document.getElementById('screen-app').classList.remove('hidden');
   showModule('dashboard');
