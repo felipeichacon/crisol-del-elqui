@@ -1181,11 +1181,39 @@ async function loadConversations() {
 }
 
 async function loadGrupos() {
-  // Cargar grupos donde el usuario es miembro
-  const { data } = await sb.from('grupo_miembros')
-    .select('grupo_id, grupos(*)')
-    .eq('perfil_id', currentProfile.id);
-  waGrupos = (data||[]).map(r => r.grupos).filter(Boolean);
+  const rol = currentProfile.role;
+
+  // Cargar todos los grupos visibles para este rol:
+  // 1) grupos con roles que incluyen el grado del miembro o 'todos'
+  // 2) grupos donde el miembro está explícitamente en grupo_miembros
+  const [porRol, porMiembro] = await Promise.all([
+    sb.from('grupos').select('*').order('created_at', {ascending:true}),
+    sb.from('grupo_miembros')
+      .select('puede_escribir, grupos(*)')
+      .eq('perfil_id', currentProfile.id)
+  ]);
+
+  const gruposExplicitos = new Set(
+    (porMiembro.data||[]).map(r => r.grupos?.id).filter(Boolean)
+  );
+  const escrituraMap = {};
+  (porMiembro.data||[]).forEach(r => {
+    if (r.grupos?.id) escrituraMap[r.grupos.id] = r.puede_escribir;
+  });
+
+  // Filtrar por roles del grupo
+  const todos = (porRol.data||[]).filter(g => {
+    const gRoles = g.roles || ['todos'];
+    return gRoles.includes('todos') || gRoles.includes(rol);
+  });
+
+  // Marcar si el miembro puede escribir
+  waGrupos = todos.map(g => ({
+    ...g,
+    _puede_escribir: gruposExplicitos.has(g.id)
+      ? escrituraMap[g.id] !== false
+      : g.modo_escritura !== 'restringido' // libre = puede escribir si tiene el rol
+  }));
 }
 
 async function loadEncuestas() {
@@ -1408,14 +1436,8 @@ async function openGrupo(grupo) {
   waActiveConv = { tipo: 'grupo', id: grupo.id, grupo };
   renderConvList();
 
-  // Verificar si el miembro puede escribir en este grupo
-  const {data: memData} = await sb.from('grupo_miembros')
-    .select('puede_escribir')
-    .eq('grupo_id', grupo.id)
-    .eq('perfil_id', currentProfile.id)
-    .maybeSingle();
-  const modoGrupo   = grupo.modo_escritura || 'libre';
-  const puedeEscribir = modoGrupo === 'libre' || (memData?.puede_escribir !== false);
+  // _puede_escribir ya fue calculado en loadGrupos
+  const puedeEscribir = grupo._puede_escribir !== false;
 
   renderChatArea(
     `<div class="wa-avatar" style="width:40px;height:40px;">◈</div>`,
