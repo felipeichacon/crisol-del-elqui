@@ -145,6 +145,16 @@ tr:hover td { background: rgba(201,168,76,0.04); }
 .adm-wa-search input { width: 100%; background: var(--dark-4); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 15px; padding: 8px 12px; outline: none; border-radius: 16px; }
 .adm-wa-search input::placeholder { color: var(--text-dim); }
 .adm-wa-list { flex: 1; overflow-y: auto; }
+.adm-wa-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.adm-wa-tab { flex: 1; padding: 10px 0; text-align: center; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.adm-wa-tab:hover { color: var(--text); }
+.adm-wa-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+/* Encuestas en admin */
+.adm-poll-card { background: var(--dark-3); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 2px; }
+.adm-poll-option-bar { height: 30px; background: var(--dark-4); border: 1px solid var(--border); border-radius: 3px; position: relative; overflow: hidden; display: flex; align-items: center; padding: 0 10px; gap: 8px; margin-bottom: 6px; }
+.adm-poll-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(201,168,76,0.15); transition: width 0.4s; }
+.adm-poll-text { position: relative; font-size: 14px; color: var(--text); flex: 1; }
+.adm-poll-pct { position: relative; font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold-dim); }
 .adm-wa-item { display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-bottom: 1px solid rgba(201,168,76,0.07); cursor: pointer; transition: background 0.15s; }
 .adm-wa-item:hover, .adm-wa-item.active { background: rgba(201,168,76,0.08); }
 .adm-wa-av { width: 42px; height: 42px; border-radius: 50%; background: var(--dark-4); border: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); overflow: hidden; object-fit: cover; }
@@ -248,7 +258,6 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <div class="nav-item" onclick="showModule('corp-blog')"><span class="nav-icon">✦</span>Blog Corp.</div>
     <div class="sidebar-label">Comunicación</div>
     <div class="nav-item" onclick="showModule('mensajeria')"><span class="nav-icon">✉</span>Mensajería<span class="nav-badge hidden" id="badge-msg">0</span></div>
-    <div class="nav-item" onclick="showModule('broadcast')"><span class="nav-icon">⬡</span>Broadcast</div>
     <div class="nav-item" onclick="showModule('grupos')"><span class="nav-icon">◈</span>Grupos</div>
     <div class="nav-item" onclick="showModule('permisos')"><span class="nav-icon">🔑</span>Permisos</div>
     <div class="sidebar-label">Sistema</div>
@@ -281,7 +290,6 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           <button class="btn-primary" onclick="showModule('nuevo-usuario')">+ Nuevo miembro</button>
           <button class="btn-secondary" onclick="showModule('noticias')">Gestionar noticias</button>
           <button class="btn-secondary" onclick="showModule('mensajeria')">Ver mensajes</button>
-          <button class="btn-secondary" onclick="showModule('broadcast')">Enviar broadcast</button>
         </div>
       </div>
     </div>
@@ -943,16 +951,21 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <!-- MENSAJERÍA -->
     <div class="module hidden" id="mod-mensajeria">
       <div class="module-title">Mensajería</div>
-      <div class="module-sub">Conversaciones privadas con miembros</div>
+      <div class="module-sub">Conversaciones, grupos y encuestas</div>
       <div class="gold-line"></div>
       <div class="adm-wa">
         <div class="adm-wa-sidebar">
           <div class="adm-wa-header">
-            Hermanos
+            Mensajería
             <span id="adm-wa-unread" style="font-family:'Cinzel',serif;font-size:9px;color:var(--gold);"></span>
           </div>
           <div class="adm-wa-search">
-            <input type="text" id="adm-wa-search" placeholder="Buscar hermano…" oninput="filterAdmConvs(this.value)">
+            <input type="text" id="adm-wa-search" placeholder="Buscar…" oninput="admFilterConvs(this.value)">
+          </div>
+          <div class="adm-wa-tabs">
+            <div class="adm-wa-tab active" id="adm-tab-directos" onclick="admSwitchTab('directos')">Directos</div>
+            <div class="adm-wa-tab" id="adm-tab-grupos" onclick="admSwitchTab('grupos')">Grupos</div>
+            <div class="adm-wa-tab" id="adm-tab-encuestas" onclick="admSwitchTab('encuestas')">Asist. &amp; Ágapes</div>
           </div>
           <div class="adm-wa-list" id="admin-conv-list"></div>
         </div>
@@ -960,7 +973,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           <div class="adm-wa-chat">
             <div class="adm-wa-empty">
               <div class="adm-wa-empty-icon">✦</div>
-              <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;">Selecciona un hermano</div>
+              <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;">Selecciona una conversación</div>
             </div>
           </div>
         </div>
@@ -999,6 +1012,18 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <button class="btn-primary" onclick="sendBroadcast()">Enviar a todos los seleccionados</button>
       </div>
       <div id="broadcast-log" style="margin-top:16px;font-size:14px;color:var(--text-dim);"></div>
+    </div>
+
+    <!-- PERMISOS -->
+    <div class="module hidden" id="mod-permisos">
+      <div class="module-title">Permisos de Acceso</div>
+      <div class="module-sub">Otorga acceso a módulos del admin según el cargo de cada hermano</div>
+      <div class="gold-line"></div>
+      <div style="background:var(--dark-3);border:1px solid var(--border);padding:16px 24px;margin-bottom:28px;font-size:14px;color:var(--text-dim);line-height:1.8;display:flex;align-items:center;gap:16px;">
+        <span style="font-size:22px;">🔑</span>
+        <span>Los hermanos con permisos pueden acceder a <strong style="color:var(--gold);">crisoldelelqui.cl/admin</strong> con su cuenta normal y verán solo los módulos autorizados. El cargo del miembro se muestra como referencia.</span>
+      </div>
+      <div id="permisos-container"></div>
     </div>
 
   </div>
@@ -1075,46 +1100,173 @@ function toast(msg, type='') {
 const MODULOS_PERMISABLES = [
   'noticias','blog','egregora','radio-agora',
   'biblioteca','galeria','calendario',
-  'corp-noticias','mensajeria'
+  'corp-noticias','corp-blog','mensajeria'
 ];
 
+const MODULOS_INFO = {
+  'noticias':       { label: 'Noticias',           desc: 'Publicar y gestionar noticias del sitio' },
+  'blog':           { label: 'Blog / Orador',       desc: 'Subir entradas al blog según cargo' },
+  'egregora':       { label: 'Revista Egrégora',    desc: 'Gestionar artículos de la revista' },
+  'radio-agora':    { label: 'Radio Ágora',          desc: 'Subir episodios del podcast' },
+  'biblioteca':     { label: 'Biblioteca',           desc: 'Subir documentos y recursos' },
+  'galeria':        { label: 'Galería',              desc: 'Subir imágenes a la galería' },
+  'calendario':     { label: 'Calendario',           desc: 'Crear y editar eventos' },
+  'corp-noticias':  { label: 'Corp. Noticias',       desc: 'Gestionar noticias de la Corporación' },
+  'corp-blog':      { label: 'Corp. Blog',           desc: 'Publicar en el blog de la Corporación' },
+  'mensajeria':     { label: 'Mensajería',           desc: 'Mensajería, grupos y encuestas' },
+};
+
+// Sugerencias de permisos por cargo
+const PERMISOS_SUGERIDOS = {
+  'Venerable Maestro':        ['noticias','blog','egregora','calendario','mensajeria'],
+  'Orador':                   ['blog','egregora'],
+  'Primer Vigilante':         ['blog','biblioteca'],
+  'Segundo Vigilante':        ['blog','biblioteca'],
+  'Secretario':               ['noticias','calendario','mensajeria'],
+  'Hospitalario':             ['mensajeria'],
+  'Bibliotecario y Archivero':['biblioteca'],
+  'Maestro de Ceremonias':    ['calendario'],
+  'Maestro de Banquetes':     ['mensajeria'],
+};
+
 async function loadPermisosAdmin() {
-  const tbody = document.getElementById('permisos-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="12" style="padding:20px;color:var(--text-dim);">Cargando…</td></tr>';
+  const container = document.getElementById('permisos-container');
+  if (!container) return;
+  container.innerHTML = '<div style="padding:20px;color:var(--text-dim);">Cargando…</div>';
 
-  const { data: profiles } = await sbAdmin.from('profiles')
-    .select('id,nombre,apellido,role,cargo')
-    .neq('role','admin')
-    .order('apellido');
+  const [profRes, permRes] = await Promise.all([
+    sbAdmin.from('profiles').select('id,nombre,apellido,role,cargo,avatar_url').neq('role','admin').order('apellido'),
+    sbAdmin.from('permisos_admin').select('*')
+  ]);
 
-  const { data: permisos } = await sbAdmin.from('permisos_admin').select('*');
   const permisoMap = {};
-  (permisos||[]).forEach(p => { permisoMap[p.perfil_id] = p.modulos||[]; });
+  (permRes.data||[]).forEach(p => { permisoMap[p.perfil_id] = p.modulos||[]; });
 
-  tbody.innerHTML = '';
-  (profiles||[]).forEach(p => {
-    const mods = permisoMap[p.id] || [];
-    const tr = document.createElement('tr');
-    const checkboxes = MODULOS_PERMISABLES.map(mod => `
-      <td style="text-align:center;">
-        <input type="checkbox" ${mods.includes(mod)?'checked':''}
-          onchange="togglePermiso('${p.id}','${mod}',this.checked)"
-          style="accent-color:var(--gold);width:16px;height:16px;cursor:pointer;">
-      </td>`).join('');
-    tr.innerHTML = `
-      <td><strong style="color:var(--cream);">${qh(p.nombre,p.apellido)}</strong></td>
-      <td style="font-size:13px;color:var(--text-dim);">${p.cargo||ROLE_LABELS[p.role]||p.role}</td>
-      ${checkboxes}
-      <td>
-        <button class="btn-secondary" style="padding:5px 10px;font-size:9px;" onclick="darTodosPermisos('${p.id}')">Todos</button>
-        <button class="btn-danger" style="padding:5px 10px;font-size:9px;margin-top:4px;" onclick="quitarTodosPermisos('${p.id}')">Ninguno</button>
-      </td>`;
-    tbody.appendChild(tr);
+  const profiles = (profRes.data||[]).sort((a,b)=>(a.apellido||'').localeCompare(b.apellido||'','es'));
+
+  container.innerHTML = '';
+
+  // Buscador
+  const search = document.createElement('div');
+  search.style.cssText = 'margin-bottom:20px;';
+  search.innerHTML = `<input type="text" id="permisos-search" placeholder="Buscar miembro…" oninput="filtrarPermisosLista(this.value)"
+    style="width:320px;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:10px 16px;outline:none;">`;
+  container.appendChild(search);
+
+  const lista = document.createElement('div');
+  lista.id = 'permisos-lista';
+  lista.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+  container.appendChild(lista);
+
+  window._permisosData = profiles.map(p => ({ perfil: p, mods: permisoMap[p.id]||[] }));
+  renderPermisosLista(window._permisosData);
+}
+
+function filtrarPermisosLista(q) {
+  if (!window._permisosData) return;
+  const filtered = window._permisosData.filter(({perfil:p}) =>
+    !q || qh(p.nombre,p.apellido).toLowerCase().includes(q.toLowerCase()) ||
+    (p.cargo||'').toLowerCase().includes(q.toLowerCase())
+  );
+  renderPermisosLista(filtered);
+}
+
+function renderPermisosLista(items) {
+  const lista = document.getElementById('permisos-lista');
+  if (!lista) return;
+  lista.innerHTML = '';
+
+  items.forEach(({perfil: p, mods}) => {
+    const hasSugerencia = PERMISOS_SUGERIDOS[p.cargo];
+    const tienePermisos = mods.length > 0;
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);';
+
+    // Header del miembro — clickeable para expandir
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;';
+    hdr.onclick = () => togglePermisoCard(p.id);
+
+    const initials = qh(p.nombre,p.apellido).replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+    const avHtml = p.avatar_url
+      ? `<img src="${p.avatar_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;">`
+      : `<div style="width:40px;height:40px;border-radius:50%;background:var(--dark-4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:14px;color:var(--gold);flex-shrink:0;">${initials}</div>`;
+
+    const modsActivos = MODULOS_PERMISABLES.filter(m => mods.includes(m));
+    const badgesHtml = modsActivos.slice(0,4).map(m =>
+      `<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;color:var(--gold);border:1px solid var(--border-bright);padding:2px 6px;">${MODULOS_INFO[m]?.label||m}</span>`
+    ).join('') + (modsActivos.length>4?`<span style="font-size:11px;color:var(--text-dim);">+${modsActivos.length-4}</span>`:'');
+
+    hdr.innerHTML = `${avHtml}
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:3px;">${qh(p.nombre,p.apellido)}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${p.cargo||ROLE_LABELS[p.role]||p.role}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:300px;">
+        ${tienePermisos ? badgesHtml : '<span style="font-size:12px;color:var(--text-dim);font-style:italic;">Sin permisos</span>'}
+      </div>
+      <span id="perm-arrow-${p.id}" style="font-size:16px;color:var(--gold-dim);margin-left:12px;transition:transform 0.2s;">›</span>`;
+
+    card.appendChild(hdr);
+
+    // Panel expandible
+    const panel = document.createElement('div');
+    panel.id = 'perm-panel-'+p.id;
+    panel.style.cssText = 'display:none;border-top:1px solid var(--border);padding:20px;background:var(--dark-4);';
+
+    // Botones de acción rápida
+    let panelHtml = `<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">`;
+    if (hasSugerencia) {
+      panelHtml += `<button onclick="aplicarSugerencia('${p.id}','${p.cargo}')" 
+        style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:7px 14px;cursor:pointer;">
+        ✦ Sugerir para ${p.cargo}</button>`;
+    }
+    panelHtml += `<button onclick="darTodosPermisos('${p.id}')" class="btn-secondary" style="padding:7px 14px;font-size:9px;">Todos</button>
+      <button onclick="quitarTodosPermisos('${p.id}')" class="btn-danger" style="padding:7px 14px;font-size:9px;">Ninguno</button>
+    </div>`;
+
+    // Grid de módulos
+    panelHtml += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">`;
+    MODULOS_PERMISABLES.forEach(mod => {
+      const info = MODULOS_INFO[mod] || { label: mod, desc: '' };
+      const checked = mods.includes(mod);
+      panelHtml += `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:var(--dark-3);border:1px solid ${checked?'var(--border-bright)':'var(--border)'};cursor:pointer;transition:border-color 0.2s;" id="perm-lbl-${p.id}-${mod}">
+        <input type="checkbox" value="${mod}" ${checked?'checked':''}
+          onchange="togglePermiso('${p.id}','${mod}',this.checked,this)"
+          style="accent-color:var(--gold);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer;">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--cream);margin-bottom:2px;">${info.label}</div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.4;">${info.desc}</div>
+        </div>
+      </label>`;
+    });
+    panelHtml += '</div>';
+    panel.innerHTML = panelHtml;
+    card.appendChild(panel);
+    lista.appendChild(card);
   });
 }
 
-async function togglePermiso(perfilId, modulo, activo) {
+function togglePermisoCard(perfilId) {
+  const panel = document.getElementById('perm-panel-'+perfilId);
+  const arrow = document.getElementById('perm-arrow-'+perfilId);
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+async function aplicarSugerencia(perfilId, cargo) {
+  const sugeridos = PERMISOS_SUGERIDOS[cargo] || [];
+  await sbAdmin.from('permisos_admin').upsert(
+    { perfil_id: perfilId, modulos: sugeridos, otorgado_por: currentProfile.id, updated_at: new Date() },
+    { onConflict: 'perfil_id' }
+  );
+  toast('Permisos sugeridos para "'+cargo+'" aplicados', 'success');
+  loadPermisosAdmin();
+}
+
+async function togglePermiso(perfilId, modulo, activo, cbEl) {
   const { data: existing } = await sbAdmin.from('permisos_admin')
     .select('modulos').eq('perfil_id', perfilId).maybeSingle();
 
@@ -1126,7 +1278,22 @@ async function togglePermiso(perfilId, modulo, activo) {
     { perfil_id: perfilId, modulos: mods, otorgado_por: currentProfile.id, updated_at: new Date() },
     { onConflict: 'perfil_id' }
   );
-  toast('Permisos actualizados', 'success');
+
+  // Actualizar borde de la label
+  if (cbEl) {
+    const lbl = document.getElementById('perm-lbl-'+perfilId+'-'+modulo);
+    if (lbl) lbl.style.borderColor = activo ? 'var(--border-bright)' : 'var(--border)';
+  }
+
+  // Actualizar los datos en memoria
+  if (window._permisosData) {
+    const entry = window._permisosData.find(e => e.perfil.id === perfilId);
+    if (entry) {
+      if (activo) { if (!entry.mods.includes(modulo)) entry.mods.push(modulo); }
+      else { entry.mods = entry.mods.filter(m=>m!==modulo); }
+    }
+  }
+  toast(activo ? 'Permiso otorgado' : 'Permiso revocado', 'success');
 }
 
 async function darTodosPermisos(perfilId) {
@@ -1432,7 +1599,7 @@ async function doLogin() {
 async function doLogout() { await sb.auth.signOut(); location.reload(); }
 
 // ── MODULES ──
-const MODULES = ['dashboard','usuarios','nuevo-usuario','edit-user','noticias','blog','egregora','radio-agora','corp-noticias','corp-blog','biblioteca','galeria','heroes','calendario','mensajeria','broadcast','grupos','permisos'];
+const MODULES = ['dashboard','usuarios','nuevo-usuario','edit-user','noticias','blog','egregora','radio-agora','corp-noticias','corp-blog','biblioteca','galeria','heroes','calendario','mensajeria','grupos','permisos'];
 function showModule(name) {
   MODULES.forEach(m => document.getElementById('mod-'+m)?.classList.toggle('hidden', m!==name));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
@@ -2346,39 +2513,109 @@ async function saveHero(role) {
 let admWaConvId = null;
 let admWaConvProfile = null;
 let admWaAllProfiles = [];
+let admWaTab = 'directos';
+let admWaGrupos = [];
+let admWaEncuestas = [];
+let admPollOpciones = [];
 
 async function loadConversations() {
-  const { data } = await sbAdmin.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).order('apellido');
-  admWaAllProfiles = (data||[]).sort((a,b) => (a.apellido||'').localeCompare(b.apellido||'','es'));
-  renderAdmConvList(admWaAllProfiles);
+  const [profRes, grupRes, encRes] = await Promise.all([
+    sbAdmin.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).order('apellido'),
+    sbAdmin.from('grupos').select('*').order('created_at', {ascending:false}),
+    sbAdmin.from('encuestas').select('*').eq('activa', true).order('created_at', {ascending:false})
+  ]);
+  admWaAllProfiles = (profRes.data||[]).sort((a,b) => (a.apellido||'').localeCompare(b.apellido||'','es'));
+  admWaGrupos      = grupRes.data || [];
+  admWaEncuestas   = encRes.data  || [];
+  admRenderConvList();
   loadUnread();
 }
 
-function filterAdmConvs(q) {
-  const filtered = admWaAllProfiles.filter(p =>
-    !q || qh(p.nombre,p.apellido).toLowerCase().includes(q.toLowerCase())
-  );
-  renderAdmConvList(filtered);
+function admSwitchTab(tab) {
+  admWaTab = tab;
+  document.querySelectorAll('.adm-wa-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('adm-tab-'+tab).classList.add('active');
+  document.getElementById('adm-wa-search').value = '';
+  admRenderConvList();
 }
 
-function renderAdmConvList(profiles) {
+function admFilterConvs(q) { admRenderConvList(q.toLowerCase()); }
+
+function admRenderConvList(query='') {
   const list = document.getElementById('admin-conv-list');
   list.innerHTML = '';
-  profiles.forEach(p => {
-    const initials = qh(p.nombre,p.apellido).replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
-    const avatarHtml = p.avatar_url
-      ? `<img class="adm-wa-av" src="${p.avatar_url}">`
-      : `<div class="adm-wa-av">${initials}</div>`;
-    const item = document.createElement('div');
-    item.className = 'adm-wa-item' + (admWaConvId===p.id?' active':'');
-    item.onclick = () => openAdminConv(p);
-    item.innerHTML = `${avatarHtml}
-      <div class="adm-wa-info">
-        <div class="adm-wa-name">${qh(p.nombre,p.apellido)}</div>
-        <div class="adm-wa-prev">${p.cargo||ROLE_LABELS[p.role]||p.role}</div>
-      </div>`;
-    list.appendChild(item);
-  });
+
+  if (admWaTab === 'directos') {
+    const perfiles = admWaAllProfiles.filter(p =>
+      !query || qh(p.nombre,p.apellido).toLowerCase().includes(query)
+    );
+    if (!perfiles.length) {
+      list.innerHTML = '<div style="padding:20px;color:var(--text-dim);font-size:13px;font-style:italic;">Sin resultados</div>';
+      return;
+    }
+    perfiles.forEach(p => {
+      const initials = qh(p.nombre,p.apellido).replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+      const avatarHtml = p.avatar_url
+        ? `<img class="adm-wa-av" src="${p.avatar_url}">`
+        : `<div class="adm-wa-av">${initials}</div>`;
+      const item = document.createElement('div');
+      item.className = 'adm-wa-item' + (admWaConvId===p.id?' active':'');
+      item.onclick = () => openAdminConv(p);
+      item.innerHTML = `${avatarHtml}
+        <div class="adm-wa-info">
+          <div class="adm-wa-name">${qh(p.nombre,p.apellido)}</div>
+          <div class="adm-wa-prev">${p.cargo||ROLE_LABELS[p.role]||p.role}</div>
+        </div>`;
+      list.appendChild(item);
+    });
+
+  } else if (admWaTab === 'grupos') {
+    const grupos = admWaGrupos.filter(g => !query || g.nombre.toLowerCase().includes(query));
+    if (!grupos.length) {
+      list.innerHTML = '<div style="padding:20px;color:var(--text-dim);font-size:13px;font-style:italic;">No hay grupos. Créalos en el módulo Grupos.</div>';
+      return;
+    }
+    grupos.forEach(g => {
+      const item = document.createElement('div');
+      item.className = 'adm-wa-item' + (admWaConvId===g.id?' active':'');
+      item.onclick = () => admOpenGrupo(g);
+      item.innerHTML = `<div class="adm-wa-av">◈</div>
+        <div class="adm-wa-info">
+          <div class="adm-wa-name">${g.nombre}</div>
+          <div class="adm-wa-prev">${g.descripcion||'Grupo'}</div>
+        </div>`;
+      list.appendChild(item);
+    });
+
+  } else if (admWaTab === 'encuestas') {
+    // Cabecera con botón nueva encuesta
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;';
+    hdr.innerHTML = `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Encuestas activas</span>
+      <button onclick="admAbrirModalEncuesta()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:5px 10px;cursor:pointer;">+ Nueva</button>`;
+    list.appendChild(hdr);
+
+    const encuestas = admWaEncuestas.filter(e => !query || e.titulo.toLowerCase().includes(query));
+    if (!encuestas.length) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:20px;color:var(--text-dim);font-size:13px;font-style:italic;';
+      empty.textContent = 'No hay encuestas activas';
+      list.appendChild(empty);
+      return;
+    }
+    encuestas.forEach(e => {
+      const totalVotos = (e.opciones||[]).reduce((s,o)=>s+(o.votos||[]).length,0);
+      const item = document.createElement('div');
+      item.className = 'adm-wa-item' + (admWaConvId===e.id?' active':'');
+      item.onclick = () => admOpenEncuesta(e);
+      item.innerHTML = `<div class="adm-wa-av" style="font-size:18px;">📊</div>
+        <div class="adm-wa-info">
+          <div class="adm-wa-name">${e.titulo}</div>
+          <div class="adm-wa-prev">${e.tipo==='asistencia'?'Asistencia':e.tipo==='agape'?'Ágape':'General'} · ${totalVotos} votos</div>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
 }
 
 async function openAdminConv(profile) {
@@ -2453,6 +2690,191 @@ async function adminSendMsg() {
   await sbAdmin.from('messages').insert({ from_id:currentProfile.id, to_id:admWaConvId, contenido:text });
   input.value = ''; input.style.height = 'auto';
   openAdminConv(admWaConvProfile);
+}
+
+// ── GRUPOS EN ADMIN ──
+async function admOpenGrupo(grupo) {
+  admWaConvId = grupo.id;
+  admRenderConvList();
+
+  const area = document.getElementById('adm-wa-chat-area');
+  area.innerHTML = `<div class="adm-wa-chat">
+    <div class="adm-wa-chat-hdr">
+      <div class="adm-wa-av">◈</div>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);">${grupo.nombre}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${grupo.descripcion||'Grupo'} · ${grupo.modo_escritura==='restringido'?'Restringido':'Libre'}</div>
+      </div>
+    </div>
+    <div class="adm-wa-msgs" id="adm-wa-msgs"></div>
+    <div class="adm-wa-input-area">
+      <textarea class="adm-wa-input" id="admin-msg-input" rows="1"
+        placeholder="Escribe un mensaje al grupo…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();admSendGrupo('${grupo.id}');}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+      <button class="adm-wa-send" onclick="admSendGrupo('${grupo.id}')">➤</button>
+    </div>
+  </div>`;
+
+  const {data} = await sbAdmin.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
+  renderAdmMsgs(data||[], true);
+}
+
+async function admSendGrupo(grupoId) {
+  const input = document.getElementById('admin-msg-input');
+  const text = input.value.trim(); if (!text) return;
+  input.value = ''; input.style.height = 'auto';
+  await sbAdmin.from('grupo_mensajes').insert({
+    grupo_id: grupoId,
+    autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    contenido: text
+  });
+  const {data} = await sbAdmin.from('grupo_mensajes').select('*').eq('grupo_id',grupoId).order('created_at').limit(100);
+  renderAdmMsgs(data||[], true);
+}
+
+// ── ENCUESTAS EN ADMIN ──
+async function admOpenEncuesta(enc) {
+  admWaConvId = enc.id;
+  admRenderConvList();
+
+  const {data: encFresh} = await sbAdmin.from('encuestas').select('*').eq('id',enc.id).single();
+  if (!encFresh) return;
+
+  const opciones = encFresh.opciones || [];
+  const totalVotos = opciones.reduce((s,o)=>s+(o.votos||[]).length,0);
+
+  let opcionesHtml = opciones.map(op => {
+    const votos = (op.votos||[]).length;
+    const pct   = totalVotos>0 ? Math.round(votos/totalVotos*100) : 0;
+    return `<div class="adm-poll-option-bar">
+      <div class="adm-poll-fill" style="width:${pct}%"></div>
+      <span class="adm-poll-text">${op.texto}</span>
+      <span class="adm-poll-pct">${pct}% (${votos})</span>
+    </div>`;
+  }).join('');
+
+  const area = document.getElementById('adm-wa-chat-area');
+  area.innerHTML = `<div class="adm-wa-chat">
+    <div class="adm-wa-chat-hdr">
+      <div class="adm-wa-av" style="font-size:18px;">📊</div>
+      <div style="flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);">${encFresh.titulo}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${encFresh.tipo==='asistencia'?'Asistencia':encFresh.tipo==='agape'?'Ágape':'General'} · ${encFresh.activa?'Activa':'Cerrada'}</div>
+      </div>
+      ${encFresh.activa?`<button onclick="admCerrarEncuesta('${encFresh.id}')" class="btn-danger" style="padding:6px 12px;font-size:9px;">Cerrar</button>`:''}
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:24px;">
+      ${encFresh.descripcion?`<div style="font-size:14px;color:var(--text-dim);margin-bottom:20px;line-height:1.7;">${encFresh.descripcion}</div>`:''}
+      ${opcionesHtml}
+      <div style="margin-top:12px;font-size:13px;color:var(--text-dim);">${totalVotos} ${totalVotos===1?'voto':'votos'} en total</div>
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px;">
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Detalle por opción</div>
+        ${opciones.map(op=>`
+          <div style="margin-bottom:10px;">
+            <div style="font-size:13px;color:var(--cream);margin-bottom:4px;">«${op.texto}»</div>
+            <div style="font-size:12px;color:var(--text-dim);">${(op.votos||[]).length} votos</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function admCerrarEncuesta(encId) {
+  await sbAdmin.from('encuestas').update({activa:false}).eq('id',encId);
+  toast('Encuesta cerrada','success');
+  const {data} = await sbAdmin.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
+  admWaEncuestas = data||[];
+  admRenderConvList();
+}
+
+// ── MODAL NUEVA ENCUESTA (admin) ──
+let admPollOpts = ['Asistiré','No podré asistir','Confirmaré más tarde'];
+
+function admAbrirModalEncuesta() {
+  admPollOpts = ['Asistiré','No podré asistir','Confirmaré más tarde'];
+  document.getElementById('modal-title').textContent = 'Nueva encuesta';
+  document.getElementById('modal-sub').textContent = 'Canal Asistencia & Ágapes';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="field" style="margin-bottom:14px;"><label>Título</label>
+      <input id="adm-poll-titulo" type="text" placeholder="Ej: Tenida del 15 de marzo"
+        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;">
+    </div>
+    <div class="field" style="margin-bottom:14px;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+      <textarea id="adm-poll-desc" rows="2" placeholder="Detalles adicionales…"
+        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:15px;padding:10px 14px;outline:none;resize:vertical;"></textarea>
+    </div>
+    <div class="field" style="margin-bottom:14px;"><label>Tipo</label>
+      <select id="adm-poll-tipo" onchange="admPollTipoChange(this.value)"
+        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:10px 14px;outline:none;">
+        <option value="asistencia">Asistencia a Tenida</option>
+        <option value="agape">Ágape</option>
+        <option value="general">General</option>
+      </select>
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px;">Opciones</div>
+    <div id="adm-poll-opts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+    <button onclick="admAddPollOpt()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:6px 14px;cursor:pointer;margin-bottom:14px;">+ Opción</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="adm-poll-mult" style="accent-color:var(--gold);width:16px;height:16px;">
+      <label for="adm-poll-mult" style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">Permitir selección múltiple</label>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-primary" onclick="admGuardarEncuesta()">Publicar encuesta</button>
+    <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
+  admRenderPollOpts();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function admPollTipoChange(tipo) {
+  if (tipo==='asistencia') admPollOpts = ['Asistiré','No podré asistir','Confirmaré más tarde'];
+  else if (tipo==='agape') admPollOpts = ['Asistiré al ágape','No asistiré','Tengo restricción alimentaria'];
+  else admPollOpts = ['Sí','No'];
+  admRenderPollOpts();
+}
+
+function admAddPollOpt() { admPollOpts.push(''); admRenderPollOpts(); }
+
+function admRenderPollOpts() {
+  const list = document.getElementById('adm-poll-opts-list');
+  if (!list) return;
+  list.innerHTML = '';
+  admPollOpts.forEach((op,i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;';
+    row.innerHTML = `<input type="text" value="${op}" placeholder="Opción ${i+1}"
+      style="flex:1;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:8px 12px;outline:none;"
+      oninput="admPollOpts[${i}]=this.value">
+      <button onclick="admPollOpts.splice(${i},1);admRenderPollOpts()"
+        style="background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 10px;cursor:pointer;">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+async function admGuardarEncuesta() {
+  const titulo = document.getElementById('adm-poll-titulo').value.trim();
+  if (!titulo) { toast('El título es obligatorio','error'); return; }
+  const opts = admPollOpts.filter(o=>o.trim());
+  if (opts.length < 2) { toast('Agrega al menos 2 opciones','error'); return; }
+  const opciones = opts.map((texto,i) => ({ id:'op_'+(Date.now()+'_'+i), texto:texto.trim(), votos:[] }));
+  const {error} = await sbAdmin.from('encuestas').insert({
+    titulo,
+    descripcion: document.getElementById('adm-poll-desc').value.trim()||null,
+    tipo: document.getElementById('adm-poll-tipo').value,
+    opciones,
+    multiple: document.getElementById('adm-poll-mult').checked,
+    autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    activa: true,
+    roles: ['todos']
+  });
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  closeModal();
+  toast('Encuesta publicada','success');
+  const {data} = await sbAdmin.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
+  admWaEncuestas = data||[];
+  admSwitchTab('encuestas');
 }
 
 async function loadUnread() {
