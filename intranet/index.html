@@ -176,28 +176,67 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .doc-meta { font-size: 13px; color: var(--text-dim); }
 
 /* ── MODULE: MENSAJERÍA ── */
-.messaging-layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 56px); gap: 0; }
-.conversations-list { background: var(--dark-2); border-right: 1px solid var(--border); overflow-y: auto; }
-.conv-header { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
-.conv-header h3 { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.15em; color: var(--cream); text-transform: uppercase; }
-.conv-item { padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
-.conv-item:hover, .conv-item.active { background: rgba(201,168,76,0.08); }
-.conv-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); margin-bottom: 4px; }
-.conv-preview { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conv-unread { font-family: 'Cinzel', serif; font-size: 10px; color: var(--gold); }
-.msg-area { display: flex; flex-direction: column; height: calc(100vh - 56px); }
-.msg-header { padding: 20px 28px; border-bottom: 1px solid var(--border); background: var(--dark-2); }
-.msg-header h4 { font-family: 'Cinzel', serif; font-size: 15px; color: var(--cream); font-weight: 400; }
-.msg-header p { font-size: 13px; color: var(--text-dim); }
-.msg-list { flex: 1; overflow-y: auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; }
-.msg-bubble { max-width: 68%; padding: 14px 18px; }
-.msg-bubble.mine { align-self: flex-end; background: rgba(201,168,76,0.12); border: 1px solid var(--border-bright); }
-.msg-bubble.theirs { align-self: flex-start; background: var(--dark-3); border: 1px solid var(--border); }
-.msg-sender { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 6px; }
-.msg-text { font-size: 16px; color: var(--text); line-height: 1.6; }
-.msg-time { font-size: 12px; color: var(--text-dim); margin-top: 6px; text-align: right; }
-.msg-input-area { padding: 16px 28px; border-top: 1px solid var(--border); background: var(--dark-2); display: flex; gap: 12px; }
-.msg-input { flex: 1; background: var(--dark-3); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 17px; padding: 12px 16px; outline: none; transition: border-color 0.3s; resize: none; }
+.wa-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 56px); gap: 0; overflow: hidden; }
+.wa-sidebar { background: var(--dark-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.wa-sidebar-header { padding: 16px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.wa-sidebar-title { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.12em; color: var(--cream); text-transform: uppercase; flex: 1; }
+.wa-search { padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.wa-search input { width: 100%; background: var(--dark-4); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 15px; padding: 9px 14px; outline: none; border-radius: 20px; }
+.wa-search input::placeholder { color: var(--text-dim); }
+.wa-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.wa-tab { flex: 1; padding: 12px 0; text-align: center; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.wa-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.wa-conv-list { flex: 1; overflow-y: auto; }
+.wa-conv-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.08); cursor: pointer; transition: background 0.15s; position: relative; }
+.wa-conv-item:hover, .wa-conv-item.active { background: rgba(201,168,76,0.07); }
+.wa-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--dark-4); border: 1px solid var(--border); flex-shrink: 0; object-fit: cover; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 16px; color: var(--gold); overflow: hidden; }
+.wa-conv-info { flex: 1; min-width: 0; }
+.wa-conv-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-conv-preview { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.wa-conv-time { font-size: 11px; color: var(--text-dim); }
+.wa-unread-badge { background: var(--gold); color: var(--dark); font-family: 'Cinzel', serif; font-size: 10px; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+/* Chat area */
+.wa-chat { display: flex; flex-direction: column; height: calc(100vh - 56px); background: var(--dark); }
+.wa-chat-header { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--dark-2); display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.wa-chat-info { flex: 1; min-width: 0; }
+.wa-chat-name { font-family: 'Cinzel', serif; font-size: 15px; color: var(--cream); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-chat-sub { font-size: 12px; color: var(--text-dim); }
+.wa-messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth; }
+.wa-date-sep { text-align: center; margin: 12px 0; }
+.wa-date-sep span { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); background: var(--dark-3); padding: 4px 14px; border-radius: 12px; text-transform: uppercase; }
+.wa-bubble-wrap { display: flex; flex-direction: column; max-width: 72%; }
+.wa-bubble-wrap.mine { align-self: flex-end; align-items: flex-end; }
+.wa-bubble-wrap.theirs { align-self: flex-start; align-items: flex-start; }
+.wa-bubble { padding: 10px 14px 6px; position: relative; border-radius: 4px; }
+.wa-bubble-wrap.mine .wa-bubble { background: rgba(201,168,76,0.14); border: 1px solid var(--border-bright); border-radius: 12px 0 12px 12px; }
+.wa-bubble-wrap.theirs .wa-bubble { background: var(--dark-3); border: 1px solid var(--border); border-radius: 0 12px 12px 12px; }
+.wa-bubble-sender { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.15em; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
+.wa-bubble-text { font-size: 16px; color: var(--text); line-height: 1.6; word-break: break-word; }
+.wa-bubble-time { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 3px; }
+.wa-input-area { padding: 12px 20px; border-top: 1px solid var(--border); background: var(--dark-2); display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0; }
+.wa-input { flex: 1; background: var(--dark-3); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 17px; padding: 12px 16px; outline: none; resize: none; max-height: 120px; border-radius: 22px; transition: border-color 0.2s; line-height: 1.4; }
+.wa-input:focus { border-color: var(--gold-dim); }
+.wa-send-btn { background: var(--gold); border: none; color: var(--dark); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 18px; transition: background 0.2s; }
+.wa-send-btn:hover { background: var(--gold-light); }
+.wa-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--dark); }
+.wa-empty-icon { font-size: 48px; opacity: 0.2; }
+.wa-empty-text { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase; }
+/* Encuestas */
+.poll-card { background: var(--dark-4); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 4px 0; min-width: 260px; max-width: 320px; }
+.poll-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--cream); margin-bottom: 4px; }
+.poll-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; }
+.poll-option { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; cursor: pointer; }
+.poll-option-bar { height: 32px; background: var(--dark-3); border: 1px solid var(--border); border-radius: 4px; position: relative; overflow: hidden; display: flex; align-items: center; padding: 0 12px; gap: 8px; transition: border-color 0.2s; }
+.poll-option-bar:hover { border-color: var(--gold-dim); }
+.poll-option-bar.voted { border-color: var(--gold); }
+.poll-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(201,168,76,0.15); transition: width 0.4s; }
+.poll-option-text { position: relative; font-size: 14px; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.poll-option-pct { position: relative; font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold-dim); }
+.poll-vote-count { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+/* Modal encuesta */
+.poll-modal-overlay { position: fixed; inset: 0; background: rgba(0,10,32,0.94); z-index: 600; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.poll-modal-card { background: var(--dark-2); border: 1px solid var(--border-bright); max-width: 560px; width: 100%; padding: 36px; position: relative; max-height: 90vh; overflow-y: auto; }
 .msg-input:focus { border-color: var(--gold-dim); }
 .btn-send { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dark); background: var(--gold); border: none; padding: 12px 20px; cursor: pointer; align-self: flex-end; transition: background 0.3s; }
 .btn-send:hover { background: var(--gold-light); }
@@ -440,21 +479,66 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 
     <!-- MENSAJERÍA MODULE -->
     <div class="module hidden" id="mod-mensajes">
-      <div class="messaging-layout">
-        <div class="conversations-list">
-          <div class="conv-header"><h3>Conversaciones</h3></div>
-          <div id="conversations-list"></div>
+      <div class="wa-layout">
+        <!-- SIDEBAR izquierdo -->
+        <div class="wa-sidebar">
+          <div class="wa-sidebar-header">
+            <span class="wa-sidebar-title">Mensajería</span>
+            <span id="wa-unread-total" style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);"></span>
+          </div>
+          <div class="wa-search">
+            <input type="text" id="wa-search-input" placeholder="Buscar hermano o grupo…" oninput="filterConvs(this.value)">
+          </div>
+          <div class="wa-tabs">
+            <div class="wa-tab active" id="tab-directos" onclick="switchTab('directos')">Directos</div>
+            <div class="wa-tab" id="tab-grupos" onclick="switchTab('grupos')">Grupos</div>
+            <div class="wa-tab" id="tab-encuestas" onclick="switchTab('encuestas')">Asist. & Ágapes</div>
+          </div>
+          <div class="wa-conv-list" id="wa-conv-list"></div>
         </div>
-        <div class="msg-area">
-          <div class="msg-header">
-            <h4 id="msg-contact-name">Selecciona una conversación</h4>
-            <p id="msg-contact-role" style="font-size:13px;color:var(--text-dim);"></p>
+        <!-- ÁREA DE CHAT -->
+        <div id="wa-chat-area">
+          <div class="wa-empty">
+            <div class="wa-empty-icon">✦</div>
+            <div class="wa-empty-text">Selecciona una conversación</div>
           </div>
-          <div class="msg-list" id="msg-list"></div>
-          <div class="msg-input-area">
-            <textarea class="msg-input" id="msg-input" rows="2" placeholder="Escribe un mensaje…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
-            <button class="btn-send" onclick="sendMessage()">Enviar</button>
-          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL NUEVA ENCUESTA -->
+    <div class="poll-modal-overlay hidden" id="modal-nueva-encuesta">
+      <div class="poll-modal-card">
+        <button onclick="document.getElementById('modal-nueva-encuesta').classList.add('hidden')" style="position:absolute;top:14px;right:18px;background:transparent;border:none;color:var(--gold-dim);font-size:22px;cursor:pointer;">✕</button>
+        <div style="font-family:'Cinzel',serif;font-size:14px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;">Nueva encuesta</div>
+        <div style="margin-bottom:14px;">
+          <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
+          <input id="poll-titulo" type="text" placeholder="Ej: Tenida del 15 de marzo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Descripción <span style="font-style:italic;font-size:10px;">(opcional)</span></label>
+          <textarea id="poll-desc" rows="2" placeholder="Detalles adicionales…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:15px;padding:10px 14px;outline:none;resize:vertical;"></textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Tipo</label>
+          <select id="poll-tipo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:10px 14px;outline:none;">
+            <option value="asistencia">Asistencia a Tenida</option>
+            <option value="agape">Ágape — Confirmación de asistencia</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+        <div style="margin-bottom:6px;">
+          <label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:10px;">Opciones de respuesta</label>
+          <div id="poll-opciones-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+          <button onclick="addPollOpcion()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:8px 16px;cursor:pointer;">+ Agregar opción</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 0;">
+          <input type="checkbox" id="poll-multiple" style="accent-color:var(--gold);width:16px;height:16px;">
+          <label for="poll-multiple" style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">Permitir selección múltiple</label>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button onclick="guardarEncuesta()" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:13px 24px;cursor:pointer;flex:1;">Publicar encuesta</button>
+          <button onclick="document.getElementById('modal-nueva-encuesta').classList.add('hidden')" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);background:transparent;border:1px solid var(--border);padding:13px 20px;cursor:pointer;">Cancelar</button>
         </div>
       </div>
     </div>
@@ -1081,82 +1165,534 @@ async function uploadDocument(input) {
   loadDocuments();
 }
 
-// ── MENSAJERÍA ──
+// ── MENSAJERÍA WHATSAPP-LIKE ──
+let waTab = 'directos';
+let waActiveConv = null; // { tipo: 'directo'|'grupo'|'encuestas', id, perfil? }
+let waGrupos = [];
+let waEncuestas = [];
+let pollOpciones = [];
+let waGroupChannel = null;
+
+// ── INIT MENSAJERÍA ──
 async function loadConversations() {
-  const { data: msgs } = await sb.from('messages')
-    .select('*, from:from_id(id,nombre,apellido,role), to:to_id(id,nombre,apellido,role)')
-    .or(`from_id.eq.${currentProfile.id},to_id.eq.${currentProfile.id}`)
-    .order('created_at', { ascending: false });
-  if (!msgs) return;
-  const seen = new Set();
-  const convs = [];
-  msgs.forEach(m => {
-    const other = m.from_id === currentProfile.id ? m.to : m.from;
-    if (other && !seen.has(other.id)) { seen.add(other.id); convs.push({ other, lastMsg: m }); }
-  });
-  const list = document.getElementById('conversations-list');
-  list.innerHTML = '';
-  allProfiles.forEach(p => {
-    if (p.id === currentProfile.id) return;
-    const div = document.createElement('div'); div.className='conv-item'; div.onclick=()=>openConversation(p);
-    div.innerHTML=`<div class="conv-name">${qh(p.nombre,p.apellido)}</div><div class="conv-preview">${ROLE_LABELS[p.role]||p.role}</div>`;
-    list.appendChild(div);
-  });
+  await Promise.all([loadGrupos(), loadEncuestas()]);
+  renderConvList();
+  loadUnreadCount();
 }
 
-async function openConversation(profile) {
-  activeConvId = profile.id;
-  document.getElementById('msg-contact-name').textContent = qh(profile.nombre, profile.apellido);
-  document.getElementById('msg-contact-role').textContent = ROLE_LABELS[profile.role] || profile.role;
+async function loadGrupos() {
+  // Cargar grupos donde el usuario es miembro
+  const { data } = await sb.from('grupo_miembros')
+    .select('grupo_id, grupos(*)')
+    .eq('perfil_id', currentProfile.id);
+  waGrupos = (data||[]).map(r => r.grupos).filter(Boolean);
+}
+
+async function loadEncuestas() {
+  const rol = currentProfile.role;
+  const { data } = await sb.from('encuestas')
+    .select('*')
+    .eq('activa', true)
+    .order('created_at', { ascending: false });
+  waEncuestas = (data||[]).filter(e =>
+    !e.roles || e.roles.includes('todos') || e.roles.includes(rol)
+  );
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  waTab = tab;
+  document.querySelectorAll('.wa-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  renderConvList();
+}
+
+function filterConvs(q) {
+  renderConvList(q.toLowerCase());
+}
+
+// ── RENDER LISTA IZQUIERDA ──
+function renderConvList(query='') {
+  const list = document.getElementById('wa-conv-list');
+  list.innerHTML = '';
+
+  if (waTab === 'directos') {
+    const perfiles = allProfiles.filter(p =>
+      p.id !== currentProfile.id &&
+      (!query || qh(p.nombre,p.apellido).toLowerCase().includes(query))
+    );
+    perfiles.forEach(p => {
+      const item = makeConvItem(
+        p.avatar_url, qh(p.nombre,p.apellido),
+        ROLE_LABELS[p.role]||p.role, null,
+        () => openDirecto(p)
+      );
+      if (waActiveConv?.tipo==='directo' && waActiveConv.id===p.id)
+        item.classList.add('active');
+      list.appendChild(item);
+    });
+
+  } else if (waTab === 'grupos') {
+    // Canal general siempre primero
+    const rolLabel = ROLE_LABELS[currentProfile.role]||'Hermanos';
+    const generalItem = makeConvItem(
+      null, 'Canal del Rol — ' + rolLabel,
+      'Chat del '+rolLabel, null,
+      () => openGrupoRol()
+    );
+    if (waActiveConv?.tipo==='rol') generalItem.classList.add('active');
+    list.appendChild(generalItem);
+
+    waGrupos.filter(g => !query || g.nombre.toLowerCase().includes(query)).forEach(g => {
+      const item = makeConvItem(
+        g.avatar_url, g.nombre, g.descripcion||'Grupo',
+        null, () => openGrupo(g)
+      );
+      if (waActiveConv?.tipo==='grupo' && waActiveConv.id===g.id)
+        item.classList.add('active');
+      list.appendChild(item);
+    });
+
+  } else if (waTab === 'encuestas') {
+    // Botón nueva encuesta (admin puede crear, todos pueden ver)
+    const encHeader = document.createElement('div');
+    encHeader.style.cssText = 'padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;';
+    encHeader.innerHTML = `<span style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Encuestas activas</span>`;
+    if (currentProfile.role === 'admin' || currentProfile.role === 'maestro') {
+      const btn = document.createElement('button');
+      btn.textContent = '+ Nueva';
+      btn.style.cssText = "font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:6px 12px;cursor:pointer;";
+      btn.onclick = () => abrirModalEncuesta();
+      encHeader.appendChild(btn);
+    }
+    list.appendChild(encHeader);
+
+    if (!waEncuestas.length) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:32px;text-align:center;color:var(--text-dim);font-size:14px;font-style:italic;';
+      empty.textContent = 'No hay encuestas activas';
+      list.appendChild(empty);
+      return;
+    }
+    waEncuestas.filter(e => !query || e.titulo.toLowerCase().includes(query)).forEach(e => {
+      const totalVotos = (e.opciones||[]).reduce((s,o) => s+(o.votos||[]).length, 0);
+      const item = makeConvItem(
+        null, e.titulo,
+        e.tipo==='asistencia'?'Asistencia a Tenida':e.tipo==='agape'?'Ágape':e.descripcion||'Encuesta',
+        totalVotos+'  votos', () => openEncuesta(e)
+      );
+      item.querySelector('.wa-conv-time').style.fontSize = '11px';
+      if (waActiveConv?.tipo==='encuesta' && waActiveConv.id===e.id)
+        item.classList.add('active');
+      list.appendChild(item);
+    });
+  }
+}
+
+function makeConvItem(avatarUrl, nombre, preview, meta, onclick) {
+  const item = document.createElement('div');
+  item.className = 'wa-conv-item';
+  item.onclick = onclick;
+
+  const initials = nombre.replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+  const avatarHtml = avatarUrl
+    ? `<img class="wa-avatar" src="${avatarUrl}">`
+    : `<div class="wa-avatar">${initials}</div>`;
+
+  item.innerHTML = `${avatarHtml}
+    <div class="wa-conv-info">
+      <div class="wa-conv-name">${nombre}</div>
+      <div class="wa-conv-preview">${preview||''}</div>
+    </div>
+    <div class="wa-conv-meta">
+      <div class="wa-conv-time">${meta||''}</div>
+    </div>`;
+  return item;
+}
+
+// ── CHAT DIRECTO ──
+async function openDirecto(profile) {
+  waActiveConv = { tipo: 'directo', id: profile.id, perfil: profile };
+  renderConvList();
+
+  const initials = qh(profile.nombre,profile.apellido).replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+  const avatarHtml = profile.avatar_url
+    ? `<img class="wa-avatar" src="${profile.avatar_url}" style="width:40px;height:40px;">`
+    : `<div class="wa-avatar" style="width:40px;height:40px;">${initials}</div>`;
+
+  renderChatArea(
+    avatarHtml,
+    qh(profile.nombre, profile.apellido),
+    ROLE_LABELS[profile.role]||profile.role,
+    false
+  );
+
   const { data: msgs } = await sb.from('messages')
     .select('*')
     .or(`and(from_id.eq.${currentProfile.id},to_id.eq.${profile.id}),and(from_id.eq.${profile.id},to_id.eq.${currentProfile.id})`)
     .order('created_at');
-  await sb.from('messages').update({ leido: true }).eq('to_id', currentProfile.id).eq('from_id', profile.id);
-  renderMessages(msgs||[]);
+  await sb.from('messages').update({leido:true}).eq('to_id',currentProfile.id).eq('from_id',profile.id);
+  renderWaMessages(msgs||[], 'directo');
   loadUnreadCount();
+
+  // Realtime para directos
+  if (waGroupChannel) { sb.removeChannel(waGroupChannel); waGroupChannel=null; }
+  waGroupChannel = sb.channel('direct-'+currentProfile.id+'-'+profile.id)
+    .on('postgres_changes', {event:'INSERT',schema:'public',table:'messages',
+      filter:`from_id=eq.${profile.id}`},
+      async () => {
+        if (waActiveConv?.tipo==='directo' && waActiveConv.id===profile.id) {
+          const {data:m} = await sb.from('messages').select('*')
+            .or(`and(from_id.eq.${currentProfile.id},to_id.eq.${profile.id}),and(from_id.eq.${profile.id},to_id.eq.${currentProfile.id})`)
+            .order('created_at');
+          await sb.from('messages').update({leido:true}).eq('to_id',currentProfile.id).eq('from_id',profile.id);
+          renderWaMessages(m||[], 'directo');
+          loadUnreadCount();
+        }
+      }).subscribe();
 }
 
-function renderMessages(msgs) {
-  const list = document.getElementById('msg-list');
-  list.innerHTML = '';
-  msgs.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'msg-bubble ' + (m.from_id===currentProfile.id?'mine':'theirs');
-    const time = new Date(m.created_at).toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
-    div.innerHTML=`<div class="msg-text">${m.contenido}</div><div class="msg-time">${time}</div>`;
-    list.appendChild(div);
-  });
-  list.scrollTop = list.scrollHeight;
-}
-
-async function sendMessage() {
-  if (!activeConvId) { toast('Selecciona un hermano para escribirle', 'error'); return; }
-  const input = document.getElementById('msg-input');
-  const text = input.value.trim(); if (!text) return;
-  await sb.from('messages').insert({ from_id: currentProfile.id, to_id: activeConvId, contenido: text });
+async function sendDirecto() {
+  const input = document.getElementById('wa-msg-input');
+  const text = input.value.trim(); if (!text || !waActiveConv) return;
   input.value = '';
-  await openConversation(allProfiles.find(p=>p.id===activeConvId));
+  await sb.from('messages').insert({
+    from_id: currentProfile.id, to_id: waActiveConv.id,
+    contenido: text
+  });
+  openDirecto(waActiveConv.perfil);
 }
 
+// ── CHAT DE ROL ──
+async function openGrupoRol() {
+  waActiveConv = { tipo: 'rol' };
+  renderConvList();
+  renderChatArea(
+    `<div class="wa-avatar" style="width:40px;height:40px;">⬡</div>`,
+    'Canal del Rol — ' + (ROLE_LABELS[currentProfile.role]||''),
+    'Chat grupal del grado', false
+  );
+
+  const { data } = await sb.from('chat_messages')
+    .select('*').eq('role', currentProfile.role)
+    .order('created_at').limit(100);
+  renderWaMessages(data||[], 'rol');
+
+  if (waGroupChannel) { sb.removeChannel(waGroupChannel); waGroupChannel=null; }
+  waGroupChannel = sb.channel('warol-'+currentProfile.role)
+    .on('postgres_changes', {event:'INSERT',schema:'public',table:'chat_messages',
+      filter:`role=eq.${currentProfile.role}`},
+      async () => {
+        if (waActiveConv?.tipo==='rol') {
+          const {data:m} = await sb.from('chat_messages').select('*').eq('role',currentProfile.role).order('created_at').limit(100);
+          renderWaMessages(m||[], 'rol');
+        }
+      }).subscribe();
+}
+
+async function sendRol() {
+  const input = document.getElementById('wa-msg-input');
+  const text = input.value.trim(); if (!text) return;
+  input.value = '';
+  await sb.from('chat_messages').insert({
+    role: currentProfile.role,
+    author_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    contenido: text
+  });
+  openGrupoRol();
+}
+
+// ── GRUPOS ──
+async function openGrupo(grupo) {
+  waActiveConv = { tipo: 'grupo', id: grupo.id, grupo };
+  renderConvList();
+  renderChatArea(
+    `<div class="wa-avatar" style="width:40px;height:40px;">◈</div>`,
+    grupo.nombre,
+    grupo.descripcion||'Grupo', false
+  );
+
+  const {data} = await sb.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
+  renderWaMessages(data||[], 'grupo');
+
+  if (waGroupChannel) { sb.removeChannel(waGroupChannel); waGroupChannel=null; }
+  waGroupChannel = sb.channel('grupo-'+grupo.id)
+    .on('postgres_changes', {event:'INSERT',schema:'public',table:'grupo_mensajes',
+      filter:`grupo_id=eq.${grupo.id}`},
+      async () => {
+        if (waActiveConv?.tipo==='grupo' && waActiveConv.id===grupo.id) {
+          const {data:m} = await sb.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
+          renderWaMessages(m||[], 'grupo');
+        }
+      }).subscribe();
+}
+
+async function sendGrupo() {
+  const input = document.getElementById('wa-msg-input');
+  const text = input.value.trim(); if (!text || !waActiveConv) return;
+  input.value = '';
+  await sb.from('grupo_mensajes').insert({
+    grupo_id: waActiveConv.id,
+    autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    contenido: text
+  });
+  openGrupo(waActiveConv.grupo);
+}
+
+// ── RENDER CHAT AREA ──
+function renderChatArea(avatarHtml, nombre, sub, esEncuesta) {
+  const area = document.getElementById('wa-chat-area');
+  area.innerHTML = `
+    <div class="wa-chat">
+      <div class="wa-chat-header">
+        ${avatarHtml}
+        <div class="wa-chat-info">
+          <div class="wa-chat-name">${nombre}</div>
+          <div class="wa-chat-sub">${sub}</div>
+        </div>
+      </div>
+      <div class="wa-messages" id="wa-messages"></div>
+      ${esEncuesta ? '' : `
+      <div class="wa-input-area">
+        <textarea class="wa-input" id="wa-msg-input" rows="1" placeholder="Escribe un mensaje…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
+      </div>`}
+    </div>`;
+}
+
+function sendWaMsg() {
+  if (!waActiveConv) return;
+  if (waActiveConv.tipo==='directo')  sendDirecto();
+  else if (waActiveConv.tipo==='rol') sendRol();
+  else if (waActiveConv.tipo==='grupo') sendGrupo();
+}
+
+// ── RENDER MENSAJES ──
+function renderWaMessages(msgs, tipo) {
+  const container = document.getElementById('wa-messages');
+  if (!container) return;
+  container.innerHTML = '';
+
+  let lastDate = '';
+  msgs.forEach(m => {
+    const fecha = new Date(m.created_at).toLocaleDateString('es-CL');
+    if (fecha !== lastDate) {
+      lastDate = fecha;
+      const sep = document.createElement('div'); sep.className='wa-date-sep';
+      sep.innerHTML = `<span>${fecha}</span>`; container.appendChild(sep);
+    }
+
+    const isMine = tipo==='directo'
+      ? m.from_id === currentProfile.id
+      : m.author_id===currentProfile.id || m.autor_id===currentProfile.id;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'wa-bubble-wrap ' + (isMine?'mine':'theirs');
+
+    const time = new Date(m.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const senderName = isMine ? '' : (m.autor_nombre ? 'Q∴H∴ '+m.autor_nombre : '');
+    const senderHtml = (!isMine && tipo!=='directo' && senderName)
+      ? `<div class="wa-bubble-sender">${senderName}</div>` : '';
+
+    wrap.innerHTML = `<div class="wa-bubble">
+      ${senderHtml}
+      <div class="wa-bubble-text">${m.contenido}</div>
+      <div class="wa-bubble-time">${time}</div>
+    </div>`;
+    container.appendChild(wrap);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── ENCUESTAS ──
+async function openEncuesta(enc) {
+  waActiveConv = { tipo: 'encuesta', id: enc.id, encuesta: enc };
+  renderConvList();
+
+  // Recargar encuesta fresca
+  const {data: encFresh} = await sb.from('encuestas').select('*').eq('id',enc.id).single();
+  if (!encFresh) return;
+  waActiveConv.encuesta = encFresh;
+
+  // Ver si el usuario ya votó
+  const {data: miVoto} = await sb.from('encuesta_votos')
+    .select('*').eq('encuesta_id',enc.id).eq('perfil_id',currentProfile.id).maybeSingle();
+
+  const area = document.getElementById('wa-chat-area');
+  area.innerHTML = `
+    <div class="wa-chat">
+      <div class="wa-chat-header">
+        <div class="wa-avatar" style="width:40px;height:40px;font-size:18px;">📊</div>
+        <div class="wa-chat-info">
+          <div class="wa-chat-name">${encFresh.titulo}</div>
+          <div class="wa-chat-sub">${encFresh.tipo==='asistencia'?'Asistencia':encFresh.tipo==='agape'?'Ágape':'Encuesta'} · ${encFresh.activa?'Activa':'Cerrada'}</div>
+        </div>
+        ${currentProfile.role==='admin'?`<button onclick="cerrarEncuesta('${enc.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--text-dim);background:transparent;border:1px solid var(--border);padding:6px 12px;cursor:pointer;text-transform:uppercase;">Cerrar</button>`:''}
+      </div>
+      <div class="wa-messages" style="padding:24px;" id="wa-enc-area">
+        ${encFresh.descripcion?`<div style="font-size:15px;color:var(--text-dim);margin-bottom:20px;line-height:1.7;">${encFresh.descripcion}</div>`:''}
+        <div id="poll-render"></div>
+      </div>
+    </div>`;
+
+  renderPoll(encFresh, miVoto);
+}
+
+function renderPoll(enc, miVoto) {
+  const container = document.getElementById('poll-render');
+  if (!container) return;
+
+  const opciones = enc.opciones || [];
+  const totalVotos = opciones.reduce((s,o) => s+(o.votos||[]).length, 0);
+  const yaVoto = miVoto !== null && miVoto !== undefined;
+
+  let html = '';
+  opciones.forEach(op => {
+    const votos = (op.votos||[]).length;
+    const pct = totalVotos > 0 ? Math.round(votos/totalVotos*100) : 0;
+    const esVotoMio = yaVoto && (miVoto?.opcion_ids||[]).includes(op.id);
+    html += `
+      <div class="poll-option" onclick="${enc.activa && !yaVoto ? `votarEncuesta('${enc.id}','${op.id}')` : ''}">
+        <div class="poll-option-bar ${esVotoMio?'voted':''}">
+          <div class="poll-fill" style="width:${pct}%"></div>
+          <span class="poll-option-text">${op.texto}</span>
+          <span class="poll-option-pct">${yaVoto?pct+'%':''}</span>
+        </div>
+      </div>`;
+  });
+
+  html += `<div class="poll-vote-count">${totalVotos} ${totalVotos===1?'voto':'votos'}${yaVoto?' · Tu voto registrado ✓':enc.activa?' · Selecciona una opción':' · Encuesta cerrada'}</div>`;
+
+  if (!yaVoto && enc.activa && opciones.length) {
+    html += `<div style="margin-top:8px;font-size:12px;color:var(--text-dim);">${enc.multiple?'Selección múltiple — haz clic en las opciones que apliquen':'Haz clic en una opción para votar'}</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+async function votarEncuesta(encId, opcionId) {
+  await sb.from('encuesta_votos').insert({
+    encuesta_id: encId,
+    perfil_id: currentProfile.id,
+    opcion_ids: [opcionId]
+  });
+  // Registrar voto en el array votos de la opción
+  const {data: enc} = await sb.from('encuestas').select('opciones').eq('id',encId).single();
+  const opciones = enc.opciones.map(o => {
+    if (o.id === opcionId) return {...o, votos: [...(o.votos||[]), currentProfile.id]};
+    return o;
+  });
+  await sb.from('encuestas').update({opciones}).eq('id',encId);
+  openEncuesta({id:encId});
+}
+
+async function cerrarEncuesta(encId) {
+  await sb.from('encuestas').update({activa:false}).eq('id',encId);
+  toast('Encuesta cerrada');
+  await loadEncuestas();
+  renderConvList();
+  openEncuesta({id:encId});
+}
+
+// ── MODAL NUEVA ENCUESTA ──
+function abrirModalEncuesta() {
+  pollOpciones = ['Asistiré', 'No podré asistir', 'Confirmaré más tarde'];
+  renderPollOpciones();
+  document.getElementById('poll-titulo').value = '';
+  document.getElementById('poll-desc').value = '';
+  document.getElementById('poll-tipo').value = 'asistencia';
+  document.getElementById('poll-multiple').checked = false;
+  document.getElementById('modal-nueva-encuesta').classList.remove('hidden');
+}
+
+function addPollOpcion() {
+  pollOpciones.push('');
+  renderPollOpciones();
+}
+
+function renderPollOpciones() {
+  const list = document.getElementById('poll-opciones-list');
+  if (!list) return;
+  list.innerHTML = '';
+  pollOpciones.forEach((op, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `<input type="text" value="${op}" placeholder="Opción ${i+1}"
+      style="flex:1;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:9px 12px;outline:none;"
+      oninput="pollOpciones[${i}]=this.value">
+      <button onclick="pollOpciones.splice(${i},1);renderPollOpciones()"
+        style="background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:8px 12px;cursor:pointer;font-size:14px;">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+// Detectar cambio de tipo para pre-llenar opciones
+document.addEventListener('change', e => {
+  if (e.target.id === 'poll-tipo') {
+    if (e.target.value === 'asistencia') pollOpciones = ['Asistiré','No podré asistir','Confirmaré más tarde'];
+    else if (e.target.value === 'agape') pollOpciones = ['Asistiré al ágape','No asistiré','Tengo restricción alimentaria'];
+    else pollOpciones = ['Sí','No'];
+    renderPollOpciones();
+  }
+});
+
+async function guardarEncuesta() {
+  const titulo = document.getElementById('poll-titulo').value.trim();
+  if (!titulo) { toast('El título es obligatorio', 'error'); return; }
+  if (pollOpciones.filter(o=>o.trim()).length < 2) { toast('Agrega al menos 2 opciones', 'error'); return; }
+
+  const opciones = pollOpciones.filter(o=>o.trim()).map((texto,i) => ({
+    id: 'op_'+(Date.now()+'_'+i), texto: texto.trim(), votos: []
+  }));
+
+  const { error } = await sb.from('encuestas').insert({
+    titulo,
+    descripcion: document.getElementById('poll-desc').value.trim()||null,
+    tipo: document.getElementById('poll-tipo').value,
+    opciones,
+    multiple: document.getElementById('poll-multiple').checked,
+    autor_id: currentProfile.id,
+    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
+    activa: true,
+    roles: ['todos']
+  });
+  if (error) { toast('Error al crear: '+error.message,'error'); return; }
+  document.getElementById('modal-nueva-encuesta').classList.add('hidden');
+  toast('Encuesta publicada', 'success');
+  await loadEncuestas();
+  switchTab('encuestas');
+}
+
+// ── UNREAD COUNT ──
 async function loadUnreadCount() {
-  const { count } = await sb.from('messages').select('id', { count:'exact', head:true }).eq('to_id', currentProfile.id).eq('leido', false);
+  const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).eq('to_id',currentProfile.id).eq('leido',false);
   const badge = document.getElementById('badge-mensajes');
-  if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
-  else { badge.classList.add('hidden'); }
+  const total = document.getElementById('wa-unread-total');
+  if (count > 0) {
+    badge.textContent = count; badge.classList.remove('hidden');
+    if (total) total.textContent = count + ' sin leer';
+  } else {
+    badge.classList.add('hidden');
+    if (total) total.textContent = '';
+  }
 }
 
 function subscribeMessages() {
-  msgChannel = sb.channel('messages-'+currentProfile.id)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_id=eq.${currentProfile.id}` },
+  msgChannel = sb.channel('wa-msgs-'+currentProfile.id)
+    .on('postgres_changes', {event:'INSERT',schema:'public',table:'messages',filter:`to_id=eq.${currentProfile.id}`},
       payload => {
-        toast('Nuevo mensaje de un hermano');
+        toast('Nuevo mensaje');
         loadUnreadCount();
-        if (currentModule==='mensajes' && activeConvId===payload.new.from_id) {
-          openConversation(allProfiles.find(p=>p.id===payload.new.from_id));
+        if (waActiveConv?.tipo==='directo' && waActiveConv.id===payload.new.from_id) {
+          openDirecto(waActiveConv.perfil);
+        } else {
+          renderConvList();
         }
-      })
-    .subscribe();
+      }).subscribe();
 }
 
 // ── CHAT ──
