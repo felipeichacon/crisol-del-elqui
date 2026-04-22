@@ -647,11 +647,14 @@ let allDocs       = [];
 
 // ── LABELS POR ROL ──
 const ROLE_LABELS = {
-  aprendiz:  'Aprendiz',
-  companero: 'Compañero',
-  maestro:   'Maestro',
-  admin:     'Administrador'
+  aprendiz:    'Aprendiz',
+  companero:   'Compañero',
+  maestro:     'Maestro',
+  admin:       'Administrador',
+  oficialidad: 'Oficialidad'
 };
+// Un miembro es 'oficialidad' si tiene cargo asignado
+function esOficialidad(perfil) { return !!(perfil?.cargo); }
 const BLOG_LABELS = {
   aprendiz:  'Blog del Segundo Vigilante',
   companero: 'Blog del Primer Vigilante',
@@ -922,9 +925,12 @@ async function loadCalendar() {
   const { data } = await sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
 
   // Filtrar por rol del miembro
+  const _tieneOficialidad = esOficialidad(currentProfile);
   _ppCalEventos = (data||[]).filter(e => {
     if (!e.roles || !e.roles.length) return false;
-    return e.roles.includes('todos') || e.roles.includes(rol);
+    return e.roles.includes('todos')
+      || e.roles.includes(rol)
+      || (e.roles.includes('oficialidad') && _tieneOficialidad);
   });
 
   renderPpCal();
@@ -1069,7 +1075,10 @@ function renderProfiles() {
       ? `<img class="profile-avatar" src="${p.avatar_url}" alt="">`
       : `<div class="profile-avatar" style="display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:20px;color:var(--gold);">${ROLE_ICONS[p.role]||'◉'}</div>`;
     const nombre = qh(p.nombre, p.apellido);
-    div.innerHTML=`${avatar}<div class="profile-name">${nombre}</div><div class="profile-role-badge">${ROLE_LABELS[p.role]||p.role}</div><div class="profile-info">${p.cargo||p.profesion||''}</div>`;
+    const cargoTag = p.cargo
+      ? `<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;color:var(--gold);border:1px solid var(--border-bright);padding:2px 6px;margin-left:6px;text-transform:uppercase;">${p.cargo}</span>`
+      : '';
+    div.innerHTML=`${avatar}<div class="profile-name">${nombre}</div><div class="profile-role-badge">${ROLE_LABELS[p.role]||p.role}${cargoTag}</div><div class="profile-info">${p.profesion||''}</div>`;
     grid.appendChild(div);
   });
 }
@@ -1202,9 +1211,16 @@ async function loadGrupos() {
   });
 
   // Filtrar por roles del grupo
+  // Un miembro ve un grupo si:
+  //   a) el grupo es para 'todos'
+  //   b) el grupo es para su rol (aprendiz/companero/maestro)
+  //   c) el grupo es para 'oficialidad' y el miembro tiene cargo
+  const tieneOficialidad = esOficialidad(currentProfile);
   const todos = (porRol.data||[]).filter(g => {
     const gRoles = g.roles || ['todos'];
-    return gRoles.includes('todos') || gRoles.includes(rol);
+    return gRoles.includes('todos')
+      || gRoles.includes(rol)
+      || (gRoles.includes('oficialidad') && tieneOficialidad);
   });
 
   // Marcar si el miembro puede escribir
@@ -1222,8 +1238,12 @@ async function loadEncuestas() {
     .select('*')
     .eq('activa', true)
     .order('created_at', { ascending: false });
+  const _ofic = esOficialidad(currentProfile);
   waEncuestas = (data||[]).filter(e =>
-    !e.roles || e.roles.includes('todos') || e.roles.includes(rol)
+    !e.roles
+    || e.roles.includes('todos')
+    || e.roles.includes(rol)
+    || (e.roles.includes('oficialidad') && _ofic)
   );
 }
 
