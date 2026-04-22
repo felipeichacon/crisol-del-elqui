@@ -2616,6 +2616,7 @@ function renderCalendario() {
     cell.style.cssText = `height:72px;overflow:hidden;background:${isToday?'rgba(201,168,76,0.1)':'var(--dark-4)'};border:${isToday?'1px solid var(--gold-dim)':'1px solid transparent'};padding:4px;cursor:pointer;transition:background 0.2s;position:relative;box-sizing:border-box;`;
     cell.onmouseover = () => cell.style.background = 'rgba(201,168,76,0.07)';
     cell.onmouseout  = () => cell.style.background = isToday ? 'rgba(201,168,76,0.1)' : 'var(--dark-4)';
+    cell.onclick = () => openNewEventoOnDay(_calYear, _calMonth, d);
 
     const numEl = document.createElement('div');
     numEl.style.cssText = `font-family:'Cinzel',serif;font-size:11px;color:${isToday?'var(--gold)':'var(--text-dim)'};margin-bottom:2px;`;
@@ -2691,6 +2692,48 @@ function calNextMonth() {
   _calMonth++;
   if (_calMonth > 11) { _calMonth = 0; _calYear++; }
   renderCalendario();
+}
+
+
+function openNewEventoOnDay(year, month, day) {
+  // Resetear formulario
+  const btn = document.getElementById('cal-save-btn');
+  btn.textContent = 'Guardar evento';
+  btn.onclick = () => saveEvento();
+
+  // Limpiar campos
+  document.getElementById('cal-titulo').value = '';
+  document.getElementById('cal-desc').value   = '';
+  document.getElementById('cal-lugar').value  = '';
+  document.getElementById('cal-tipo').value   = 'tenida_ordinaria';
+
+  // Pre-llenar fecha inicio con hora 19:00 (horario típico de tenida)
+  const pad = n => String(n).padStart(2,'0');
+  const fechaStr = `${year}-${pad(month+1)}-${pad(day)}T19:00`;
+  document.getElementById('cal-inicio').value = fechaStr;
+  document.getElementById('cal-fin').value    = '';
+
+  // Roles por defecto: todos marcados
+  ['aprendiz','companero','maestro'].forEach(r => {
+    const cb = document.getElementById('cal-rol-'+r);
+    if (cb) cb.checked = true;
+  });
+  const todos = document.getElementById('cal-rol-todos');
+  if (todos) todos.checked = false;
+
+  // Resetear plancha
+  const autorSel = document.getElementById('cal-autor-plancha');
+  const relatorSel = document.getElementById('cal-relator-plancha');
+  if (autorSel) autorSel.value = '';
+  if (relatorSel) relatorSel.value = '';
+
+  // Mostrar formulario y hacer scroll
+  const form = document.getElementById('cal-form');
+  form.style.display = 'block';
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Foco en el título
+  setTimeout(() => document.getElementById('cal-titulo').focus(), 300);
 }
 
 async function saveEvento(editId = null) {
