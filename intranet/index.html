@@ -768,16 +768,19 @@ function showApp() {
 
 // ── MÓDULOS DE ADMINISTRACIÓN EN LA INTRANET ──
 const ADM_MODULOS_CONFIG = {
-  'noticias':      { id:'adm-noticias',      icon:'◫', label:'Noticias',       fn:'loadAdmNoticias'      },
-  'blog':          { id:'adm-blog',          icon:'✦', label:'Blog',           fn:'loadAdmBlog'          },
-  'egregora':      { id:'adm-egregora',      icon:'◈', label:'Rev. Egrégora',  fn:'loadAdmEgregora'      },
-  'radio-agora':   { id:'adm-radio-agora',   icon:'◉', label:'Radio Ágora',    fn:'loadAdmRadio'         },
-  'biblioteca':    { id:'adm-biblioteca',    icon:'◫', label:'Biblioteca',     fn:'loadAdmBiblioteca'    },
-  'galeria':       { id:'adm-galeria',       icon:'⊞', label:'Galería',        fn:'loadAdmGaleria'       },
-  'calendario':    { id:'adm-calendario',    icon:'◷', label:'Calendario',     fn:'loadAdmCalendario'    },
-  'corp-noticias': { id:'adm-corp-noticias', icon:'◫', label:'Corp. Noticias', fn:'loadAdmCorpNoticias'  },
-  'corp-blog':     { id:'adm-corp-blog',     icon:'✦', label:'Corp. Blog',     fn:'loadAdmCorpBlog'      },
-  'mensajeria':    { id:'adm-mensajeria',    icon:'✉', label:'Mensajería',     fn:'loadAdmMensajeria'    },
+  'noticias':        { id:'adm-noticias',       icon:'◫', label:'Noticias',                  fn:'loadAdmNoticias'      },
+  'blog-venerable':  { id:'adm-blog-venerable', icon:'✦', label:'Blog Venerable Maestro',    fn:'loadAdmBlogVenerable' },
+  'blog-orador':     { id:'adm-blog-orador',    icon:'✦', label:'Blog Orador',               fn:'loadAdmBlogOrador'    },
+  'blog-primer-vig': { id:'adm-blog-primer',    icon:'✦', label:'Blog Primer Vigilante',     fn:'loadAdmBlogPrimer'    },
+  'blog-segundo-vig':{ id:'adm-blog-segundo',   icon:'✦', label:'Blog Segundo Vigilante',    fn:'loadAdmBlogSegundo'   },
+  'egregora':        { id:'adm-egregora',       icon:'◈', label:'Rev. Egrégora',             fn:'loadAdmEgregora'      },
+  'radio-agora':     { id:'adm-radio-agora',    icon:'◉', label:'Radio Ágora',               fn:'loadAdmRadio'         },
+  'biblioteca':      { id:'adm-biblioteca',     icon:'◫', label:'Biblioteca',                fn:'loadAdmBiblioteca'    },
+  'galeria':         { id:'adm-galeria',        icon:'⊞', label:'Galería',                   fn:'loadAdmGaleria'       },
+  'calendario':      { id:'adm-calendario',     icon:'◷', label:'Calendario',                fn:'loadAdmCalendario'    },
+  'corp-noticias':   { id:'adm-corp-noticias',  icon:'◫', label:'Corp. Noticias',            fn:'loadAdmCorpNoticias'  },
+  'corp-blog':       { id:'adm-corp-blog',      icon:'✦', label:'Corp. Blog',                fn:'loadAdmCorpBlog'      },
+  'mensajeria':      { id:'adm-mensajeria',     icon:'✉', label:'Mensajería',                fn:'loadAdmMensajeria'    },
 };
 
 function inyectarModulosAdmin() {
@@ -889,32 +892,41 @@ async function admEliminarNoticia(id) {
   if (content) await admLoadNoticiasList(content);
 }
 
-async function loadAdmBlog() {
-  const content = document.getElementById('adm-blog-content');
+
+// ── HELPER: construir módulo de blog para un cargo/rol ──
+function buildAdmBlogModule(contentId, tituloLabel, rolBlog) {
+  const content = document.getElementById(contentId);
   if (!content) return;
-  // Solo puede publicar si tiene el cargo correspondiente
-  const CARGO_ROL = {'Orador':'maestro','Primer Vigilante':'companero','Segundo Vigilante':'aprendiz','Venerable Maestro':'venerable'};
-  const rolBlog = CARGO_ROL[currentProfile.cargo] || currentProfile.role;
-  const BLOG_LABELS_MAP = {maestro:'Blog del Orador',companero:'Blog del Primer Vigilante',aprendiz:'Blog del Segundo Vigilante',venerable:'Palabras del Venerable'};
+  const BLOG_NOMBRE = {
+    venerable: 'Palabras del Venerable Maestro',
+    maestro:   'Blog del Orador',
+    companero: 'Blog del Primer Vigilante',
+    aprendiz:  'Blog del Segundo Vigilante'
+  };
+  const nombre = BLOG_NOMBRE[rolBlog] || tituloLabel;
   content.innerHTML = `
     <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
-      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nueva entrada — ${BLOG_LABELS_MAP[rolBlog]||'Blog'}</div>
+      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nueva entrada — ${nombre}</div>
       <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
-        <input id="admblog-titulo" type="text" placeholder="Título de la entrada" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
+        <input id="${contentId}-titulo" type="text" placeholder="Título de la entrada"
+          style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
       <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
-        <textarea id="admblog-contenido" rows="8" placeholder="Escribe aquí…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
+        <textarea id="${contentId}-contenido" rows="8" placeholder="Escribe aquí…"
+          style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
       <div style="display:flex;gap:10px;">
-        <button onclick="admPublicarBlog(true,'${rolBlog}')" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
-        <button onclick="admPublicarBlog(false,'${rolBlog}')" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
+        <button onclick="admPublicarBlogEspecifico('${contentId}','${rolBlog}',true)"
+          style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
+        <button onclick="admPublicarBlogEspecifico('${contentId}','${rolBlog}',false)"
+          style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
       </div>
     </div>
-    <div id="admblog-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
-  await admLoadBlogLista(rolBlog);
+    <div id="${contentId}-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
+  admCargarListaBlog(contentId, rolBlog);
 }
 
-async function admPublicarBlog(publish, rolBlog) {
-  const titulo    = document.getElementById('admblog-titulo')?.value.trim();
-  const contenido = document.getElementById('admblog-contenido')?.value.trim();
+async function admPublicarBlogEspecifico(contentId, rolBlog, publish) {
+  const titulo    = document.getElementById(contentId+'-titulo')?.value.trim();
+  const contenido = document.getElementById(contentId+'-contenido')?.value.trim();
   if (!titulo || !contenido) { toast('Completa título y contenido','error'); return; }
   const { error } = await sb.from('posts').insert({
     role: rolBlog, titulo, contenido, extracto: contenido.substring(0,200),
@@ -924,17 +936,23 @@ async function admPublicarBlog(publish, rolBlog) {
   });
   if (error) { toast('Error: '+error.message,'error'); return; }
   toast(publish?'Publicado':'Borrador guardado','success');
-  document.getElementById('admblog-titulo').value = '';
-  document.getElementById('admblog-contenido').value = '';
-  await admLoadBlogLista(rolBlog);
+  document.getElementById(contentId+'-titulo').value = '';
+  document.getElementById(contentId+'-contenido').value = '';
+  admCargarListaBlog(contentId, rolBlog);
 }
 
-async function admLoadBlogLista(rolBlog) {
-  const lista = document.getElementById('admblog-lista');
+async function admCargarListaBlog(contentId, rolBlog) {
+  const lista = document.getElementById(contentId+'-lista');
   if (!lista) return;
-  const { data } = await sb.from('posts').select('*').eq('autor_id',currentProfile.id).order('created_at',{ascending:false}).limit(20);
+  const { data } = await sb.from('posts').select('*')
+    .eq('autor_id', currentProfile.id)
+    .eq('role', rolBlog)
+    .order('created_at',{ascending:false}).limit(20);
   lista.innerHTML = '';
-  if (!data?.length) { lista.innerHTML='<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado entradas aún.</div>'; return; }
+  if (!data?.length) {
+    lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado entradas aún.</div>';
+    return;
+  }
   data.forEach(p => {
     const div = document.createElement('div');
     div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
@@ -942,18 +960,26 @@ async function admLoadBlogLista(rolBlog) {
       <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${p.titulo}</div>
       <div style="font-size:12px;color:var(--text-dim);">${p.publicado?'Publicado':'Borrador'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
     </div>
-    <button onclick="admEliminarBlog('${p.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
+    <button onclick="admEliminarEntradaBlog('${p.id}','${contentId}','${rolBlog}')"
+      style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
     lista.appendChild(div);
   });
 }
 
-async function admEliminarBlog(id) {
+async function admEliminarEntradaBlog(id, contentId, rolBlog) {
   if (!confirm('¿Eliminar esta entrada?')) return;
   await sb.from('posts').delete().eq('id',id).eq('autor_id',currentProfile.id);
   toast('Entrada eliminada');
-  const CARGO_ROL = {'Orador':'maestro','Primer Vigilante':'companero','Segundo Vigilante':'aprendiz','Venerable Maestro':'venerable'};
-  await admLoadBlogLista(CARGO_ROL[currentProfile.cargo]||currentProfile.role);
+  admCargarListaBlog(contentId, rolBlog);
 }
+
+// ── 4 funciones de blog específicas ──
+function loadAdmBlogVenerable() { buildAdmBlogModule('adm-blog-venerable-content','Blog Venerable Maestro','venerable'); }
+function loadAdmBlogOrador()    { buildAdmBlogModule('adm-blog-orador-content',   'Blog del Orador',       'maestro');   }
+function loadAdmBlogPrimer()    { buildAdmBlogModule('adm-blog-primer-content',   'Blog Primer Vigilante', 'companero'); }
+function loadAdmBlogSegundo()   { buildAdmBlogModule('adm-blog-segundo-content',  'Blog Segundo Vigilante','aprendiz');  }
+
+
 
 async function loadAdmEgregora() {
   const content = document.getElementById('adm-egregora-content');
@@ -1046,7 +1072,7 @@ function admMsgModulo(nombre, desc, modKey) {
 }
 
 // ── MODULES ──
-const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','chat','mi-perfil','adm-noticias','adm-blog','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
+const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','chat','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-orador','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   MODULES.forEach(m => {
     const el = document.getElementById('mod-'+m);
@@ -1057,9 +1083,12 @@ function showModule(name) {
   if (name === 'hero')       { loadHero(); }
   if (name === 'calendar')   { loadCalendar(); }
   // Módulos de administración dentro de la intranet
-  if (name === 'adm-noticias')      loadAdmNoticias();
-  if (name === 'adm-blog')          loadAdmBlog();
-  if (name === 'adm-egregora')      loadAdmEgregora();
+  if (name === 'adm-noticias')       loadAdmNoticias();
+  if (name === 'adm-blog-venerable') loadAdmBlogVenerable();
+  if (name === 'adm-blog-orador')    loadAdmBlogOrador();
+  if (name === 'adm-blog-primer')    loadAdmBlogPrimer();
+  if (name === 'adm-blog-segundo')   loadAdmBlogSegundo();
+  if (name === 'adm-egregora')       loadAdmEgregora();
   if (name === 'adm-radio-agora')   loadAdmRadio();
   if (name === 'adm-biblioteca')    loadAdmBiblioteca();
   if (name === 'adm-galeria')       loadAdmGaleria();
