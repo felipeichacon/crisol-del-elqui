@@ -1407,10 +1407,21 @@ async function sendRol() {
 async function openGrupo(grupo) {
   waActiveConv = { tipo: 'grupo', id: grupo.id, grupo };
   renderConvList();
+
+  // Verificar si el miembro puede escribir en este grupo
+  const {data: memData} = await sb.from('grupo_miembros')
+    .select('puede_escribir')
+    .eq('grupo_id', grupo.id)
+    .eq('perfil_id', currentProfile.id)
+    .maybeSingle();
+  const modoGrupo   = grupo.modo_escritura || 'libre';
+  const puedeEscribir = modoGrupo === 'libre' || (memData?.puede_escribir !== false);
+
   renderChatArea(
     `<div class="wa-avatar" style="width:40px;height:40px;">◈</div>`,
     grupo.nombre,
-    grupo.descripcion||'Grupo', false
+    (grupo.descripcion||'Grupo') + (modoGrupo==='restringido'&&!puedeEscribir?' · Solo lectura':''), 
+    !puedeEscribir
   );
 
   const {data} = await sb.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
@@ -1442,8 +1453,16 @@ async function sendGrupo() {
 }
 
 // ── RENDER CHAT AREA ──
-function renderChatArea(avatarHtml, nombre, sub, esEncuesta) {
+function renderChatArea(avatarHtml, nombre, sub, esEncuestaOSoloLectura) {
   const area = document.getElementById('wa-chat-area');
+  const inputHtml = esEncuestaOSoloLectura
+    ? `<div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--dark-2);text-align:center;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;">Solo lectura — sin permiso de escritura</div>`
+    : `<div class="wa-input-area">
+        <textarea class="wa-input" id="wa-msg-input" rows="1" placeholder="Escribe un mensaje…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
+      </div>`;
   area.innerHTML = `
     <div class="wa-chat">
       <div class="wa-chat-header">
@@ -1454,13 +1473,7 @@ function renderChatArea(avatarHtml, nombre, sub, esEncuesta) {
         </div>
       </div>
       <div class="wa-messages" id="wa-messages"></div>
-      ${esEncuesta ? '' : `
-      <div class="wa-input-area">
-        <textarea class="wa-input" id="wa-msg-input" rows="1" placeholder="Escribe un mensaje…"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendWaMsg();}"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-        <button class="wa-send-btn" onclick="sendWaMsg()">➤</button>
-      </div>`}
+      ${inputHtml}
     </div>`;
 }
 
