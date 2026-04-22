@@ -1103,35 +1103,49 @@ function toast(msg, type='') {
 
 // ── PERMISOS ADMIN ──
 const MODULOS_PERMISABLES = [
-  'noticias','blog','egregora','radio-agora',
+  'noticias',
+  'blog-venerable',     // Blog del Venerable Maestro (Palabras del Venerable)
+  'blog-orador',        // Blog del Orador (Maestros)
+  'blog-primer-vig',    // Blog del Primer Vigilante (Compañeros)
+  'blog-segundo-vig',   // Blog del Segundo Vigilante (Aprendices)
+  'egregora',
+  'radio-agora',
   'biblioteca','galeria','calendario',
   'corp-noticias','corp-blog','mensajeria'
 ];
 
 const MODULOS_INFO = {
-  'noticias':       { label: 'Noticias',           desc: 'Publicar y gestionar noticias del sitio' },
-  'blog':           { label: 'Blog / Orador',       desc: 'Subir entradas al blog según cargo' },
-  'egregora':       { label: 'Revista Egrégora',    desc: 'Gestionar artículos de la revista' },
-  'radio-agora':    { label: 'Radio Ágora',          desc: 'Subir episodios del podcast' },
-  'biblioteca':     { label: 'Biblioteca',           desc: 'Subir documentos y recursos' },
-  'galeria':        { label: 'Galería',              desc: 'Subir imágenes a la galería' },
-  'calendario':     { label: 'Calendario',           desc: 'Crear y editar eventos' },
-  'corp-noticias':  { label: 'Corp. Noticias',       desc: 'Gestionar noticias de la Corporación' },
-  'corp-blog':      { label: 'Corp. Blog',           desc: 'Publicar en el blog de la Corporación' },
-  'mensajeria':     { label: 'Mensajería',           desc: 'Mensajería, grupos y encuestas' },
+  'noticias':        { label: 'Noticias',                    desc: 'Publicar y gestionar noticias del sitio' },
+  'blog-venerable':  { label: 'Blog — Venerable Maestro',   desc: 'Palabras del Venerable en el sitio público' },
+  'blog-orador':     { label: 'Blog — Orador',              desc: 'Blog del Orador visible para Maestros' },
+  'blog-primer-vig': { label: 'Blog — Primer Vigilante',    desc: 'Blog del Primer Vigilante para Compañeros' },
+  'blog-segundo-vig':{ label: 'Blog — Segundo Vigilante',   desc: 'Blog del Segundo Vigilante para Aprendices' },
+  'egregora':        { label: 'Revista Egrégora',            desc: 'Gestionar artículos de la revista' },
+  'radio-agora':     { label: 'Radio Ágora',                 desc: 'Subir episodios del podcast' },
+  'biblioteca':      { label: 'Biblioteca',                  desc: 'Subir documentos y recursos' },
+  'galeria':         { label: 'Galería',                     desc: 'Subir imágenes a la galería' },
+  'calendario':      { label: 'Calendario',                  desc: 'Crear y editar eventos' },
+  'corp-noticias':   { label: 'Corp. Noticias',              desc: 'Gestionar noticias de la Corporación' },
+  'corp-blog':       { label: 'Corp. Blog',                  desc: 'Publicar en el blog de la Corporación' },
+  'mensajeria':      { label: 'Mensajería',                  desc: 'Mensajería, grupos y encuestas' },
 };
 
 // Sugerencias de permisos por cargo
 const PERMISOS_SUGERIDOS = {
-  'Venerable Maestro':        ['noticias','blog','egregora','calendario','mensajeria'],
-  'Orador':                   ['blog','egregora'],
-  'Primer Vigilante':         ['blog','biblioteca'],
-  'Segundo Vigilante':        ['blog','biblioteca'],
+  'Venerable Maestro':        ['noticias','blog-venerable','egregora','calendario','mensajeria'],
+  'Orador':                   ['blog-orador','egregora'],
+  'Primer Vigilante':         ['blog-primer-vig','biblioteca'],
+  'Segundo Vigilante':        ['blog-segundo-vig','biblioteca'],
   'Secretario':               ['noticias','calendario','mensajeria'],
   'Hospitalario':             ['mensajeria'],
   'Bibliotecario y Archivero':['biblioteca'],
   'Maestro de Ceremonias':    ['calendario'],
   'Maestro de Banquetes':     ['mensajeria'],
+  'Ex Venerable Maestro':     ['noticias','egregora'],
+  'Tesorero':                 ['mensajeria'],
+  'Maestro Experto':          ['egregora'],
+  'Columna de la Armonía':    ['mensajeria'],
+  'Guarda Templo':            ['mensajeria'],
 };
 
 async function loadPermisosAdmin() {
