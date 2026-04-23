@@ -602,6 +602,11 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
       <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Familiares directos</div>
       <div id="modal-familiares" style="font-size:15px;color:var(--text-dim);line-height:2;"></div>
     </div>
+    <div id="modal-grupos-wrap" class="hidden">
+      <div class="section-divider"></div>
+      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Grupos</div>
+      <div id="modal-grupos-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
   </div>
 </div>
 
@@ -1079,7 +1084,7 @@ function showModule(name) {
   if (name === 'adm-corp-blog')     loadAdmCorpBlog();
   if (name === 'adm-mensajeria')    loadAdmMensajeria();
   if (name === 'blog')       { loadPosts(); }
-  if (name === 'profiles')   { renderProfiles(); }
+  if (name === 'profiles')   { if (!allProfiles.length) loadProfiles(); else renderProfiles(); }
   if (name === 'biblioteca') { loadDocuments(); }
   if (name === 'mensajes')   { loadConversations(); }
   if (name === 'mi-perfil')  { fillProfileForm(); }
@@ -1396,40 +1401,86 @@ function renderProfiles() {
 
 function openProfileModal(p) {
   const esPropio = p.id === currentProfile.id;
+  const dash     = '—'; // valor para campos vacíos
+  const fmtFecha = iso => iso ? new Date(iso).toLocaleDateString('es-CL') : dash;
+  const val      = v  => (v && String(v).trim()) ? String(v).trim() : dash;
+
+  // Cabecera
   document.getElementById('modal-avatar').src = p.avatar_url || '';
   document.getElementById('modal-name').textContent = qh(p.nombre, p.apellido);
-  document.getElementById('modal-role-badge').textContent = (p.cargo ? p.cargo + ' · ' : '') + (ROLE_LABELS[p.role] || p.role);
-  document.getElementById('modal-bio').textContent = p.biografia || 'Sin biografía registrada.';
+  document.getElementById('modal-role-badge').textContent =
+    (p.cargo ? p.cargo + ' · ' : '') + (ROLE_LABELS[p.role] || p.role);
+  document.getElementById('modal-bio').textContent = p.biografia || dash;
 
-  const fmtFecha = iso => iso ? new Date(iso).toLocaleDateString('es-CL') : null;
+  // Todos los campos — siempre visibles
   const fields = [
-    ['Grado', p.grado],
-    ['Cargo en la Logia', p.cargo],
-    ['Profesión', p.profesion],
-    ['Lugar de trabajo', p.lugar_trabajo],
-    ['Puesto de trabajo', p.puesto_trabajo],
-    ['Estado civil', p.estado_civil],
-    ['Ciudad', p.ciudad],
-    ['Teléfono', p.telefono],
-    ['Fecha de iniciación', fmtFecha(p.fecha_iniciacion)],
+    // ── Datos personales ──
+    ['Grado',                     val(p.grado)],
+    ['Cargo en la Logia',         val(p.cargo)],
+    ['Estado Civil',              val(p.estado_civil)],
+    ['Profesión',                 val(p.profesion)],
+    ['Lugar de trabajo',          val(p.lugar_trabajo)],
+    ['Puesto de trabajo',         val(p.puesto_trabajo)],
+    ['Dirección',                 val(p.direccion)],
+    ['Ciudad',                    val(p.ciudad)],
+    ['Teléfono',                  val(p.telefono)],
+    ['Deporte favorito',          val(p.deporte_favorito)],
+    ['Actividad cultural',        val(p.actividad_cultural)],
+    // ── Fechas masónicas ──
+    ['Fecha de iniciación',       fmtFecha(p.fecha_iniciacion)],
     ['Fecha de aumento de salario', fmtFecha(p.fecha_aumento)],
-    ['Fecha de exaltación', fmtFecha(p.fecha_exaltacion)],
+    ['Fecha de exaltación',       fmtFecha(p.fecha_exaltacion)],
   ];
+
   const grid = document.getElementById('modal-info-grid');
   grid.innerHTML = '';
-  fields.filter(([,v])=>v).forEach(([label, val]) => {
-    const d = document.createElement('div'); d.className='info-field';
-    d.innerHTML=`<label>${label}</label><p>${val}</p>`; grid.appendChild(d);
+
+  fields.forEach(([label, v]) => {
+    const d = document.createElement('div');
+    d.className = 'info-field';
+    d.innerHTML = `<label>${label}</label><p style="${v===dash?'color:var(--text-dim);font-style:italic;':''}">${v}</p>`;
+    grid.appendChild(d);
   });
 
+  // ── Familiares ──
   const familiares = p.familiares || [];
   const famWrap = document.getElementById('modal-familiares-wrap');
   if (familiares.length) {
-    document.getElementById('modal-familiares').innerHTML = familiares.map(f=>`${f.nombre||''} — ${f.parentesco||''}`).join('<br>');
+    document.getElementById('modal-familiares').innerHTML =
+      familiares.map(f => `${f.nombre||''} — ${f.parentesco||''}`).join('<br>');
     famWrap.classList.remove('hidden');
-  } else { famWrap.classList.add('hidden'); }
+  } else {
+    famWrap.classList.add('hidden');
+  }
 
-  // Botón editar solo en perfil propio
+  // ── Grupos ──
+  const gruposWrap = document.getElementById('modal-grupos-wrap');
+  const gruposList = document.getElementById('modal-grupos-list');
+  if (gruposWrap && gruposList) {
+    const gruposDelMiembro = waGrupos.filter(g => {
+      // mostrar grupos donde el rol del perfil visto tiene acceso
+      const gRoles = g.roles || ['todos'];
+      const rolVisto = p.role;
+      return gRoles.includes('todos') || gRoles.includes(rolVisto)
+        || (gRoles.includes('oficialidad') && esOficialidad(p));
+    });
+    if (gruposDelMiembro.length) {
+      gruposList.innerHTML = '';
+      gruposDelMiembro.forEach(g => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--dark-3);border:1px solid var(--border);';
+        row.innerHTML = `<span style="color:var(--gold);">◈</span>
+          <span style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);">${g.nombre}</span>
+          <span style="font-size:12px;color:var(--text-dim);margin-left:auto;">${g.descripcion||''}</span>`;
+        gruposList.appendChild(row);
+      });
+      gruposWrap.classList.remove('hidden');
+    } else {
+      gruposWrap.classList.add('hidden');
+    }
+  }
+
+  // ── Botón editar: solo perfil propio ──
   const btnEdit = document.getElementById('modal-btn-edit');
   if (btnEdit) btnEdit.style.display = esPropio ? '' : 'none';
 
