@@ -356,9 +356,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
       <span class="nav-icon">✉</span> Mensajería
       <span class="unread-badge hidden" id="badge-mensajes">0</span>
     </div>
-    <div class="nav-item" onclick="showModule('chat')">
-      <span class="nav-icon">⬡</span> Chat del Rol
-    </div>
+
     <div class="sidebar-label">Mi cuenta</div>
     <div class="nav-item" onclick="showModule('mi-perfil')">
       <span class="nav-icon">◎</span> Mi perfil
@@ -548,21 +546,6 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
       </div>
     </div>
 
-    <!-- CHAT MODULE -->
-    <div class="module hidden" id="mod-chat">
-      <div class="chat-layout">
-        <div class="chat-header">
-          <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--cream);">Chat del Rol</div>
-          <div class="chat-role-badge" id="chat-role-badge">—</div>
-          <div style="font-size:14px;color:var(--text-dim);margin-left:auto;">Mensajes en tiempo real · Supabase Realtime</div>
-        </div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input-area">
-          <textarea class="chat-input" id="chat-input" rows="2" placeholder="Escribe en el ágora del rol…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
-          <button class="btn-send" onclick="sendChatMessage()">Enviar</button>
-        </div>
-      </div>
-    </div>
 
     <!-- MI PERFIL MODULE -->
     <div class="module hidden" id="mod-mi-perfil">
@@ -760,7 +743,6 @@ function showApp() {
   showModule('hero');
   loadGallery();
   loadProfiles();
-  subscribeChat();
   subscribeMessages();
   loadUnreadCount();
   inyectarModulosAdmin();
@@ -1072,7 +1054,7 @@ function admMsgModulo(nombre, desc, modKey) {
 }
 
 // ── MODULES ──
-const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','chat','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-orador','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
+const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-orador','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   MODULES.forEach(m => {
     const el = document.getElementById('mod-'+m);
@@ -1100,7 +1082,6 @@ function showModule(name) {
   if (name === 'profiles')   { renderProfiles(); }
   if (name === 'biblioteca') { loadDocuments(); }
   if (name === 'mensajes')   { loadConversations(); }
-  if (name === 'chat')       { loadChat(); }
   if (name === 'mi-perfil')  { fillProfileForm(); }
 }
 
