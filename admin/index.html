@@ -774,8 +774,10 @@ tr:hover td { background: rgba(201,168,76,0.04); }
               <select id="bib-carpeta-sel" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
                 <option value="">Sin carpeta</option>
               </select></div>
-            <div class="field"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
-              <input type="text" id="bib-desc" placeholder="Breve descripción" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Editorial <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <input type="text" id="bib-editorial" placeholder="Ej: Gran Logia de Chile" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field" style="grid-column:1/-1;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <textarea id="bib-desc" rows="2" placeholder="Breve descripción del recurso…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
           </div>
           <!-- Roles de acceso (múltiple) -->
           <div style="margin-bottom:16px;">
@@ -827,12 +829,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <option>Actas de Tenidas</option><option>Fondo General</option>
           </select>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Nombre</th><th>Autor</th><th>Tipo</th><th>Roles</th><th>Categoría</th><th>Carpeta</th><th>Fecha Doc.</th><th>Acciones</th></tr></thead>
-            <tbody id="docs-tbody"></tbody>
-          </table>
-        </div>
+        <div id="docs-container"></div>
       </div>
 
       <!-- ── PANEL VIDEOS ── -->
@@ -855,8 +852,10 @@ tr:hover td { background: rgba(201,168,76,0.04); }
               </select></div>
             <div class="field"><label>Fecha del video</label>
               <input type="date" id="bibv-fecha-doc" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-            <div class="field"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
-              <input type="text" id="bibv-desc" placeholder="Breve descripción" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Editorial / Procedencia <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <input type="text" id="bibv-editorial" placeholder="Ej: Gran Logia de Chile" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field" style="grid-column:1/-1;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <textarea id="bibv-desc" rows="2" placeholder="Breve descripción del video…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
           </div>
           <!-- Preview thumbnail automático desde YouTube -->
           <div style="margin-bottom:16px;" id="bibv-thumb-preview-wrap" style="display:none;">
@@ -2540,6 +2539,7 @@ async function saveBibDoc() {
   const fechaDoc = document.getElementById('bib-fecha-doc').value || null;
   const cat      = document.getElementById('bib-cat').value;
   const carpetaId= document.getElementById('bib-carpeta-sel')?.value || null;
+  const editorial= document.getElementById('bib-editorial')?.value.trim()||null;
   const desc     = document.getElementById('bib-desc').value.trim();
   const roles    = Array.from(document.querySelectorAll('input[name="bib-rol"]:checked')).map(cb=>cb.value);
   if (!nombre)         { toast('El nombre es obligatorio','error'); return; }
@@ -2565,6 +2565,7 @@ async function saveBibDoc() {
     categoria: cat||null,
     carpeta_id: carpetaId||null,
     autor_nombre: autor||null,
+    editorial: editorial||null,
     fecha_doc: fechaDoc,
     roles,
     role: roles[0], // compatibilidad con intranet antigua
@@ -2573,7 +2574,7 @@ async function saveBibDoc() {
   if (error) { toast('Error al guardar: '+error.message,'error'); return; }
 
   bibFileNew = null;
-  ['bib-nombre','bib-autor','bib-desc'].forEach(id => document.getElementById(id) && (document.getElementById(id).value=''));
+  ['bib-nombre','bib-autor','bib-desc','bib-editorial'].forEach(id => document.getElementById(id) && (document.getElementById(id).value=''));
   document.getElementById('bib-fecha-doc').value='';
   document.getElementById('bib-cat').value='';
   document.getElementById('bib-file-name').textContent='Ningún archivo seleccionado';
@@ -2591,6 +2592,7 @@ async function saveBibVideo() {
   const ytUrl   = document.getElementById('bibv-youtube-url').value.trim();
   const cat     = document.getElementById('bibv-cat').value;
   const fechaDoc= document.getElementById('bibv-fecha-doc').value||null;
+  const editorial= document.getElementById('bibv-editorial')?.value.trim()||null;
   const desc    = document.getElementById('bibv-desc').value.trim();
   const roles   = Array.from(document.querySelectorAll('input[name="bibv-rol"]:checked')).map(cb=>cb.value);
 
@@ -2623,6 +2625,7 @@ async function saveBibVideo() {
     tipo: 'youtube',
     categoria: cat||null,
     autor_nombre: autor||null,
+    editorial: editorial||null,
     fecha_doc: fechaDoc,
     roles,
     role: roles[0],
@@ -2631,7 +2634,7 @@ async function saveBibVideo() {
   if (error) { toast('Error: '+error.message,'error'); return; }
 
   bibVideoThumb = null;
-  ['bibv-nombre','bibv-autor','bibv-desc','bibv-youtube-url'].forEach(id => {
+  ['bibv-nombre','bibv-autor','bibv-desc','bibv-youtube-url','bibv-editorial'].forEach(id => {
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('bibv-fecha-doc').value='';
@@ -2650,37 +2653,105 @@ async function loadDocuments() {
   const catFilter  = document.getElementById('bib-cat-filter')?.value  || '';
 
   let q = sbAdmin.from('documents')
-    .select('*, doc_carpetas(nombre)')
+    .select('*, doc_carpetas(id,nombre)')
     .neq('tipo','youtube')
-    .order('created_at',{ascending:false});
+    .order('nombre', {ascending:true});
   if (roleFilter !== 'todos') q = q.contains('roles', [roleFilter]);
   if (catFilter)              q = q.eq('categoria', catFilter);
   const { data } = await q;
   allDocs = data || [];
 
-  const tbody = document.getElementById('docs-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-  const icons = {pdf:'📄',docx:'📝',jpg:'🖼️',png:'🖼️',otro:'📁'};
-  allDocs.forEach(d => {
-    const tr = document.createElement('tr');
-    const linkHtml = d.url
-      ? `<a href="${d.url}" target="_blank" style="color:var(--gold);text-decoration:none;">${icons[d.tipo]||'📁'} ${d.nombre}</a>`
-      : d.nombre;
-    const rolesHtml = (d.roles||[]).map(r =>
-      `<span class="role-badge role-${r}" style="font-size:9px;padding:2px 6px;">${ROLE_LABELS[r]||r}</span>`
-    ).join(' ');
-    const fechaStr = d.fecha_doc ? new Date(d.fecha_doc+'T12:00').toLocaleDateString('es-CL') : '—';
-    tr.innerHTML = `
-      <td>${linkHtml}</td>
-      <td style="font-size:13px;color:var(--text-dim);">${d.autor_nombre||'—'}</td>
-      <td><span class="role-badge">${(d.tipo||'').toUpperCase()||'—'}</span></td>
-      <td>${rolesHtml}</td>
-      <td style="font-size:13px;color:var(--text-dim);">${d.categoria||'—'}</td>
-      <td style="font-size:13px;color:var(--text-dim);">${d.doc_carpetas?.nombre||'—'}</td>
-      <td style="font-size:13px;color:var(--text-dim);">${fechaStr}</td>
-      <td><button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteDoc('${d.id}')">Eliminar</button></td>`;
-    tbody.appendChild(tr);
+  renderDocCards(allDocs);
+}
+
+function renderDocCards(docs) {
+  const container = document.getElementById('docs-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!docs.length) {
+    container.innerHTML = '<div style="padding:32px;color:var(--text-dim);font-style:italic;">No hay documentos aún.</div>';
+    return;
+  }
+
+  const icons = {pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', otro:'📁'};
+
+  // Agrupar por carpeta
+  const grupos = {};
+  docs.forEach(d => {
+    const key = d.carpeta_id || '__sin_carpeta__';
+    const label = d.doc_carpetas?.nombre || 'Sin carpeta';
+    if (!grupos[key]) grupos[key] = { label, docs: [] };
+    grupos[key].docs.push(d);
+  });
+
+  // Ordenar: carpetas primero, sin carpeta al final
+  const keys = Object.keys(grupos).sort((a,b) => {
+    if (a === '__sin_carpeta__') return 1;
+    if (b === '__sin_carpeta__') return -1;
+    return grupos[a].label.localeCompare(grupos[b].label, 'es');
+  });
+
+  keys.forEach(key => {
+    const grupo = grupos[key];
+
+    // ── Encabezado de carpeta ──
+    const carpetaHdr = document.createElement('div');
+    carpetaHdr.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:14px;' + (key !== keys[0] ? 'margin-top:32px;' : '');
+    carpetaHdr.innerHTML = `
+      <span style="font-size:18px;">📁</span>
+      <span style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);letter-spacing:0.1em;">${grupo.label}</span>
+      <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);">${grupo.docs.length} doc${grupo.docs.length!==1?'s':''}</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>`;
+    container.appendChild(carpetaHdr);
+
+    // ── Grid de cards ──
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:8px;';
+
+    grupo.docs.forEach(d => {
+      const rolesHtml = (d.roles||[]).map(r =>
+        `<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--border);padding:2px 5px;color:var(--text-dim);">${ROLE_LABELS[r]||r}</span>`
+      ).join(' ');
+      const fechaStr = d.fecha_doc ? new Date(d.fecha_doc+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short',day:'numeric'}) : null;
+      const icon = icons[d.tipo] || '📁';
+
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:18px 20px;display:flex;flex-direction:column;gap:6px;transition:border-color 0.2s;';
+      card.onmouseover = () => card.style.borderColor = 'var(--border-bright)';
+      card.onmouseout  = () => card.style.borderColor = 'var(--border)';
+
+      card.innerHTML = `
+        <!-- Tipo + acciones -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+          <span style="font-size:20px;">${icon}</span>
+          <div style="display:flex;gap:6px;">
+            ${d.url ? `<a href="${d.url}" target="_blank" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border-bright);padding:4px 8px;text-decoration:none;">Ver</a>` : ''}
+            <button onclick="deleteDoc('${d.id}')" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:4px 8px;cursor:pointer;">✕</button>
+          </div>
+        </div>
+        <!-- Título -->
+        <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);line-height:1.4;">${d.nombre}</div>
+        <!-- Autor -->
+        <div style="font-size:13px;color:var(--text-dim);">
+          ${d.autor_nombre ? `<span style="color:var(--gold-dim);">Q∴H∴ ${d.autor_nombre}</span>` : '<span style="font-style:italic;color:var(--text-dim);">Sin autor</span>'}
+        </div>
+        <!-- Categoría + Editorial en fila -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          ${d.categoria ? `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border-bright);padding:2px 7px;">${d.categoria}</span>` : ''}
+          ${d.editorial ? `<span style="font-size:12px;color:var(--text-dim);">· ${d.editorial}</span>` : ''}
+        </div>
+        <!-- Fecha -->
+        ${fechaStr ? `<div style="font-size:12px;color:var(--text-dim);">${fechaStr}</div>` : ''}
+        <!-- Descripción -->
+        ${d.descripcion ? `<div style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-top:4px;border-top:1px solid var(--border);padding-top:8px;">${d.descripcion}</div>` : ''}
+        <!-- Roles -->
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${rolesHtml}</div>`;
+
+      grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
   });
 }
 
