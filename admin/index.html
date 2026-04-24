@@ -2372,7 +2372,14 @@ async function saveBibDoc() {
     toast('Subiendo archivo…');
     const ext = bibFileNew.name.split('.').pop().toLowerCase();
     tipoDoc = ext === 'pdf' ? 'pdf' : ['docx','doc'].includes(ext) ? 'docx' : ['jpg','jpeg','png'].includes(ext) ? 'jpg' : 'otro';
-    const path = role + '/' + Date.now() + '-' + bibFileNew.name.replace(/\s/g,'_');
+    // Sanitizar nombre: quitar tildes, ñ, caracteres especiales y espacios
+    const sanitizeFilename = name => name
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quitar tildes/diacríticos
+      .replace(/[^a-zA-Z0-9._-]/g,'_')                   // reemplazar todo lo demás por _
+      .replace(/_+/g,'_')                                 // colapsar guiones bajos seguidos
+      .replace(/^_|_$/g,'');                              // limpiar extremos
+    const safeName = sanitizeFilename(bibFileNew.name);
+    const path = role + '/' + Date.now() + '-' + safeName;
     const { error: upErr } = await sbAdmin.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
     if (upErr) { toast('Error al subir: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
