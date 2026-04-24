@@ -169,11 +169,14 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .filter-btn { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); background: transparent; border: 1px solid var(--border); padding: 8px 16px; cursor: pointer; transition: all 0.3s; }
 .filter-btn.active, .filter-btn:hover { color: var(--gold); border-color: var(--border-bright); background: rgba(201,168,76,0.06); }
 .docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2px; padding: 0 48px 48px; }
-.doc-card { background: var(--dark-3); border: 1px solid var(--border); padding: 24px 20px; display: flex; gap: 16px; align-items: flex-start; transition: border-color 0.3s; cursor: pointer; }
+.doc-card { background: var(--dark-3); border: 1px solid var(--border); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; transition: border-color 0.2s; cursor: pointer; }
 .doc-card:hover { border-color: var(--border-bright); }
-.doc-icon { font-size: 28px; flex-shrink: 0; }
-.doc-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); margin-bottom: 6px; font-weight: 400; line-height: 1.3; }
-.doc-meta { font-size: 13px; color: var(--text-dim); }
+.doc-icon { font-size: 20px; flex-shrink: 0; }
+.doc-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); line-height: 1.4; }
+.doc-meta { font-size: 12px; color: var(--text-dim); }
+.doc-carpeta-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.doc-carpeta-nombre { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); letter-spacing: 0.1em; }
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 12px; margin-bottom: 8px; }
 
 /* ── MODULE: MENSAJERÍA ── */
 .wa-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 56px); gap: 0; overflow: hidden; }
@@ -1490,13 +1493,6 @@ function openProfileModal(p) {
 // ── BIBLIOTECA ──
 async function loadDocuments() {
   const rol = currentProfile.role;
-
-  // Lógica de visibilidad acumulativa:
-  // - público (landing): solo con role='publico' o roles contiene 'publico' — NO se muestra en intranet
-  // - aprendiz: ve solo docs de aprendiz + todos
-  // - companero: ve docs de companero + aprendiz + todos
-  // - maestro: ve todo (maestro + companero + aprendiz + todos)
-  // - admin: ve todo
   const rolesVisibles = {
     aprendiz:  ['aprendiz','todos'],
     companero: ['companero','aprendiz','todos'],
@@ -1506,11 +1502,10 @@ async function loadDocuments() {
   const rolesParaRol = rolesVisibles[rol] || ['todos'];
 
   const { data } = await sb.from('documents')
-    .select('*')
+    .select('*, doc_carpetas(id,nombre)')
     .neq('tipo','youtube')
-    .order('created_at', { ascending: false });
+    .order('nombre', {ascending:true});
 
-  // Filtrar en cliente por array roles[]
   allDocs = (data||[]).filter(d => {
     const docRoles = d.roles || [d.role] || ['todos'];
     return docRoles.some(r => rolesParaRol.includes(r));
@@ -1519,23 +1514,75 @@ async function loadDocuments() {
 }
 
 function renderDocs(docs) {
-  const grid = document.getElementById('docs-grid');
-  grid.innerHTML = '';
-  if (!docs.length) { grid.innerHTML='<div style="padding:32px;color:var(--text-dim);font-style:italic;">No hay documentos aún.</div>'; return; }
-  const icons = { pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', youtube:'▶', otro:'📁' };
-  docs.forEach(doc => {
-    const url = doc.youtube_url || doc.url;
-    const div = document.createElement('div'); div.className='doc-card';
-    div.onclick = () => url ? window.open(url,'_blank') : null;
-    div.style.cursor = url ? 'pointer' : 'default';
-    const autorHtml = doc.autor_nombre ? `<span style="color:var(--text-dim);font-size:12px;">Q∴H∴ ${doc.autor_nombre}</span>` : '';
-    div.innerHTML = `<div class="doc-icon">${doc.youtube_url?'▶':(icons[doc.tipo]||'📁')}</div>
-      <div style="flex:1;min-width:0;">
-        <div class="doc-name">${doc.nombre}</div>
-        <div class="doc-meta">${doc.youtube_url?'YouTube':(doc.tipo?.toUpperCase()||'')}${doc.categoria?' · '+doc.categoria:''}</div>
-        ${autorHtml}
-      </div>`;
-    grid.appendChild(div);
+  const container = document.getElementById('docs-grid');
+  container.innerHTML = '';
+  if (!docs.length) {
+    container.innerHTML = '<div style="padding:32px;color:var(--text-dim);font-style:italic;">No hay documentos para tu grado aún.</div>';
+    return;
+  }
+  const icons = {pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', otro:'📁'};
+
+  // Agrupar por carpeta
+  const grupos = {};
+  docs.forEach(d => {
+    const key   = d.carpeta_id || '__sin__';
+    const label = d.doc_carpetas?.nombre || 'Documentos';
+    if (!grupos[key]) grupos[key] = { label, docs:[] };
+    grupos[key].docs.push(d);
+  });
+
+  const keys = Object.keys(grupos).sort((a,b) => {
+    if (a==='__sin__') return 1;
+    if (b==='__sin__') return -1;
+    return grupos[a].label.localeCompare(grupos[b].label,'es');
+  });
+
+  keys.forEach((key, ki) => {
+    const g = grupos[key];
+
+    // Encabezado carpeta
+    const hdr = document.createElement('div');
+    hdr.className = 'doc-carpeta-hdr';
+    if (ki > 0) hdr.style.marginTop = '28px';
+    hdr.innerHTML = `<span style="font-size:18px;">📁</span>
+      <span class="doc-carpeta-nombre">${g.label}</span>
+      <span style="font-size:11px;color:var(--text-dim);">${g.docs.length} documento${g.docs.length!==1?'s':''}</span>
+      <div style="flex:1;height:1px;background:var(--border);"></div>`;
+    container.appendChild(hdr);
+
+    // Grid de cards
+    const grid = document.createElement('div');
+    grid.className = 'doc-grid';
+
+    g.docs.forEach(d => {
+      const url  = d.url;
+      const icon = icons[d.tipo] || '📁';
+      const fechaStr = d.fecha_doc
+        ? new Date(d.fecha_doc+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short',day:'numeric'})
+        : null;
+
+      const card = document.createElement('div');
+      card.className = 'doc-card';
+      card.onclick = () => url ? window.open(url,'_blank') : null;
+
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="doc-icon">${icon}</span>
+          ${url ? `<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border-bright);padding:3px 7px;">Abrir</span>` : ''}
+        </div>
+        <div class="doc-name">${d.nombre}</div>
+        ${d.autor_nombre ? `<div style="font-size:12px;color:var(--gold-dim);">Q∴H∴ ${d.autor_nombre}</div>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          ${d.categoria ? `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border-bright);padding:2px 6px;">${d.categoria}</span>` : ''}
+          ${d.editorial ? `<span style="font-size:12px;color:var(--text-dim);">· ${d.editorial}</span>` : ''}
+        </div>
+        ${fechaStr ? `<div class="doc-meta">${fechaStr}</div>` : ''}
+        ${d.descripcion ? `<div style="font-size:13px;color:var(--text-dim);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;margin-top:2px;">${d.descripcion}</div>` : ''}`;
+
+      grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
   });
 }
 
