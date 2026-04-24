@@ -738,81 +738,200 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <!-- BIBLIOTECA -->
     <div class="module hidden" id="mod-biblioteca">
       <div class="module-title">Biblioteca</div>
-      <div class="module-sub">Gestión de documentos y videos por rol</div>
+      <div class="module-sub">Gestión de documentos, videos y recursos por grado</div>
       <div class="gold-line"></div>
 
-      <!-- Formulario agregar recurso -->
-      <div id="bib-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:760px;">
-        <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo recurso</div>
-        <div class="form-grid" style="margin-bottom:16px;">
-          <div class="field"><label>Nombre del recurso</label><input type="text" id="bib-nombre" placeholder="Título o nombre del recurso" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-          <div class="field"><label>Categoría</label><input type="text" id="bib-cat" placeholder="Ej: Historia, Filosofía, Ritual…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-          <div class="field"><label>Rol de acceso</label>
-            <select id="bib-role-sel" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
-              <option value="todos">Público (todos)</option>
-              <option value="aprendiz">Solo Aprendices</option>
-              <option value="companero">Solo Compañeros</option>
-              <option value="maestro">Solo Maestros</option>
-            </select>
+      <!-- Tabs: Documentos / Videos / Carpetas -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;">
+        <div class="bib-tab active" id="bibtab-docs"     onclick="bibSwitchTab('docs')"     style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;padding:12px 24px;cursor:pointer;border-bottom:2px solid var(--gold);color:var(--gold);">Documentos</div>
+        <div class="bib-tab"        id="bibtab-videos"   onclick="bibSwitchTab('videos')"   style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;padding:12px 24px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);">Videos</div>
+        <div class="bib-tab"        id="bibtab-carpetas" onclick="bibSwitchTab('carpetas')" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;padding:12px 24px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-dim);">Carpetas</div>
+      </div>
+
+      <!-- ── PANEL DOCUMENTOS ── -->
+      <div id="bibpanel-docs">
+        <div id="bib-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:820px;">
+          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo documento</div>
+          <div class="form-grid" style="margin-bottom:16px;">
+            <div class="field"><label>Nombre del recurso</label>
+              <input type="text" id="bib-nombre" placeholder="Título o nombre del documento" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Autor</label>
+              <input type="text" id="bib-autor" placeholder="Nombre del autor" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Fecha del documento</label>
+              <input type="date" id="bib-fecha-doc" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Categoría</label>
+              <select id="bib-cat" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+                <option value="">— Selecciona —</option>
+                <option>Planchas</option>
+                <option>Filosofía</option>
+                <option>Masonería</option>
+                <option>Literatura</option>
+                <option>Trazados de Cámara</option>
+                <option>Actas de Tenidas</option>
+                <option>Fondo General</option>
+              </select></div>
+            <div class="field"><label>Carpeta <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <select id="bib-carpeta-sel" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+                <option value="">Sin carpeta</option>
+              </select></div>
+            <div class="field"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <input type="text" id="bib-desc" placeholder="Breve descripción" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
           </div>
-          <div class="field"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span></label><input type="text" id="bib-desc" placeholder="Breve descripción" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-        </div>
-        <!-- Tipo: archivo o YouTube -->
-        <div style="margin-bottom:16px;">
-          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Tipo de recurso</div>
-          <div style="display:flex;gap:16px;margin-bottom:16px;">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
-              <input type="radio" name="bib-tipo" value="archivo" checked onchange="toggleBibTipo(this.value)" style="accent-color:var(--gold);"> Archivo (PDF, DOCX, imagen)
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
-              <input type="radio" name="bib-tipo" value="youtube" onchange="toggleBibTipo(this.value)" style="accent-color:var(--gold);"> Video de YouTube
-            </label>
+          <!-- Roles de acceso (múltiple) -->
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Visible para</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-rol" value="publico"   style="accent-color:var(--gold);width:16px;height:16px;"> Público (landing)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-rol" value="aprendiz" style="accent-color:var(--gold);width:16px;height:16px;"> Aprendices
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-rol" value="companero" style="accent-color:var(--gold);width:16px;height:16px;"> Compañeros
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-rol" value="maestro"  style="accent-color:var(--gold);width:16px;height:16px;"> Maestros
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-rol" value="todos" checked style="accent-color:var(--gold);width:16px;height:16px;"> Todos
+              </label>
+            </div>
           </div>
-          <div id="bib-archivo-area">
+          <!-- Archivo -->
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Archivo</div>
             <button type="button" class="btn-secondary" onclick="document.getElementById('bib-file-new').click()">Seleccionar archivo</button>
-            <input type="file" id="bib-file-new" style="display:none" accept=".pdf,.docx,.doc,.jpg,.png,.mp4" onchange="previewBibFile(this)">
+            <input type="file" id="bib-file-new" style="display:none" accept=".pdf,.docx,.doc,.jpg,.png" onchange="previewBibFile(this)">
             <span id="bib-file-name" style="font-size:13px;color:var(--text-dim);margin-left:12px;">Ningún archivo seleccionado</span>
           </div>
-          <div id="bib-youtube-area" style="display:none;">
-            <input type="url" id="bib-youtube-url" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+          <div style="display:flex;gap:12px;">
+            <button class="btn-primary" onclick="saveBibDoc()">Guardar documento</button>
+            <button class="btn-secondary" onclick="document.getElementById('bib-form').style.display='none'">Cancelar</button>
           </div>
         </div>
-        <div style="display:flex;gap:12px;">
-          <button class="btn-primary" onclick="saveBibDoc()">Guardar recurso</button>
-          <button class="btn-secondary" onclick="document.getElementById('bib-form').style.display='none'">Cancelar</button>
+        <!-- Controles -->
+        <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap;">
+          <button class="btn-primary" onclick="abrirBibForm()">+ Nuevo documento</button>
+          <select id="bib-role-filter" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:10px 16px;outline:none;" onchange="loadDocuments()">
+            <option value="todos">Todos los grados</option>
+            <option value="publico">Público</option>
+            <option value="aprendiz">Aprendices</option>
+            <option value="companero">Compañeros</option>
+            <option value="maestro">Maestros</option>
+          </select>
+          <select id="bib-cat-filter" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:10px 16px;outline:none;" onchange="loadDocuments()">
+            <option value="">Todas las categorías</option>
+            <option>Planchas</option><option>Filosofía</option><option>Masonería</option>
+            <option>Literatura</option><option>Trazados de Cámara</option>
+            <option>Actas de Tenidas</option><option>Fondo General</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Autor</th><th>Tipo</th><th>Roles</th><th>Categoría</th><th>Carpeta</th><th>Fecha Doc.</th><th>Acciones</th></tr></thead>
+            <tbody id="docs-tbody"></tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Controles -->
-      <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-primary" onclick="document.getElementById('bib-form').style.display='block';document.getElementById('bib-form').scrollIntoView({behavior:'smooth'})">+ Nuevo recurso</button>
-        <select id="bib-role-filter" style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:10px 16px;outline:none;" onchange="loadDocuments()">
-          <option value="todos">Todos los roles</option>
-          <option value="aprendiz">Aprendices</option>
-          <option value="companero">Compañeros</option>
-          <option value="maestro">Maestros</option>
-        </select>
+      <!-- ── PANEL VIDEOS ── -->
+      <div id="bibpanel-videos" style="display:none;">
+        <div id="bib-video-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:820px;">
+          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo video</div>
+          <div class="form-grid" style="margin-bottom:16px;">
+            <div class="field"><label>Nombre del video</label>
+              <input type="text" id="bibv-nombre" placeholder="Título del video" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Autor</label>
+              <input type="text" id="bibv-autor" placeholder="Nombre del autor o expositor" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>URL de YouTube</label>
+              <input type="url" id="bibv-youtube-url" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;" oninput="previewYoutubeThumbnail(this.value)"></div>
+            <div class="field"><label>Categoría</label>
+              <select id="bibv-cat" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+                <option value="">— Selecciona —</option>
+                <option>Planchas</option><option>Filosofía</option><option>Masonería</option>
+                <option>Literatura</option><option>Trazados de Cámara</option>
+                <option>Actas de Tenidas</option><option>Fondo General</option>
+              </select></div>
+            <div class="field"><label>Fecha del video</label>
+              <input type="date" id="bibv-fecha-doc" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+            <div class="field"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+              <input type="text" id="bibv-desc" placeholder="Breve descripción" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+          </div>
+          <!-- Preview thumbnail automático desde YouTube -->
+          <div style="margin-bottom:16px;" id="bibv-thumb-preview-wrap" style="display:none;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Preview del video</div>
+            <img id="bibv-thumb-preview" src="" alt="" style="max-width:320px;border:1px solid var(--border);display:none;">
+            <div style="margin-top:10px;">
+              <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px;">O sube una portada personalizada</div>
+              <button type="button" class="btn-secondary" onclick="document.getElementById('bibv-thumb-file').click()">Seleccionar imagen de portada</button>
+              <input type="file" id="bibv-thumb-file" style="display:none" accept="image/*" onchange="previewCustomThumb(this)">
+              <span id="bibv-thumb-file-name" style="font-size:13px;color:var(--text-dim);margin-left:12px;"></span>
+            </div>
+          </div>
+          <!-- Roles -->
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Visible para</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bibv-rol" value="publico"   style="accent-color:var(--gold);width:16px;height:16px;"> Público (landing)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bibv-rol" value="aprendiz"  style="accent-color:var(--gold);width:16px;height:16px;"> Aprendices
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bibv-rol" value="companero" style="accent-color:var(--gold);width:16px;height:16px;"> Compañeros
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bibv-rol" value="maestro"   style="accent-color:var(--gold);width:16px;height:16px;"> Maestros
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bibv-rol" value="todos" checked style="accent-color:var(--gold);width:16px;height:16px;"> Todos
+              </label>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn-primary" onclick="saveBibVideo()">Guardar video</button>
+            <button class="btn-secondary" onclick="document.getElementById('bib-video-form').style.display='none'">Cancelar</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:24px;">
+          <button class="btn-primary" onclick="abrirBibVideoForm()">+ Nuevo video</button>
+        </div>
+        <div id="bibv-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;"></div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Nombre</th><th>Tipo</th><th>Rol</th><th>Categoría</th><th>Fecha</th><th>Acciones</th></tr></thead>
-          <tbody id="docs-tbody"></tbody>
-        </table>
+
+      <!-- ── PANEL CARPETAS ── -->
+      <div id="bibpanel-carpetas" style="display:none;">
+        <div id="bib-carpeta-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:560px;">
+          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nueva carpeta</div>
+          <input type="hidden" id="bib-carpeta-edit-id" value="">
+          <div class="field" style="margin-bottom:14px;"><label>Nombre de la carpeta</label>
+            <input type="text" id="bib-carpeta-nombre" placeholder="Ej: Planchas 2024" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+          <div class="field" style="margin-bottom:14px;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
+            <input type="text" id="bib-carpeta-desc" placeholder="Descripción breve" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Visible para</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-carpeta-rol" value="aprendiz"  style="accent-color:var(--gold);width:16px;height:16px;"> Aprendices</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-carpeta-rol" value="companero" style="accent-color:var(--gold);width:16px;height:16px;"> Compañeros</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-carpeta-rol" value="maestro"   style="accent-color:var(--gold);width:16px;height:16px;"> Maestros</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-carpeta-rol" value="todos" checked style="accent-color:var(--gold);width:16px;height:16px;"> Todos</label>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn-primary" onclick="guardarCarpeta()">Guardar carpeta</button>
+            <button class="btn-secondary" onclick="document.getElementById('bib-carpeta-form').style.display='none'">Cancelar</button>
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-bottom:24px;" onclick="abrirCarpetaForm()">+ Nueva carpeta</button>
+        <div id="bib-carpetas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;"></div>
       </div>
     </div>
-
-    <!-- GALERIA -->
-    <div class="module hidden" id="mod-galeria">
-      <div class="module-title">Galería</div>
-      <div class="module-sub">Gestión de imágenes por rol</div>
-      <div class="gold-line"></div>
-      <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
-        <button class="btn-primary" onclick="document.getElementById('gal-file').click()">+ Subir imagen</button>
-        <input type="file" id="gal-file" style="display:none" accept="image/*" multiple onchange="uploadGallery(this)">
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:3px;" id="admin-gallery"></div>
-    </div>
-
     <!-- PORTADAS -->
     <div class="module hidden" id="mod-heroes">
       <div class="module-title">Portadas por rol</div>
@@ -1630,7 +1749,7 @@ function showModule(name) {
   if (name==='corp-blog')     loadCorpBlogAdmin();
   if (name==='blog')          loadPosts('blog');
   if (name==='egregora')      loadEgregoraAdmin();
-  if (name==='biblioteca')    loadDocuments();
+  if (name==='biblioteca')    { loadDocuments(); loadCarpetasSel(); }
   if (name==='galeria')       loadGalleryAdmin();
   if (name==='heroes')        loadHeroes();
   if (name==='calendario')    loadCalendario();
@@ -2339,1087 +2458,336 @@ async function savePostModal(publish) {
 }
 
 // ── DOCUMENTOS ──
-let bibFileNew = null;
+let bibFileNew    = null;
+let bibVideoThumb = null;
+let bibCarpetas   = [];
 
-function toggleBibTipo(val) {
-  document.getElementById('bib-archivo-area').style.display = val === 'archivo' ? 'block' : 'none';
-  document.getElementById('bib-youtube-area').style.display = val === 'youtube' ? 'block' : 'none';
+// ── SANITIZAR NOMBRE DE ARCHIVO ──
+const sanitizeFilename = name => name
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[^a-zA-Z0-9._-]/g,'_')
+  .replace(/_+/g,'_').replace(/^_|_$/g,'');
+
+// ── TABS BIBLIOTECA ──
+function bibSwitchTab(tab) {
+  ['docs','videos','carpetas'].forEach(t => {
+    document.getElementById('bibpanel-'+t).style.display = t===tab ? '' : 'none';
+    const el = document.getElementById('bibtab-'+t);
+    if (el) {
+      el.style.borderBottom = t===tab ? '2px solid var(--gold)' : '2px solid transparent';
+      el.style.color = t===tab ? 'var(--gold)' : 'var(--text-dim)';
+    }
+  });
+  if (tab==='docs')     loadDocuments();
+  if (tab==='videos')   loadBibVideos();
+  if (tab==='carpetas') loadCarpetas();
 }
 
+function abrirBibForm() {
+  document.getElementById('bib-form').style.display = 'block';
+  loadCarpetasSel();
+  document.getElementById('bib-form').scrollIntoView({behavior:'smooth'});
+}
+
+function abrirBibVideoForm() {
+  document.getElementById('bib-video-form').style.display = 'block';
+  document.getElementById('bib-video-form').scrollIntoView({behavior:'smooth'});
+}
+
+function abrirCarpetaForm(carpeta=null) {
+  document.getElementById('bib-carpeta-edit-id').value = carpeta?.id || '';
+  document.getElementById('bib-carpeta-nombre').value  = carpeta?.nombre || '';
+  document.getElementById('bib-carpeta-desc').value    = carpeta?.descripcion || '';
+  document.querySelectorAll('input[name="bib-carpeta-rol"]').forEach(cb => {
+    cb.checked = carpeta ? (carpeta.roles||[]).includes(cb.value) : cb.value==='todos';
+  });
+  document.getElementById('bib-carpeta-form').style.display = 'block';
+  document.getElementById('bib-carpeta-form').scrollIntoView({behavior:'smooth'});
+}
+
+// ── PREVIEW ARCHIVO ──
 function previewBibFile(input) {
   const file = input.files[0]; if (!file) return;
   bibFileNew = file;
-  document.getElementById('bib-file-name').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+  document.getElementById('bib-file-name').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1)+' MB)';
   document.getElementById('bib-file-name').style.color = 'var(--gold)';
 }
 
-async function saveBibDoc() {
-  const nombre    = document.getElementById('bib-nombre').value.trim();
-  const categoria = document.getElementById('bib-cat').value.trim();
-  const role      = document.getElementById('bib-role-sel').value;
-  const desc      = document.getElementById('bib-desc').value.trim();
-  const tipo      = document.querySelector('input[name="bib-tipo"]:checked')?.value || 'archivo';
-  if (!nombre) { toast('El nombre es obligatorio', 'error'); return; }
-
-  let url = null, youtubeUrl = null, tipoDoc = 'otro';
-
-  if (tipo === 'youtube') {
-    youtubeUrl = document.getElementById('bib-youtube-url').value.trim();
-    if (!youtubeUrl) { toast('Ingresa la URL de YouTube', 'error'); return; }
-    tipoDoc = 'youtube';
-  } else {
-    if (!bibFileNew) { toast('Selecciona un archivo', 'error'); return; }
-    toast('Subiendo archivo…');
-    const ext = bibFileNew.name.split('.').pop().toLowerCase();
-    tipoDoc = ext === 'pdf' ? 'pdf' : ['docx','doc'].includes(ext) ? 'docx' : ['jpg','jpeg','png'].includes(ext) ? 'jpg' : 'otro';
-    // Sanitizar nombre: quitar tildes, ñ, caracteres especiales y espacios
-    const sanitizeFilename = name => name
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quitar tildes/diacríticos
-      .replace(/[^a-zA-Z0-9._-]/g,'_')                   // reemplazar todo lo demás por _
-      .replace(/_+/g,'_')                                 // colapsar guiones bajos seguidos
-      .replace(/^_|_$/g,'');                              // limpiar extremos
-    const safeName = sanitizeFilename(bibFileNew.name);
-    const path = role + '/' + Date.now() + '-' + safeName;
-    const { error: upErr } = await sbAdmin.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
-    if (upErr) { toast('Error al subir: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
-    url = publicUrl;
+// ── PREVIEW THUMBNAIL YOUTUBE ──
+function previewYoutubeThumbnail(url) {
+  const wrap = document.getElementById('bibv-thumb-preview-wrap');
+  const img  = document.getElementById('bibv-thumb-preview');
+  if (!url || !url.includes('youtu')) { wrap.style.display='none'; return; }
+  const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+  if (match) {
+    img.src = 'https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg';
+    img.style.display = 'block';
+    wrap.style.display = 'block';
   }
+}
+
+function previewCustomThumb(input) {
+  const file = input.files[0]; if (!file) return;
+  bibVideoThumb = file;
+  document.getElementById('bibv-thumb-file-name').textContent = file.name;
+  document.getElementById('bibv-thumb-file-name').style.color = 'var(--gold)';
+}
+
+// ── GUARDAR DOCUMENTO ──
+async function saveBibDoc() {
+  const nombre   = document.getElementById('bib-nombre').value.trim();
+  const autor    = document.getElementById('bib-autor').value.trim();
+  const fechaDoc = document.getElementById('bib-fecha-doc').value || null;
+  const cat      = document.getElementById('bib-cat').value;
+  const carpetaId= document.getElementById('bib-carpeta-sel')?.value || null;
+  const desc     = document.getElementById('bib-desc').value.trim();
+  const roles    = Array.from(document.querySelectorAll('input[name="bib-rol"]:checked')).map(cb=>cb.value);
+  if (!nombre)         { toast('El nombre es obligatorio','error'); return; }
+  if (!cat)            { toast('Selecciona una categoría','error'); return; }
+  if (!roles.length)   { toast('Selecciona al menos un rol','error'); return; }
+  if (!bibFileNew)     { toast('Selecciona un archivo','error'); return; }
+
+  toast('Subiendo archivo…');
+  const ext     = bibFileNew.name.split('.').pop().toLowerCase();
+  const tipDoc  = ext==='pdf'?'pdf':['docx','doc'].includes(ext)?'docx':['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
+  const safeName= sanitizeFilename(bibFileNew.name);
+  // Usar primer rol como carpeta de storage, o 'docs' si es todos
+  const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
+  const path    = storeFolder + '/' + Date.now() + '-' + safeName;
+  const { error: upErr } = await sbAdmin.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
+  if (upErr) { toast('Error al subir: '+upErr.message,'error'); return; }
+  const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
 
   const { error } = await sbAdmin.from('documents').insert({
-    role, nombre, descripcion: desc || null,
-    url, youtube_url: youtubeUrl, tipo: tipoDoc,
-    categoria: categoria || null, autor_id: currentProfile.id
+    nombre, descripcion: desc||null,
+    url: publicUrl,
+    tipo: tipDoc,
+    categoria: cat||null,
+    carpeta_id: carpetaId||null,
+    autor_nombre: autor||null,
+    fecha_doc: fechaDoc,
+    roles,
+    role: roles[0], // compatibilidad con intranet antigua
+    autor_id: currentProfile.id
   });
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+  if (error) { toast('Error al guardar: '+error.message,'error'); return; }
 
   bibFileNew = null;
-  document.getElementById('bib-nombre').value = '';
-  document.getElementById('bib-cat').value = '';
-  document.getElementById('bib-desc').value = '';
-  document.getElementById('bib-youtube-url').value = '';
-  document.getElementById('bib-file-name').textContent = 'Ningún archivo seleccionado';
-  document.getElementById('bib-file-name').style.color = 'var(--text-dim)';
-  document.getElementById('bib-form').style.display = 'none';
-  toast('Recurso guardado', 'success');
+  ['bib-nombre','bib-autor','bib-desc'].forEach(id => document.getElementById(id) && (document.getElementById(id).value=''));
+  document.getElementById('bib-fecha-doc').value='';
+  document.getElementById('bib-cat').value='';
+  document.getElementById('bib-file-name').textContent='Ningún archivo seleccionado';
+  document.getElementById('bib-file-name').style.color='var(--text-dim)';
+  document.getElementById('bib-form').style.display='none';
+  document.querySelectorAll('input[name="bib-rol"]').forEach(cb=>cb.checked=cb.value==='todos');
+  toast('Documento guardado','success');
   loadDocuments();
 }
 
+// ── GUARDAR VIDEO ──
+async function saveBibVideo() {
+  const nombre  = document.getElementById('bibv-nombre').value.trim();
+  const autor   = document.getElementById('bibv-autor').value.trim();
+  const ytUrl   = document.getElementById('bibv-youtube-url').value.trim();
+  const cat     = document.getElementById('bibv-cat').value;
+  const fechaDoc= document.getElementById('bibv-fecha-doc').value||null;
+  const desc    = document.getElementById('bibv-desc').value.trim();
+  const roles   = Array.from(document.querySelectorAll('input[name="bibv-rol"]:checked')).map(cb=>cb.value);
+
+  if (!nombre) { toast('El nombre es obligatorio','error'); return; }
+  if (!ytUrl)  { toast('Ingresa la URL de YouTube','error'); return; }
+  if (!roles.length) { toast('Selecciona al menos un rol','error'); return; }
+
+  // Thumbnail: personalizado o automático de YouTube
+  let thumbUrl = null;
+  if (bibVideoThumb) {
+    toast('Subiendo portada…');
+    const safeName = sanitizeFilename(bibVideoThumb.name);
+    const path = 'thumbs/' + Date.now() + '-' + safeName;
+    const { error: tErr } = await sbAdmin.storage.from('Documents').upload(path, bibVideoThumb, {upsert:true});
+    if (!tErr) {
+      const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
+      thumbUrl = publicUrl;
+    }
+  }
+  if (!thumbUrl) {
+    // Thumbnail automático de YouTube
+    const match = ytUrl.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+    if (match) thumbUrl = 'https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg';
+  }
+
+  const { error } = await sbAdmin.from('documents').insert({
+    nombre, descripcion: desc||null,
+    youtube_url: ytUrl,
+    thumbnail_url: thumbUrl,
+    tipo: 'youtube',
+    categoria: cat||null,
+    autor_nombre: autor||null,
+    fecha_doc: fechaDoc,
+    roles,
+    role: roles[0],
+    autor_id: currentProfile.id
+  });
+  if (error) { toast('Error: '+error.message,'error'); return; }
+
+  bibVideoThumb = null;
+  ['bibv-nombre','bibv-autor','bibv-desc','bibv-youtube-url'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('bibv-fecha-doc').value='';
+  document.getElementById('bibv-cat').value='';
+  const pi=document.getElementById('bibv-thumb-preview'); if(pi){pi.style.display='none';}
+  const pw=document.getElementById('bibv-thumb-preview-wrap'); if(pw){pw.style.display='none';}
+  document.getElementById('bib-video-form').style.display='none';
+  document.querySelectorAll('input[name="bibv-rol"]').forEach(cb=>cb.checked=cb.value==='todos');
+  toast('Video guardado','success');
+  loadBibVideos();
+}
+
+// ── LOAD DOCUMENTOS ──
 async function loadDocuments() {
   const roleFilter = document.getElementById('bib-role-filter')?.value || 'todos';
-  let q = sbAdmin.from('documents').select('*').order('created_at',{ascending:false});
-  if (roleFilter !== 'todos') q = q.eq('role', roleFilter);
+  const catFilter  = document.getElementById('bib-cat-filter')?.value  || '';
+
+  let q = sbAdmin.from('documents')
+    .select('*, doc_carpetas(nombre)')
+    .neq('tipo','youtube')
+    .order('created_at',{ascending:false});
+  if (roleFilter !== 'todos') q = q.contains('roles', [roleFilter]);
+  if (catFilter)              q = q.eq('categoria', catFilter);
   const { data } = await q;
   allDocs = data || [];
-  const tbody = document.getElementById('docs-tbody'); tbody.innerHTML='';
-  const icons = { pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', youtube:'▶️', otro:'📁' };
+
+  const tbody = document.getElementById('docs-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const icons = {pdf:'📄',docx:'📝',jpg:'🖼️',png:'🖼️',otro:'📁'};
   allDocs.forEach(d => {
     const tr = document.createElement('tr');
-    const date = new Date(d.created_at).toLocaleDateString('es-CL');
-    const linkHtml = d.youtube_url
-      ? `<a href="${d.youtube_url}" target="_blank" style="color:var(--gold);text-decoration:none;">▶️ ${d.nombre}</a>`
-      : d.url ? `<a href="${d.url}" target="_blank" style="color:var(--gold);text-decoration:none;">${icons[d.tipo]||'📁'} ${d.nombre}</a>`
+    const linkHtml = d.url
+      ? `<a href="${d.url}" target="_blank" style="color:var(--gold);text-decoration:none;">${icons[d.tipo]||'📁'} ${d.nombre}</a>`
       : d.nombre;
-    tr.innerHTML=`
+    const rolesHtml = (d.roles||[]).map(r =>
+      `<span class="role-badge role-${r}" style="font-size:9px;padding:2px 6px;">${ROLE_LABELS[r]||r}</span>`
+    ).join(' ');
+    const fechaStr = d.fecha_doc ? new Date(d.fecha_doc+'T12:00').toLocaleDateString('es-CL') : '—';
+    tr.innerHTML = `
       <td>${linkHtml}</td>
-      <td><span class="role-badge">${(d.youtube_url?'YouTube':d.tipo?.toUpperCase())||'—'}</span></td>
-      <td><span class="role-badge role-${d.role}">${ROLE_LABELS[d.role]||d.role}</span></td>
-      <td style="font-size:14px;color:var(--text-dim);">${d.categoria||'—'}</td>
-      <td style="font-size:14px;color:var(--text-dim);">${date}</td>
+      <td style="font-size:13px;color:var(--text-dim);">${d.autor_nombre||'—'}</td>
+      <td><span class="role-badge">${(d.tipo||'').toUpperCase()||'—'}</span></td>
+      <td>${rolesHtml}</td>
+      <td style="font-size:13px;color:var(--text-dim);">${d.categoria||'—'}</td>
+      <td style="font-size:13px;color:var(--text-dim);">${d.doc_carpetas?.nombre||'—'}</td>
+      <td style="font-size:13px;color:var(--text-dim);">${fechaStr}</td>
       <td><button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteDoc('${d.id}')">Eliminar</button></td>`;
     tbody.appendChild(tr);
   });
 }
 
-async function deleteDoc(id) {
-  if (!confirm('¿Eliminar este recurso?')) return;
-  await sbAdmin.from('documents').delete().eq('id', id);
-  toast('Recurso eliminado'); loadDocuments();
-}
-
-// Mantener uploadBibDoc por compatibilidad (ya no se usa en UI)
-async function uploadBibDoc(input) { previewBibFile(input); }
-
-// ── GALERÍA ADMIN ──
-async function loadGalleryAdmin() {
-  const { data } = await sbAdmin.from('gallery').select('*').order('created_at',{ascending:false});
-  allGallery = data || [];
-  const grid = document.getElementById('admin-gallery'); grid.innerHTML='';
-  allGallery.forEach(img => {
-    const div = document.createElement('div');
-    div.style.cssText='position:relative;aspect-ratio:1;overflow:hidden;background:var(--dark-3);';
-    div.innerHTML=`<img src="${img.url}" style="width:100%;height:100%;object-fit:cover;">
-      <div style="position:absolute;top:4px;right:4px;">
-        <button class="btn-danger" style="padding:4px 8px;font-size:10px;" onclick="deleteGallery('${img.id}')">✕</button>
-      </div>
-      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,16,56,0.8);padding:4px 8px;font-family:'Cinzel',serif;font-size:9px;color:var(--gold-dim);">${ROLE_LABELS[img.role]||img.role}</div>`;
-    grid.appendChild(div);
-  });
-}
-
-async function uploadGallery(input) {
-  const files = Array.from(input.files); if(!files.length) return;
-  const role = prompt('¿Para qué rol?\n(aprendiz / companero / maestro / todos)', 'todos') || 'todos';
-  toast('Subiendo '+files.length+' imagen(es)…');
-  for (const file of files) {
-    const path = role+'/'+Date.now()+'-'+file.name;
-    await sbAdmin.storage.from('Gallery').upload(path, file);
-    const { data: { publicUrl } } = sbAdmin.storage.from('Gallery').getPublicUrl(path);
-    await sbAdmin.from('gallery').insert({ role, url:publicUrl, author_id:currentProfile.id });
-  }
-  toast('Galería actualizada', 'success'); loadGalleryAdmin();
-}
-
-async function deleteGallery(id) {
-  if (!confirm('¿Eliminar imagen?')) return;
-  await sbAdmin.from('gallery').delete().eq('id', id);
-  toast('Imagen eliminada'); loadGalleryAdmin();
-}
-
-// ── PORTADAS ──
-async function loadHeroes() {
-  const { data } = await sbAdmin.from('hero_images').select('*');
-  const grid = document.getElementById('heroes-grid'); grid.innerHTML='';
-  const heroRoles = ['aprendiz','companero','maestro'];
-  heroRoles.forEach(heroRole => {
-    const h = (data||[]).find(x=>x.role===heroRole) || {};
-    const div = document.createElement('div');
-    div.style.cssText='background:var(--dark-3);border:1px solid var(--border);padding:28px 24px;';
-    const imgHtml = h.url
-      ? `<img id="hero-img-preview-${heroRole}" src="${h.url}" style="width:100%;height:140px;object-fit:cover;margin-bottom:16px;">`
-      : `<img id="hero-img-preview-${heroRole}" src="" style="display:none;width:100%;height:140px;object-fit:cover;margin-bottom:16px;"><div style="width:100%;height:140px;background:var(--dark-5);margin-bottom:16px;display:flex;align-items:center;justify-content:center;font-size:28px;opacity:0.3;">◈</div>`;
-    div.innerHTML=`
-      <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">${ROLE_LABELS[heroRole]}</div>
-      ${imgHtml}
-      <div class="field"><label>Título</label><input id="hero-t-${heroRole}" value="${h.titulo||''}" placeholder="Título de la portada"></div>
-      <div class="field"><label>Subtítulo</label><input id="hero-s-${heroRole}" value="${h.subtitulo||''}" placeholder="Subtítulo"></div>
-      <div style="display:flex;gap:10px;margin-top:12px;">
-        <button class="btn-secondary" style="flex:1;font-size:9px;padding:8px;" onclick="document.getElementById('hero-file-${heroRole}').click()">Cambiar imagen</button>
-        <button class="btn-primary" style="flex:1;font-size:9px;padding:8px;" onclick="saveHero('${heroRole}')">Guardar</button>
-      </div>
-      <input type="file" id="hero-file-${heroRole}" accept="image/*" style="display:none" onchange="uploadHeroAdmin(this,'${heroRole}')">`;
-    grid.appendChild(div);
-  });
-}
-
-
-async function uploadHeroAdmin(input, role) {
-  const file = input.files[0]; if(!file) return;
-  toast('Subiendo portada…');
-  const path = role+'/hero-'+Date.now()+'.'+file.name.split('.').pop();
-  const { error: upErr } = await sbAdmin.storage.from('Heroes').upload(path, file, {upsert:true});
-  if (upErr) { toast('Error al subir: ' + upErr.message, 'error'); return; }
-  const { data: { publicUrl } } = sbAdmin.storage.from('Heroes').getPublicUrl(path);
-  const titulo    = document.getElementById('hero-t-'+role)?.value.trim() || '';
-  const subtitulo = document.getElementById('hero-s-'+role)?.value.trim() || '';
-  const { error } = await sbAdmin.from('hero_images').upsert(
-    { role, url: publicUrl, titulo, subtitulo, updated_at: new Date() },
-    { onConflict: 'role' }
-  );
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
-  // Actualizar solo la imagen en el DOM sin recargar todo
-  const preview = document.getElementById('hero-img-preview-'+role);
-  if (preview) { preview.src = publicUrl; preview.style.display = 'block'; }
-  toast('Portada actualizada correctamente', 'success');
-}
-
-async function saveHero(role) {
-  const titulo    = document.getElementById('hero-t-'+role).value.trim();
-  const subtitulo = document.getElementById('hero-s-'+role).value.trim();
-  // Usar UPDATE para no sobreescribir la url existente
-  const { data: existing } = await sbAdmin.from('hero_images').select('id').eq('role', role).maybeSingle();
-  let error;
-  if (existing) {
-    ({ error } = await sbAdmin.from('hero_images').update({ titulo, subtitulo, updated_at: new Date() }).eq('role', role));
-  } else {
-    ({ error } = await sbAdmin.from('hero_images').insert({ role, titulo, subtitulo, updated_at: new Date() }));
-  }
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
-  toast('Portada guardada correctamente', 'success');
-}
-
-// ── MENSAJERÍA ADMIN WHATSAPP ──
-let admWaConvId = null;
-let admWaConvProfile = null;
-let admWaAllProfiles = [];
-let admWaTab = 'directos';
-let admWaGrupos = [];
-let admWaEncuestas = [];
-let admPollOpciones = [];
-
-async function loadConversations() {
-  const [profRes, grupRes, encRes] = await Promise.all([
-    sbAdmin.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).order('apellido'),
-    sbAdmin.from('grupos').select('*').order('created_at', {ascending:false}),
-    sbAdmin.from('encuestas').select('*').eq('activa', true).order('created_at', {ascending:false})
-  ]);
-  admWaAllProfiles = (profRes.data||[]).sort((a,b) => (a.apellido||'').localeCompare(b.apellido||'','es'));
-  admWaGrupos      = grupRes.data || [];
-  admWaEncuestas   = encRes.data  || [];
-  admRenderConvList();
-  loadUnread();
-}
-
-function admSwitchTab(tab) {
-  admWaTab = tab;
-  document.querySelectorAll('.adm-wa-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('adm-tab-'+tab).classList.add('active');
-  document.getElementById('adm-wa-search').value = '';
-  admRenderConvList();
-}
-
-function admFilterConvs(q) { admRenderConvList(q.toLowerCase()); }
-
-function admRenderConvList(query='') {
-  const list = document.getElementById('admin-conv-list');
-  list.innerHTML = '';
-
-  if (admWaTab === 'directos') {
-    const perfiles = admWaAllProfiles.filter(p =>
-      !query || qh(p.nombre,p.apellido).toLowerCase().includes(query)
-    );
-    if (!perfiles.length) {
-      list.innerHTML = '<div style="padding:20px;color:var(--text-dim);font-size:13px;font-style:italic;">Sin resultados</div>';
-      return;
-    }
-    perfiles.forEach(p => {
-      const initials = qh(p.nombre,p.apellido).replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
-      const avatarHtml = p.avatar_url
-        ? `<img class="adm-wa-av" src="${p.avatar_url}">`
-        : `<div class="adm-wa-av">${initials}</div>`;
-      const item = document.createElement('div');
-      item.className = 'adm-wa-item' + (admWaConvId===p.id?' active':'');
-      item.onclick = () => openAdminConv(p);
-      item.innerHTML = `${avatarHtml}
-        <div class="adm-wa-info">
-          <div class="adm-wa-name">${qh(p.nombre,p.apellido)}</div>
-          <div class="adm-wa-prev">${p.cargo||ROLE_LABELS[p.role]||p.role}</div>
-        </div>`;
-      list.appendChild(item);
-    });
-
-  } else if (admWaTab === 'grupos') {
-    const grupos = admWaGrupos.filter(g => !query || g.nombre.toLowerCase().includes(query));
-    if (!grupos.length) {
-      list.innerHTML = '<div style="padding:20px;color:var(--text-dim);font-size:13px;font-style:italic;">No hay grupos. Créalos en el módulo Grupos.</div>';
-      return;
-    }
-    grupos.forEach(g => {
-      const item = document.createElement('div');
-      item.className = 'adm-wa-item' + (admWaConvId===g.id?' active':'');
-      item.onclick = () => admOpenGrupo(g);
-      item.innerHTML = `<div class="adm-wa-av">◈</div>
-        <div class="adm-wa-info">
-          <div class="adm-wa-name">${g.nombre}</div>
-          <div class="adm-wa-prev">${g.descripcion||'Grupo'}</div>
-        </div>`;
-      list.appendChild(item);
-    });
-
-  } else if (admWaTab === 'encuestas') {
-    // Cabecera con botón nueva encuesta
-    const hdr = document.createElement('div');
-    hdr.style.cssText = 'padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;';
-    hdr.innerHTML = `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Encuestas activas</span>
-      <button onclick="admAbrirModalEncuesta()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:5px 10px;cursor:pointer;">+ Nueva</button>`;
-    list.appendChild(hdr);
-
-    const encuestas = admWaEncuestas.filter(e => !query || e.titulo.toLowerCase().includes(query));
-    if (!encuestas.length) {
-      const empty = document.createElement('div');
-      empty.style.cssText = 'padding:20px;color:var(--text-dim);font-size:13px;font-style:italic;';
-      empty.textContent = 'No hay encuestas activas';
-      list.appendChild(empty);
-      return;
-    }
-    encuestas.forEach(e => {
-      const totalVotos = (e.opciones||[]).reduce((s,o)=>s+(o.votos||[]).length,0);
-      const item = document.createElement('div');
-      item.className = 'adm-wa-item' + (admWaConvId===e.id?' active':'');
-      item.onclick = () => admOpenEncuesta(e);
-      item.innerHTML = `<div class="adm-wa-av" style="font-size:18px;">📊</div>
-        <div class="adm-wa-info">
-          <div class="adm-wa-name">${e.titulo}</div>
-          <div class="adm-wa-prev">${e.tipo==='asistencia'?'Asistencia':e.tipo==='agape'?'Ágape':'General'} · ${totalVotos} votos</div>
-        </div>`;
-      list.appendChild(item);
-    });
-  }
-}
-
-async function openAdminConv(profile) {
-  admWaConvId = profile.id;
-  admWaConvProfile = profile;
-  activeConvUserId = profile.id;
-  renderAdmConvList(admWaAllProfiles);
-
-  const initials = qh(profile.nombre,profile.apellido).replace(/Q∴H∴\s*/,'').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
-  const avatarHtml = profile.avatar_url
-    ? `<img class="adm-wa-av" src="${profile.avatar_url}" style="width:38px;height:38px;">`
-    : `<div class="adm-wa-av" style="width:38px;height:38px;">${initials}</div>`;
-
-  const area = document.getElementById('adm-wa-chat-area');
-  area.innerHTML = `<div class="adm-wa-chat">
-    <div class="adm-wa-chat-hdr">
-      ${avatarHtml}
-      <div>
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);">${qh(profile.nombre,profile.apellido)}</div>
-        <div style="font-size:12px;color:var(--text-dim);">${profile.cargo||ROLE_LABELS[profile.role]||profile.role}</div>
-      </div>
-    </div>
-    <div class="adm-wa-msgs" id="adm-wa-msgs"></div>
-    <div class="adm-wa-input-area">
-      <textarea class="adm-wa-input" id="admin-msg-input" rows="1"
-        placeholder="Escribe un mensaje…"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();adminSendMsg();}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
-      <button class="adm-wa-send" onclick="adminSendMsg()">➤</button>
-    </div>
-  </div>`;
-
-  const { data: msgs } = await sbAdmin.from('messages').select('*')
-    .or(`and(from_id.eq.${currentProfile.id},to_id.eq.${profile.id}),and(from_id.eq.${profile.id},to_id.eq.${currentProfile.id})`)
-    .order('created_at');
-  await sbAdmin.from('messages').update({leido:true}).eq('to_id',currentProfile.id).eq('from_id',profile.id);
-
-  renderAdmMsgs(msgs||[]);
-  loadUnread();
-}
-
-function renderAdmMsgs(msgs) {
-  const container = document.getElementById('adm-wa-msgs');
-  if (!container) return;
-  container.innerHTML = '';
-  let lastDate = '';
-  msgs.forEach(m => {
-    const fecha = new Date(m.created_at).toLocaleDateString('es-CL');
-    if (fecha !== lastDate) {
-      lastDate = fecha;
-      const sep = document.createElement('div'); sep.className='adm-wa-date';
-      sep.innerHTML=`<span>${fecha}</span>`;
-      container.appendChild(sep);
-    }
-    const isMine = m.from_id === currentProfile.id;
-    const wrap = document.createElement('div');
-    wrap.className = 'adm-wa-bw '+(isMine?'mine':'theirs');
-    const time = new Date(m.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-    wrap.innerHTML = `<div class="adm-wa-b">
-      <div class="adm-wa-btxt">${m.contenido}</div>
-      <div class="adm-wa-btime">${time}</div>
-    </div>`;
-    container.appendChild(wrap);
-  });
-  container.scrollTop = container.scrollHeight;
-}
-
-async function adminSendMsg() {
-  if (!admWaConvId) { toast('Selecciona un hermano', 'error'); return; }
-  const input = document.getElementById('admin-msg-input');
-  const text = input.value.trim(); if (!text) return;
-  await sbAdmin.from('messages').insert({ from_id:currentProfile.id, to_id:admWaConvId, contenido:text });
-  input.value = ''; input.style.height = 'auto';
-  openAdminConv(admWaConvProfile);
-}
-
-// ── GRUPOS EN ADMIN ──
-async function admOpenGrupo(grupo) {
-  admWaConvId = grupo.id;
-  admRenderConvList();
-
-  const area = document.getElementById('adm-wa-chat-area');
-  area.innerHTML = `<div class="adm-wa-chat">
-    <div class="adm-wa-chat-hdr">
-      <div class="adm-wa-av">◈</div>
-      <div>
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);">${grupo.nombre}</div>
-        <div style="font-size:12px;color:var(--text-dim);">${grupo.descripcion||'Grupo'} · ${grupo.modo_escritura==='restringido'?'Restringido':'Libre'}</div>
-      </div>
-    </div>
-    <div class="adm-wa-msgs" id="adm-wa-msgs"></div>
-    <div class="adm-wa-input-area">
-      <textarea class="adm-wa-input" id="admin-msg-input" rows="1"
-        placeholder="Escribe un mensaje al grupo…"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();admSendGrupo('${grupo.id}');}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
-      <button class="adm-wa-send" onclick="admSendGrupo('${grupo.id}')">➤</button>
-    </div>
-  </div>`;
-
-  const {data} = await sbAdmin.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
-  renderAdmMsgs(data||[], true);
-}
-
-async function admSendGrupo(grupoId) {
-  const input = document.getElementById('admin-msg-input');
-  const text = input.value.trim(); if (!text) return;
-  input.value = ''; input.style.height = 'auto';
-  await sbAdmin.from('grupo_mensajes').insert({
-    grupo_id: grupoId,
-    autor_id: currentProfile.id,
-    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
-    contenido: text
-  });
-  const {data} = await sbAdmin.from('grupo_mensajes').select('*').eq('grupo_id',grupoId).order('created_at').limit(100);
-  renderAdmMsgs(data||[], true);
-}
-
-// ── ENCUESTAS EN ADMIN ──
-async function admOpenEncuesta(enc) {
-  admWaConvId = enc.id;
-  admRenderConvList();
-
-  const {data: encFresh} = await sbAdmin.from('encuestas').select('*').eq('id',enc.id).single();
-  if (!encFresh) return;
-
-  const opciones = encFresh.opciones || [];
-  const totalVotos = opciones.reduce((s,o)=>s+(o.votos||[]).length,0);
-
-  let opcionesHtml = opciones.map(op => {
-    const votos = (op.votos||[]).length;
-    const pct   = totalVotos>0 ? Math.round(votos/totalVotos*100) : 0;
-    return `<div class="adm-poll-option-bar">
-      <div class="adm-poll-fill" style="width:${pct}%"></div>
-      <span class="adm-poll-text">${op.texto}</span>
-      <span class="adm-poll-pct">${pct}% (${votos})</span>
-    </div>`;
-  }).join('');
-
-  const area = document.getElementById('adm-wa-chat-area');
-  area.innerHTML = `<div class="adm-wa-chat">
-    <div class="adm-wa-chat-hdr">
-      <div class="adm-wa-av" style="font-size:18px;">📊</div>
-      <div style="flex:1;">
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);">${encFresh.titulo}</div>
-        <div style="font-size:12px;color:var(--text-dim);">${encFresh.tipo==='asistencia'?'Asistencia':encFresh.tipo==='agape'?'Ágape':'General'} · ${encFresh.activa?'Activa':'Cerrada'}</div>
-      </div>
-      ${encFresh.activa?`<button onclick="admCerrarEncuesta('${encFresh.id}')" class="btn-danger" style="padding:6px 12px;font-size:9px;">Cerrar</button>`:''}
-    </div>
-    <div style="flex:1;overflow-y:auto;padding:24px;">
-      ${encFresh.descripcion?`<div style="font-size:14px;color:var(--text-dim);margin-bottom:20px;line-height:1.7;">${encFresh.descripcion}</div>`:''}
-      ${opcionesHtml}
-      <div style="margin-top:12px;font-size:13px;color:var(--text-dim);">${totalVotos} ${totalVotos===1?'voto':'votos'} en total</div>
-      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px;">
-        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Detalle por opción</div>
-        ${opciones.map(op=>`
-          <div style="margin-bottom:10px;">
-            <div style="font-size:13px;color:var(--cream);margin-bottom:4px;">«${op.texto}»</div>
-            <div style="font-size:12px;color:var(--text-dim);">${(op.votos||[]).length} votos</div>
-          </div>`).join('')}
-      </div>
-    </div>
-  </div>`;
-}
-
-async function admCerrarEncuesta(encId) {
-  await sbAdmin.from('encuestas').update({activa:false}).eq('id',encId);
-  toast('Encuesta cerrada','success');
-  const {data} = await sbAdmin.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
-  admWaEncuestas = data||[];
-  admRenderConvList();
-}
-
-// ── MODAL NUEVA ENCUESTA (admin) ──
-let admPollOpts = ['Asistiré','No podré asistir','Confirmaré más tarde'];
-
-function admAbrirModalEncuesta() {
-  admPollOpts = ['Asistiré','No podré asistir','Confirmaré más tarde'];
-  document.getElementById('modal-title').textContent = 'Nueva encuesta';
-  document.getElementById('modal-sub').textContent = 'Canal Asistencia & Ágapes';
-  document.getElementById('modal-body').innerHTML = `
-    <div class="field" style="margin-bottom:14px;"><label>Título</label>
-      <input id="adm-poll-titulo" type="text" placeholder="Ej: Tenida del 15 de marzo"
-        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;">
-    </div>
-    <div class="field" style="margin-bottom:14px;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
-      <textarea id="adm-poll-desc" rows="2" placeholder="Detalles adicionales…"
-        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:15px;padding:10px 14px;outline:none;resize:vertical;"></textarea>
-    </div>
-    <div class="field" style="margin-bottom:14px;"><label>Tipo</label>
-      <select id="adm-poll-tipo" onchange="admPollTipoChange(this.value)"
-        style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:10px 14px;outline:none;">
-        <option value="asistencia">Asistencia a Tenida</option>
-        <option value="agape">Ágape</option>
-        <option value="general">General</option>
-      </select>
-    </div>
-    <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px;">Opciones</div>
-    <div id="adm-poll-opts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
-    <button onclick="admAddPollOpt()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:6px 14px;cursor:pointer;margin-bottom:14px;">+ Opción</button>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="adm-poll-mult" style="accent-color:var(--gold);width:16px;height:16px;">
-      <label for="adm-poll-mult" style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">Permitir selección múltiple</label>
-    </div>`;
-  document.getElementById('modal-footer').innerHTML = `
-    <button class="btn-primary" onclick="admGuardarEncuesta()">Publicar encuesta</button>
-    <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
-  admRenderPollOpts();
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-function admPollTipoChange(tipo) {
-  if (tipo==='asistencia') admPollOpts = ['Asistiré','No podré asistir','Confirmaré más tarde'];
-  else if (tipo==='agape') admPollOpts = ['Asistiré al ágape','No asistiré','Tengo restricción alimentaria'];
-  else admPollOpts = ['Sí','No'];
-  admRenderPollOpts();
-}
-
-function admAddPollOpt() { admPollOpts.push(''); admRenderPollOpts(); }
-
-function admRenderPollOpts() {
-  const list = document.getElementById('adm-poll-opts-list');
-  if (!list) return;
-  list.innerHTML = '';
-  admPollOpts.forEach((op,i) => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:8px;';
-    row.innerHTML = `<input type="text" value="${op}" placeholder="Opción ${i+1}"
-      style="flex:1;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:8px 12px;outline:none;"
-      oninput="admPollOpts[${i}]=this.value">
-      <button onclick="admPollOpts.splice(${i},1);admRenderPollOpts()"
-        style="background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 10px;cursor:pointer;">✕</button>`;
-    list.appendChild(row);
-  });
-}
-
-async function admGuardarEncuesta() {
-  const titulo = document.getElementById('adm-poll-titulo').value.trim();
-  if (!titulo) { toast('El título es obligatorio','error'); return; }
-  const opts = admPollOpts.filter(o=>o.trim());
-  if (opts.length < 2) { toast('Agrega al menos 2 opciones','error'); return; }
-  const opciones = opts.map((texto,i) => ({ id:'op_'+(Date.now()+'_'+i), texto:texto.trim(), votos:[] }));
-  const {error} = await sbAdmin.from('encuestas').insert({
-    titulo,
-    descripcion: document.getElementById('adm-poll-desc').value.trim()||null,
-    tipo: document.getElementById('adm-poll-tipo').value,
-    opciones,
-    multiple: document.getElementById('adm-poll-mult').checked,
-    autor_id: currentProfile.id,
-    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
-    activa: true,
-    roles: ['todos']
-  });
-  if (error) { toast('Error: '+error.message,'error'); return; }
-  closeModal();
-  toast('Encuesta publicada','success');
-  const {data} = await sbAdmin.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
-  admWaEncuestas = data||[];
-  admSwitchTab('encuestas');
-}
-
-async function loadUnread() {
-  const { count } = await sbAdmin.from('messages').select('id',{count:'exact',head:true}).eq('to_id',currentProfile.id).eq('leido',false);
-  const badge = document.getElementById('badge-msg');
-  if (count>0) { badge.textContent=count; badge.classList.remove('hidden'); }
-  else { badge.classList.add('hidden'); }
-}
-
-// ── BROADCAST ──
-function toggleAllRoles(cb) {
-  ['aprendiz','companero','maestro'].forEach(r => document.getElementById('bc-'+r).checked = cb.checked);
-}
-
-async function sendBroadcast() {
-  const roles = ['aprendiz','companero','maestro'].filter(r=>document.getElementById('bc-'+r).checked);
-  const mensaje = document.getElementById('bc-mensaje').value.trim();
-  if (!roles.length) { toast('Selecciona al menos un rol', 'error'); return; }
-  if (!mensaje) { toast('Escribe un mensaje', 'error'); return; }
-  const { data: targets } = await sbAdmin.from('profiles').select('id').in('role', roles).eq('activo',true);
-  if (!targets?.length) { toast('No hay miembros activos en los roles seleccionados', 'error'); return; }
-  toast('Enviando a '+targets.length+' miembros…');
-  const msgs = targets.map(t => ({ from_id:currentProfile.id, to_id:t.id, contenido:mensaje }));
-  const { error } = await sbAdmin.from('messages').insert(msgs);
-  if (error) { toast('Error al enviar', 'error'); return; }
-  document.getElementById('broadcast-log').textContent = '✓ Mensaje enviado a '+targets.length+' miembros el '+new Date().toLocaleString('es-CL');
-  document.getElementById('bc-mensaje').value='';
-  document.getElementById('bc-asunto').value='';
-  ['aprendiz','companero','maestro','todos'].forEach(r=>{ const el=document.getElementById('bc-'+r); if(el) el.checked=false; });
-  toast('Broadcast enviado correctamente', 'success');
-}
-
-// ── MODAL ──
-function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
-// ── NOTICIAS ──
-let noticiaImgFile = null;
-
-function previewNoticiaImg(input) {
-  const file = input.files[0]; if(!file) return;
-  noticiaImgFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const prev = document.getElementById('noticia-img-preview');
-    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function saveNoticia(publish) {
-  const titulo   = document.getElementById('noticia-titulo').value.trim();
-  const contenido= document.getElementById('noticia-contenido').value.trim();
-  const tag      = document.getElementById('noticia-tag').value;
-  const fecha    = document.getElementById('noticia-fecha').value || new Date().toISOString().split('T')[0];
-  if (!titulo || !contenido) { toast('Título y contenido son obligatorios', 'error'); return; }
-  toast('Guardando noticia…');
-
-  let imgUrl = '';
-  if (noticiaImgFile) {
-    const path = Date.now() + '-' + noticiaImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Noticias').upload(path, noticiaImgFile, {upsert:true});
-    if (upErr) {
-      toast('Error al subir imagen: ' + upErr.message, 'error');
-      return;
-    }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Noticias').getPublicUrl(path);
-    imgUrl = publicUrl;
-  }
-
-  const { error } = await sbAdmin.from('noticias').insert({
-    titulo,
-    contenido,
-    extracto:   contenido.substring(0, 220),
-    tag,
-    fecha_pub:  fecha,
-    imagen_url: imgUrl || null,
-    autor_id:   currentProfile.id,
-    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
-    publicado:  publish
-  });
-
-  if (error) {
-    // Si la tabla no existe, usar posts como fallback
-    await sbAdmin.from('posts').insert({
-      role:        'todos',
-      titulo,
-      contenido,
-      extracto:    contenido.substring(0, 220),
-      autor_id:    currentProfile.id,
-      autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
-      publicado:   publish
-    });
-  }
-
-  noticiaImgFile = null;
-  document.getElementById('noticia-img-preview').innerHTML = `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>`;
-  document.getElementById('noticia-titulo').value = '';
-  document.getElementById('noticia-contenido').value = '';
-  document.getElementById('noticia-form').style.display = 'none';
-  toast(publish ? 'Noticia publicada' : 'Borrador guardado', 'success');
-  loadNoticias();
-}
-
-async function loadNoticias() {
-  // Intentar tabla noticias primero, fallback a posts
-  let data = null;
-  const { data: d1, error: e1 } = await sbAdmin.from('noticias').select('*').order('fecha_pub', {ascending:false});
-  if (!e1) {
-    data = d1;
-  } else {
-    const { data: d2 } = await sbAdmin.from('posts').select('*').order('created_at', {ascending:false});
-    data = d2;
-  }
-
-  const grid = document.getElementById('noticias-grid');
+// ── LOAD VIDEOS ──
+async function loadBibVideos() {
+  const { data } = await sbAdmin.from('documents')
+    .select('*').eq('tipo','youtube').order('created_at',{ascending:false});
+  const grid = document.getElementById('bibv-grid');
+  if (!grid) return;
   grid.innerHTML = '';
-  if (!data?.length) {
-    grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;">No hay noticias aún.</div>';
+  (data||[]).forEach(v => {
+    const thumb = v.thumbnail_url || (v.youtube_url && (() => {
+      const m = v.youtube_url.match(/(?:v=|youtu\.be\/)[\w-]{11}/);
+      return m ? 'https://img.youtube.com/vi/'+m[0].replace(/.*[\/=]/,'')+'/hqdefault.jpg' : '';
+    })()) || '';
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);overflow:hidden;';
+    card.innerHTML = `
+      <div style="position:relative;padding-top:56.25%;background:var(--dark-4);">
+        ${thumb?`<img src="${thumb}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`:''}
+        <a href="${v.youtube_url}" target="_blank" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+          <div style="width:48px;height:48px;background:rgba(0,0,0,0.7);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;">▶</div>
+        </a>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);margin-bottom:4px;line-height:1.4;">${v.nombre}</div>
+        ${v.autor_nombre?`<div style="font-size:12px;color:var(--text-dim);">Q∴H∴ ${v.autor_nombre}</div>`:''}
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${v.categoria||''}</div>
+        <button class="btn-danger" style="margin-top:10px;padding:5px 10px;font-size:9px;" onclick="deleteDoc('${v.id}')">Eliminar</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  if (!data?.length) grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No hay videos aún.</div>';
+}
+
+// ── CARPETAS ──
+async function loadCarpetasSel() {
+  const sel = document.getElementById('bib-carpeta-sel');
+  if (!sel) return;
+  const { data } = await sbAdmin.from('doc_carpetas').select('*').order('nombre');
+  bibCarpetas = data || [];
+  sel.innerHTML = '<option value="">Sin carpeta</option>' +
+    (data||[]).map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+}
+
+async function loadCarpetas() {
+  const { data } = await sbAdmin.from('doc_carpetas').select('*').order('nombre');
+  bibCarpetas = data || [];
+  const grid = document.getElementById('bib-carpetas-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (!bibCarpetas.length) {
+    grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;">No hay carpetas. Crea la primera.</div>';
     return;
   }
-  data.forEach(n => {
-    const div = document.createElement('div'); div.className='content-card';
-    const fecha = n.fecha_pub || n.created_at;
-    const dateStr = fecha ? new Date(fecha).toLocaleDateString('es-CL') : '—';
-    const imgHtml = n.imagen_url
-      ? `<img src="${n.imagen_url}" style="width:100%;height:140px;object-fit:cover;margin-bottom:14px;">`
-      : '';
-    div.innerHTML = `
-      ${imgHtml}
-      <div class="content-card-tag">${n.tag||'Noticia'} · ${n.publicado?'Publicado':'Borrador'}</div>
-      <div class="content-card-title">${n.titulo}</div>
-      <div class="content-card-meta">${n.autor_nombre ? 'Q∴H∴ '+n.autor_nombre : '—'} · ${dateStr}</div>
-      <div class="content-card-actions" style="margin-top:12px;">
-        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleNoticia('${n.id}',${n.publicado})">${n.publicado?'Despublicar':'Publicar'}</button>
-        <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteNoticia('${n.id}')">Eliminar</button>
+  bibCarpetas.forEach(cap => {
+    const rolesStr = (cap.roles||[]).map(r=>ROLE_LABELS[r]||r).join(', ');
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:8px;';
+    card.innerHTML = `
+      <div style="font-size:24px;color:var(--gold);">📁</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${cap.nombre}</div>
+      <div style="font-size:12px;color:var(--text-dim);">${cap.descripcion||''}</div>
+      <div style="font-size:11px;color:var(--gold-dim);">${rolesStr}</div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn-secondary" style="padding:5px 10px;font-size:9px;" onclick="abrirCarpetaForm(${JSON.stringify(cap).replace(/"/g,'&quot;')})">Editar</button>
+        <button class="btn-danger"    style="padding:5px 10px;font-size:9px;" onclick="deleteCarpeta('${cap.id}')">Eliminar</button>
       </div>`;
-    grid.appendChild(div);
+    grid.appendChild(card);
   });
 }
 
-async function toggleNoticia(id, pub) {
-  await sbAdmin.from('noticias').update({ publicado: !pub }).eq('id', id);
-  toast(pub ? 'Despublicada' : 'Publicada', 'success');
-  loadNoticias();
-}
+async function guardarCarpeta() {
+  const nombre = document.getElementById('bib-carpeta-nombre').value.trim();
+  if (!nombre) { toast('El nombre es obligatorio','error'); return; }
+  const desc  = document.getElementById('bib-carpeta-desc').value.trim()||null;
+  const roles = Array.from(document.querySelectorAll('input[name="bib-carpeta-rol"]:checked')).map(cb=>cb.value);
+  const editId= document.getElementById('bib-carpeta-edit-id').value;
 
-async function deleteNoticia(id) {
-  if (!confirm('¿Eliminar esta noticia?')) return;
-  await sbAdmin.from('noticias').delete().eq('id', id);
-  toast('Noticia eliminada'); loadNoticias();
-}
-
-function openContentModal(type) {
-  document.getElementById('noticia-form').style.display = 'block';
-}
-
-// ── RADIO ÁGORA ──
-async function loadEpisodios() {
-  const { data } = await sbAdmin.from('episodios').select('*').order('numero');
-  const grid = document.getElementById('radio-grid'); grid.innerHTML='';
-  if (!data?.length) { grid.innerHTML='<div style="color:var(--text-dim);font-style:italic;">No hay episodios aún.</div>'; return; }
-  data.forEach(ep => {
-    const div = document.createElement('div'); div.className='content-card';
-    div.innerHTML=`
-      <div class="content-card-tag">${ep.programa||'Radio Ágora'} · T${ep.temporada||1} · Ep.${String(ep.numero).padStart(2,'0')} · ${ep.publicado?'Publicado':'Borrador'}</div>
-      <div class="content-card-title">${ep.titulo}</div>
-      <div class="content-card-meta">${ep.duracion||'—'} · ${ep.categoria||'—'}</div>
-      <div class="content-card-actions" style="margin-top:12px;">
-        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleEpisodio('${ep.id}',${ep.publicado})">${ep.publicado?'Despublicar':'Publicar'}</button>
-        <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteEpisodio('${ep.id}')">Eliminar</button>
-      </div>`;
-    grid.appendChild(div);
-  });
-}
-
-let radioAudioFile = null;
-
-function previewAudioFile(input) {
-  const file = input.files[0]; if(!file) return;
-  radioAudioFile = file;
-  document.getElementById('radio-audio-name').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
-  document.getElementById('radio-audio-name').style.color = 'var(--gold)';
-  const url = URL.createObjectURL(file);
-  const player = document.getElementById('radio-audio-preview');
-  player.src = url;
-  document.getElementById('radio-audio-player').style.display = 'block';
-}
-
-async function saveEpisodio(publish) {
-  const titulo = document.getElementById('radio-titulo').value.trim();
-  const num    = parseInt(document.getElementById('radio-num').value);
-  if (!titulo || !num) { toast('Número y título son obligatorios','error'); return; }
-
-  let audioUrl = document.getElementById('radio-url').value.trim() || null;
-
-  // Subir archivo si fue seleccionado
-  if (radioAudioFile) {
-    toast('Subiendo audio… esto puede tardar unos momentos');
-    const ext  = radioAudioFile.name.split('.').pop().toLowerCase();
-    const path = 'episodios/ep-' + num + '-' + Date.now() + '.' + ext;
-    const { error: upErr } = await sbAdmin.storage.from('Audio').upload(path, radioAudioFile, { upsert: true });
-    if (upErr) { toast('Error al subir audio: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Audio').getPublicUrl(path);
-    audioUrl = publicUrl;
-    toast('Audio subido correctamente');
+  if (editId) {
+    await sbAdmin.from('doc_carpetas').update({nombre,descripcion:desc,roles}).eq('id',editId);
+  } else {
+    await sbAdmin.from('doc_carpetas').insert({nombre,descripcion:desc,roles});
   }
-
-  const { error } = await sbAdmin.from('episodios').insert({
-    numero:               num,
-    titulo,
-    descripcion:          document.getElementById('radio-desc').value.trim()||null,
-    duracion:             document.getElementById('radio-dur').value.trim()||null,
-    categoria:            document.getElementById('radio-cat').value,
-    audio_url:            audioUrl,
-    programa:             document.getElementById('radio-programa').value.trim()||null,
-    temporada:            parseInt(document.getElementById('radio-temporada').value)||1,
-    descripcion_programa: document.getElementById('radio-desc-programa').value.trim()||null,
-    autor_id:             currentProfile.id,
-    publicado:            publish
-  });
-
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
-
-  document.getElementById('radio-form').style.display='none';
-  ['radio-titulo','radio-num','radio-dur','radio-url','radio-desc','radio-programa','radio-desc-programa'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('radio-temporada').value='1';
-  document.getElementById('radio-audio-name').textContent = 'Ningún archivo seleccionado';
-  document.getElementById('radio-audio-name').style.color = 'var(--text-dim)';
-  document.getElementById('radio-audio-player').style.display = 'none';
-  document.getElementById('radio-audio-preview').src = '';
-  radioAudioFile = null;
-  toast(publish?'Episodio publicado':'Borrador guardado','success');
-  loadEpisodios();
+  document.getElementById('bib-carpeta-form').style.display='none';
+  document.getElementById('bib-carpeta-nombre').value='';
+  document.getElementById('bib-carpeta-desc').value='';
+  toast(editId?'Carpeta actualizada':'Carpeta creada','success');
+  loadCarpetas();
 }
 
-async function toggleEpisodio(id, pub) {
-  await sbAdmin.from('episodios').update({publicado:!pub}).eq('id',id);
-  toast(pub?'Despublicado':'Publicado','success'); loadEpisodios();
+async function deleteCarpeta(id) {
+  if (!confirm('¿Eliminar esta carpeta? Los documentos dentro no se eliminarán.')) return;
+  await sbAdmin.from('doc_carpetas').delete().eq('id',id);
+  toast('Carpeta eliminada');
+  loadCarpetas();
 }
-async function deleteEpisodio(id) {
-  if(!confirm('¿Eliminar este episodio?')) return;
-  await sbAdmin.from('episodios').delete().eq('id',id);
-  toast('Episodio eliminado'); loadEpisodios();
+
+async function deleteDoc(id) {
+  if (!confirm('¿Eliminar este recurso?')) return;
+  await sbAdmin.from('documents').delete().eq('id',id);
+  toast('Recurso eliminado');
+  loadDocuments();
+  loadBibVideos();
 }
 
 
-// ── REVISTA EGRÉGORA ──
-let egrImgFile = null;
-
-function previewEgrImg(input) {
-  const file = input.files[0]; if(!file) return;
-  egrImgFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const prev = document.getElementById('egr-img-preview');
-    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function saveEgregoraArticulo(publish) {
-  const titulo    = document.getElementById('egr-titulo').value.trim();
-  const contenido = document.getElementById('egr-contenido').value.trim();
-  if (!titulo || !contenido) { toast('Título y contenido son obligatorios', 'error'); return; }
-  toast('Guardando artículo…');
-
-  let imgUrl = null;
-  if (egrImgFile) {
-    const path = Date.now() + '-' + egrImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Egregora').upload(path, egrImgFile, {upsert:true});
-    if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Egregora').getPublicUrl(path);
-    imgUrl = publicUrl;
-  }
-
-  const { error } = await sbAdmin.from('egregora_articulos').insert({
-    titulo, contenido,
-    extracto:     contenido.substring(0, 240),
-    edicion:      document.getElementById('egr-edicion').value.trim() || null,
-    categoria:    document.getElementById('egr-categoria').value,
-    imagen_url:   imgUrl,
-    autor_id:     currentProfile.id,
-    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
-    publicado:    publish
-  });
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
-
-  egrImgFile = null;
-  document.getElementById('egr-img-preview').innerHTML = '<span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>';
-  document.getElementById('egr-titulo').value = '';
-  document.getElementById('egr-contenido').value = '';
-  document.getElementById('egr-edicion').value = '';
-  document.getElementById('egregora-form').style.display = 'none';
-  toast(publish ? 'Artículo publicado' : 'Borrador guardado', 'success');
-  loadEgregoraAdmin();
-}
-
-async function loadEgregoraAdmin() {
-  const { data } = await sbAdmin.from('egregora_articulos').select('*').order('created_at', {ascending:false});
-  const grid = document.getElementById('egregora-admin-grid');
-  grid.innerHTML = '';
-  if (!data?.length) { grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;">No hay artículos aún.</div>'; return; }
-  data.forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'content-card';
-    div.style.cssText = 'padding:0;overflow:hidden;';
-    const imgHtml = a.imagen_url
-      ? `<img src="${a.imagen_url}" style="width:100%;height:160px;object-fit:cover;display:block;">`
-      : `<div style="width:100%;height:160px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.2;">◈</div>`;
-    div.innerHTML = `
-      ${imgHtml}
-      <div style="padding:20px 24px;">
-        <div class="content-card-tag">${a.edicion||'Egrégora'} · ${a.categoria||'Reflexión'} · ${a.publicado?'<span style="color:#4caf50;">Publicado</span>':'<span style="color:var(--gold-dim);">Borrador</span>'}</div>
-        <div class="content-card-title">${a.titulo}</div>
-        <div class="content-card-meta">${a.autor_nombre ? 'Q∴H∴ '+a.autor_nombre : '—'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div>
-        <div class="content-card-actions" style="margin-top:12px;">
-          <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleEgregoraArticulo('${a.id}',${a.publicado})">${a.publicado?'Despublicar':'Publicar'}</button>
-          <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteEgregoraArticulo('${a.id}')">Eliminar</button>
-        </div>
-      </div>`;
-    grid.appendChild(div);
-  });
-}
-
-async function toggleEgregoraArticulo(id, pub) {
-  await sbAdmin.from('egregora_articulos').update({publicado:!pub}).eq('id',id);
-  toast(pub?'Despublicado':'Publicado','success'); loadEgregoraAdmin();
-}
-async function deleteEgregoraArticulo(id) {
-  if(!confirm('¿Eliminar este artículo?')) return;
-  await sbAdmin.from('egregora_articulos').delete().eq('id',id);
-  toast('Artículo eliminado'); loadEgregoraAdmin();
-}
-
-// ── CORPORACIÓN — NOTICIAS ──
-let corpNoticiaImgFile = null;
-function previewCorpNoticiaImg(input) {
-  const file = input.files[0]; if(!file) return;
-  corpNoticiaImgFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const prev = document.getElementById('corp-noticia-img-preview');
-    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function saveCorpNoticia(publish) {
-  const titulo    = document.getElementById('corp-noticia-titulo').value.trim();
-  const contenido = document.getElementById('corp-noticia-contenido').value.trim();
-  if (!titulo||!contenido) { toast('Título y contenido son obligatorios','error'); return; }
-  toast('Guardando…');
-  let imgUrl = null;
-  if (corpNoticiaImgFile) {
-    const path = 'corp/' + Date.now() + '-' + corpNoticiaImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Noticias').upload(path, corpNoticiaImgFile, {upsert:true});
-    if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Noticias').getPublicUrl(path);
-    imgUrl = publicUrl;
-  }
-  const { error } = await sbAdmin.from('corp_noticias').insert({
-    titulo, contenido, extracto: contenido.substring(0,220),
-    tag:       document.getElementById('corp-noticia-tag').value,
-    fecha_pub: document.getElementById('corp-noticia-fecha').value || new Date().toISOString().split('T')[0],
-    imagen_url: imgUrl,
-    autor_id:   currentProfile.id,
-    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
-    publicado:  publish
-  });
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
-  corpNoticiaImgFile = null;
-  document.getElementById('corp-noticia-form').style.display='none';
-  document.getElementById('corp-noticia-titulo').value='';
-  document.getElementById('corp-noticia-contenido').value='';
-  document.getElementById('corp-noticia-img-preview').innerHTML = '<span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>';
-  toast(publish?'Publicado':'Borrador guardado','success');
-  loadCorpNoticiasAdmin();
-}
-
-async function loadCorpNoticiasAdmin() {
-  const { data } = await sbAdmin.from('corp_noticias').select('*').order('fecha_pub',{ascending:false});
-  const grid = document.getElementById('corp-noticias-grid'); grid.innerHTML='';
-  if (!data?.length) { grid.innerHTML='<div style="color:var(--text-dim);font-style:italic;">No hay noticias aún.</div>'; return; }
-  data.forEach(n => {
-    const div = document.createElement('div'); div.className='content-card';
-    const imgHtml = n.imagen_url ? `<img src="${n.imagen_url}" style="width:100%;height:120px;object-fit:cover;margin-bottom:12px;">` : '';
-    div.innerHTML=`${imgHtml}
-      <div class="content-card-tag">${n.tag||'Corporación'} · ${n.publicado?'Publicado':'Borrador'}</div>
-      <div class="content-card-title">${n.titulo}</div>
-      <div class="content-card-meta">${n.fecha_pub ? new Date(n.fecha_pub+'T12:00:00').toLocaleDateString('es-CL') : '—'}</div>
-      <div class="content-card-actions" style="margin-top:12px;">
-        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleCorpNoticia('${n.id}',${n.publicado})">${n.publicado?'Despublicar':'Publicar'}</button>
-        <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteCorpNoticia('${n.id}')">Eliminar</button>
-      </div>`;
-    grid.appendChild(div);
-  });
-}
-
-async function toggleCorpNoticia(id,pub) { await sbAdmin.from('corp_noticias').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicada':'Publicada','success'); loadCorpNoticiasAdmin(); }
-async function deleteCorpNoticia(id) { if(!confirm('¿Eliminar?')) return; await sbAdmin.from('corp_noticias').delete().eq('id',id); toast('Eliminada'); loadCorpNoticiasAdmin(); }
-
-// ── CORPORACIÓN — BLOG ──
-async function loadCorpBlogAdmin() {
-  const { data } = await sbAdmin.from('corp_posts').select('*').order('created_at',{ascending:false});
-  const grid = document.getElementById('corp-blog-admin-grid'); grid.innerHTML='';
-  if (!data?.length) { grid.innerHTML='<div style="color:var(--text-dim);font-style:italic;">No hay entradas aún.</div>'; return; }
-  data.forEach(p => {
-    const div = document.createElement('div'); div.className='content-card';
-    div.innerHTML=`
-      <div class="content-card-tag">${p.categoria||'Cultura'} · ${p.publicado?'Publicado':'Borrador'}</div>
-      <div class="content-card-title">${p.titulo}</div>
-      <div class="content-card-meta">${p.autor_nombre ? 'Q∴H∴ '+p.autor_nombre : '—'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
-      <div class="content-card-actions" style="margin-top:12px;">
-        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="toggleCorpPost('${p.id}',${p.publicado})">${p.publicado?'Despublicar':'Publicar'}</button>
-        <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deleteCorpPost('${p.id}')">Eliminar</button>
-      </div>`;
-    grid.appendChild(div);
-  });
-}
-
-function openCorpPostModal() {
-  document.getElementById('modal-title').textContent = 'Nueva entrada — Corporación Elqui';
-  document.getElementById('modal-sub').textContent = '';
-  document.getElementById('modal-body').innerHTML=`
-    <div class="field"><label>Categoría</label>
-      <select id="cp-cat" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
-        <option>Educación</option><option>Cultura</option><option>Sociedad</option><option>Noticias</option>
-      </select>
-    </div>
-    <div class="field"><label>Título</label><input id="cp-titulo" placeholder="Título de la entrada" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-    <div class="field"><label>Contenido</label><textarea id="cp-contenido" rows="6" placeholder="Contenido…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>`;
-  document.getElementById('modal-footer').innerHTML=`
-    <button class="btn-primary" onclick="saveCorpPost(true)">Publicar</button>
-    <button class="btn-secondary" onclick="saveCorpPost(false)">Borrador</button>
-    <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-async function saveCorpPost(publish) {
-  const titulo    = document.getElementById('cp-titulo').value.trim();
-  const contenido = document.getElementById('cp-contenido').value.trim();
-  if (!titulo||!contenido) { toast('Completa título y contenido','error'); return; }
-  await sbAdmin.from('corp_posts').insert({
-    titulo, contenido, extracto: contenido.substring(0,200),
-    categoria: document.getElementById('cp-cat').value,
-    autor_id: currentProfile.id,
-    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
-    publicado: publish
-  });
-  toast(publish?'Publicado':'Borrador guardado','success');
-  closeModal(); loadCorpBlogAdmin();
-}
-
-async function toggleCorpPost(id,pub) { await sbAdmin.from('corp_posts').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicado':'Publicado','success'); loadCorpBlogAdmin(); }
-async function deleteCorpPost(id) { if(!confirm('¿Eliminar?')) return; await sbAdmin.from('corp_posts').delete().eq('id',id); toast('Eliminado'); loadCorpBlogAdmin(); }
-
-
-
-// ── ICAL / GOOGLE CALENDAR ──
-const ICAL_BASE = 'https://rpzigsvocrychahsrzfj.supabase.co/functions/v1/ical-feed';
-
-function copyCalLink(token, nombre) {
-  if (!token) { toast('Este miembro no tiene token de calendario', 'error'); return; }
-  const url = ICAL_BASE + '?token=' + token;
-  navigator.clipboard.writeText(url).then(() => {
-    toast('Enlace iCal copiado — ' + nombre.trim(), 'success');
-  }).catch(() => {
-    prompt('Copia este enlace:', url);
-  });
-}
-
-async function showCalLinks() {
-  const { data: profiles } = await sbAdmin
-    .from('profiles')
-    .select('id,nombre,apellido,role,calendar_token')
-    .order('nombre');
-  if (!profiles?.length) { toast('No hay miembros', 'error'); return; }
-
-  const roles = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Admin' };
-  document.getElementById('modal-title').textContent = 'Enlaces de suscripción iCal';
-  document.getElementById('modal-sub').textContent = 'Comparte el enlace personal con cada hermano para que sincronice su calendario';
-  document.getElementById('modal-body').innerHTML = `
-    <div style="margin-bottom:16px;font-size:14px;color:var(--text-dim);line-height:1.8;">
-      Cada enlace es único e intransferible. El miembro debe añadirlo como <strong style="color:var(--gold);">calendario por URL</strong> en Google Calendar, Apple Calendar o Outlook. Los eventos se actualizan automáticamente.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px;">
-      ${profiles.map(p => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--dark-4);border:1px solid var(--border);">
-          <div style="flex:1;">
-            <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);">Q\u2234H\u2234 ${(p.nombre||'').trim().split(' ')[0]} ${(p.apellido||'').trim().split(' ')[0]}</div>
-            <div style="font-size:11px;color:var(--gold-dim);font-family:'Cinzel',serif;letter-spacing:0.15em;">${roles[p.role]||p.role}</div>
-          </div>
-          <button onclick="copyCalLink('${p.calendar_token}','${p.nombre||''} ${p.apellido||''}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:8px 14px;cursor:pointer;white-space:nowrap;">📅 Copiar enlace</button>
-          <a href="${ICAL_BASE}?token=${p.calendar_token}" target="_blank" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);text-decoration:none;border:1px solid var(--border);padding:8px 14px;white-space:nowrap;">Previsualizar</a>
-        </div>`).join('')}
-    </div>`;
-  document.getElementById('modal-footer').innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
-  document.getElementById('modal-overlay').classList.remove('hidden');
-}
-
-// ── CALENDARIO ──
-const CAL_TIPO_LABELS = {
-  tenida_ordinaria: 'Tenida Ordinaria', tenida_extraordinaria: 'Tenida Extraordinaria',
-  tenida_administrativa: 'Tenida Administrativa', tenida_constitucional: 'Tenida Constitucional',
-  tenida_conjunto: 'Tenida en Conjunto', tenida_jurisdiccional: 'Tenida Jurisdiccional',
-  iniciacion: 'Ceremonia de Iniciación', aumento_salario: 'Ceremonia de Aumento de Salario',
-  exaltacion: 'Ceremonia de Exaltación', social: 'Eventos',
-  corporacion: 'Corporación Elqui', otro: 'Otro'
-};
-const CAL_TIPO_COLORS = {
-  tenida_ordinaria: '#C9A84C', tenida_extraordinaria: '#E8C97A',
-  tenida_administrativa: '#a8c47a', tenida_constitucional: '#7ac4c4',
-  tenida_conjunto: '#c4a07a', tenida_jurisdiccional: '#7a9ac4',
-  iniciacion: '#7aaed4', aumento_salario: '#d4c07a',
-  exaltacion: '#c47ad4', social: '#7ad47a',
-  corporacion: '#d4a0c0', otro: '#8A7240'
-};
 let _calYear = new Date().getFullYear();
 let _calMonth = new Date().getMonth();
 let _calEventos = [];
