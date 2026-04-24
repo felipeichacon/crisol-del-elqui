@@ -1490,11 +1490,31 @@ function openProfileModal(p) {
 // ── BIBLIOTECA ──
 async function loadDocuments() {
   const rol = currentProfile.role;
+
+  // Lógica de visibilidad acumulativa:
+  // - público (landing): solo con role='publico' o roles contiene 'publico' — NO se muestra en intranet
+  // - aprendiz: ve solo docs de aprendiz + todos
+  // - companero: ve docs de companero + aprendiz + todos
+  // - maestro: ve todo (maestro + companero + aprendiz + todos)
+  // - admin: ve todo
+  const rolesVisibles = {
+    aprendiz:  ['aprendiz','todos'],
+    companero: ['companero','aprendiz','todos'],
+    maestro:   ['maestro','companero','aprendiz','todos'],
+    admin:     ['maestro','companero','aprendiz','todos'],
+  };
+  const rolesParaRol = rolesVisibles[rol] || ['todos'];
+
   const { data } = await sb.from('documents')
     .select('*')
-    .in('role', [rol, 'todos'])
+    .neq('tipo','youtube')
     .order('created_at', { ascending: false });
-  allDocs = data || [];
+
+  // Filtrar en cliente por array roles[]
+  allDocs = (data||[]).filter(d => {
+    const docRoles = d.roles || [d.role] || ['todos'];
+    return docRoles.some(r => rolesParaRol.includes(r));
+  });
   renderDocs(allDocs);
 }
 
@@ -1508,7 +1528,13 @@ function renderDocs(docs) {
     const div = document.createElement('div'); div.className='doc-card';
     div.onclick = () => url ? window.open(url,'_blank') : null;
     div.style.cursor = url ? 'pointer' : 'default';
-    div.innerHTML=`<div class="doc-icon">${doc.youtube_url?'▶':(icons[doc.tipo]||'📁')}</div><div><div class="doc-name">${doc.nombre}</div><div class="doc-meta">${doc.youtube_url?'YouTube':(doc.tipo?.toUpperCase()||'')}${doc.categoria?' · '+doc.categoria:''}</div></div>`;
+    const autorHtml = doc.autor_nombre ? `<span style="color:var(--text-dim);font-size:12px;">Q∴H∴ ${doc.autor_nombre}</span>` : '';
+    div.innerHTML = `<div class="doc-icon">${doc.youtube_url?'▶':(icons[doc.tipo]||'📁')}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="doc-name">${doc.nombre}</div>
+        <div class="doc-meta">${doc.youtube_url?'YouTube':(doc.tipo?.toUpperCase()||'')}${doc.categoria?' · '+doc.categoria:''}</div>
+        ${autorHtml}
+      </div>`;
     grid.appendChild(div);
   });
 }
