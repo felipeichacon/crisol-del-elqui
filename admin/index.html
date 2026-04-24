@@ -956,6 +956,14 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <div id="bib-carpetas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;"></div>
       </div>
     </div>
+    <!-- GALERÍA -->
+    <div class="module hidden" id="mod-galeria">
+      <div class="module-title">Galería</div>
+      <div class="module-sub">Imágenes subidas por los miembros de la intranet</div>
+      <div class="gold-line"></div>
+      <div class="gallery-grid" id="admin-gallery-grid"></div>
+    </div>
+
     <!-- PORTADAS -->
     <div class="module hidden" id="mod-heroes">
       <div class="module-title">Portadas por rol</div>
@@ -1475,6 +1483,37 @@ async function quitarTodosPermisos(perfilId) {
   toast('Permisos removidos', 'success');
   loadPermisosAdmin();
 }
+
+// ── GALERÍA ADMIN ──
+async function loadGalleryAdmin() {
+  const { data } = await sbAdmin.from('gallery').select('*').order('created_at', {ascending:false});
+  const grid = document.getElementById('admin-gallery-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (!data?.length) {
+    grid.innerHTML = '<div style="padding:32px;color:var(--text-dim);font-style:italic;">No hay imágenes en la galería.</div>';
+    return;
+  }
+  data.forEach(img => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    div.style.cssText = 'position:relative;';
+    div.innerHTML = `<img src="${img.url}" style="width:100%;height:100%;object-fit:cover;">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);padding:8px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:var(--text-dim);">${img.role||''}</span>
+        <button onclick="deleteGalleryImg('${img.id}')" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:3px 7px;cursor:pointer;">✕</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+async function deleteGalleryImg(id) {
+  if (!confirm('¿Eliminar esta imagen?')) return;
+  await sbAdmin.from('gallery').delete().eq('id', id);
+  toast('Imagen eliminada');
+  loadGalleryAdmin();
+}
+
 // ── ADMIN: GRUPOS ──
 async function loadGruposAdmin() {
   const { data: grupos } = await sbAdmin.from('grupos').select('*').order('created_at', {ascending:false});
