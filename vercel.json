@@ -1,5 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/logia-crisol-elqui.html" }
-  ]
+    "rewrites": [
+          { "source": "/", "destination": "/logia-crisol-elqui.html" },
+          { "source": "/admin", "destination": "/admin/index.html" },
+          { "source": "/intranet", "destination": "/intranet/index.html" }
+    ]
 }
