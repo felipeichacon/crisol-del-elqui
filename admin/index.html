@@ -1724,9 +1724,14 @@ async function eliminarGrupo(grupoId) {
   loadGruposAdmin();
 }
 // ── INIT ──
+function showLogin() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('screen-login').classList.remove('hidden');
+  document.getElementById('screen-app').classList.add('hidden');
+}
+
 async function init() {
   sb.auth.onAuthStateChange(async(_e, session) => {
-    // Solo reaccionar a SIGNED_IN y SIGNED_OUT, ignorar TOKEN_REFRESHED y otros
     if (_e === 'SIGNED_IN' && !currentProfile) {
       currentUser = session.user;
       document.getElementById('loading').style.display = 'none';
@@ -1734,18 +1739,22 @@ async function init() {
     } else if (_e === 'SIGNED_OUT') {
       currentUser = null;
       currentProfile = null;
-      document.getElementById('screen-app').classList.add('hidden');
-      document.getElementById('screen-login').classList.remove('hidden');
+      showLogin();
     }
   });
-  // Verificar sesión existente al cargar
-  const { data: { session } } = await sb.auth.getSession();
-  document.getElementById('loading').style.display = 'none';
-  if (session) {
-    currentUser = session.user;
-    await loadProfile();
-  } else {
-    document.getElementById('screen-login').classList.remove('hidden');
+  try {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error) throw error;
+    document.getElementById('loading').style.display = 'none';
+    if (session) {
+      currentUser = session.user;
+      await loadProfile();
+    } else {
+      showLogin();
+    }
+  } catch (e) {
+    console.error('Error al inicializar sesión:', e);
+    showLogin();
   }
 }
 
