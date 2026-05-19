@@ -1236,7 +1236,7 @@ function qhFull(nombre, apellido) {
 }
 
 const ROLE_LABELS = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', admin:'Administrador', oficialidad:'Oficialidad' };
-const BLOG_LABELS = { aprendiz:'2° Vigilante', companero:'1° Vigilante', maestro:'Orador', venerable:'Venerable Maestro' };
+const BLOG_LABELS = { aprendiz:'2° Vigilante', companero:'1° Vigilante', maestro:'Orador', venerable:'Venerable Maestro', todos:'Todos los grados' };
 
 function toast(msg, type='') {
   const t = document.getElementById('toast');
@@ -2454,7 +2454,11 @@ async function loadPosts(type) {
   const { data } = await sbAdmin.from('posts').select('*').order('created_at', {ascending:false});
   allPosts = data || [];
   const gridId = type==='noticia' ? 'noticias-grid' : 'blog-grid';
-  const posts = (type==='blog' && currentBlogRole) ? allPosts.filter(p=>p.role===currentBlogRole) : allPosts;
+  const posts = (type==='blog' && currentBlogRole)
+    ? allPosts.filter(p => currentBlogRole==='maestro'
+        ? (p.role==='maestro' || p.role==='todos')
+        : p.role===currentBlogRole)
+    : allPosts;
   renderPostsGrid(posts, gridId);
 }
 
@@ -2499,12 +2503,19 @@ function openPostModal(preRole) {
   document.getElementById('modal-title').textContent = 'Nueva entrada de blog';
   document.getElementById('modal-sub').textContent = 'Se publicará en la intranet según el rol seleccionado';
   document.getElementById('modal-body').innerHTML=`
-    <div class="field"><label>Rol destino</label>
+    <div class="field"><label>${preRole==='maestro'?'Audiencia (Blog del Orador)':'Rol destino'}</label>
       <select id="mp-role">
+        ${preRole==='maestro' ? `
+        <option value="todos">Todos los grados</option>
+        <option value="aprendiz">Solo Aprendices</option>
+        <option value="companero">Solo Compañeros</option>
+        <option value="maestro">Solo Maestros</option>
+        ` : `
         <option value="venerable"${preRole==='venerable'?' selected':''}>Venerable Maestro (Landing page)</option>
         <option value="aprendiz"${preRole==='aprendiz'?' selected':''}>2° Vigilante (Aprendices)</option>
         <option value="companero"${preRole==='companero'?' selected':''}>1° Vigilante (Compañeros)</option>
         <option value="maestro"${preRole==='maestro'?' selected':''}>Orador (Maestros)</option>
+        `}
       </select>
     </div>
     <div class="field"><label>Título</label><input id="mp-titulo" placeholder="Título de la entrada"></div>

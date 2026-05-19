@@ -1305,10 +1305,11 @@ async function loadPosts() {
   const btnPost = document.getElementById('btn-nueva-entrada');
   if (btnPost) btnPost.style.display = puedeEscribir ? '' : 'none';
 
-  // Cargar posts filtrados por rol — solo publicados (o propios borradores)
+  // Cargar posts del grado propio + posts del Orador para todos los grados
+  const rolEfectivo = rol === 'admin' ? 'maestro' : rol;
   const { data } = await sb.from('posts')
     .select('*')
-    .eq('role', rol === 'admin' ? 'maestro' : rol)
+    .in('role', [rolEfectivo, 'todos'])
     .order('created_at', { ascending: false });
 
   const grid = document.getElementById('blog-posts-grid');
