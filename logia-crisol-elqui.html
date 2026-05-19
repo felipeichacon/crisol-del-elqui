@@ -778,7 +778,7 @@
     data.forEach((a, i) => {
       const div = document.createElement('div');
       div.className = 'egregora-article';
-      div.onclick = () => openEgregoraArticulo(a);
+      div.onclick = () => showEgregoraPage(a);
       div.innerHTML = `
         <div class="egregora-num">${String(i+1).padStart(2,'0')}</div>
         <div style="flex:1;">
@@ -1368,11 +1368,17 @@
     return d.innerHTML;
   }
 
-  function showEgregoraPage() {
+  function showEgregoraPage(articulo = null) {
     document.getElementById('page-landing').style.display = 'none';
     document.getElementById('page-egregora').style.display = 'block';
     window.scrollTo(0, 0);
-    loadEgregoraPage();
+    loadEgregoraPage(articulo);
+  }
+
+  function openArticuloEnPagina(id) {
+    document.getElementById('modal-egregora-archivo')?.remove();
+    const articulo = _egregoraData.find(a => a.id === id) || null;
+    showEgregoraPage(articulo);
   }
 
   function showLandingFromEgregora() {
@@ -1381,19 +1387,23 @@
     window.scrollTo(0, 0);
   }
 
-  async function loadEgregoraPage() {
+  async function loadEgregoraPage(articulo = null) {
     const container = document.getElementById('egr-page-articulo');
-    const { data, error } = await _sb
-      .from('egregora_articulos')
-      .select('*')
-      .eq('publicado', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    let data = articulo;
 
-    if (error || !data) {
-      container.innerHTML = `<div style="padding:100px 48px;text-align:center;"><p style="color:var(--text-dim);font-style:italic;">No hay artículos publicados aún.</p></div>`;
-      return;
+    if (!data) {
+      const { data: fetched, error } = await _sb
+        .from('egregora_articulos')
+        .select('*')
+        .eq('publicado', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (error || !fetched) {
+        container.innerHTML = `<div style="padding:100px 48px;text-align:center;"><p style="color:var(--text-dim);font-style:italic;">No hay artículos publicados aún.</p></div>`;
+        return;
+      }
+      data = fetched;
     }
 
     _egrPageArticuloId = data.id;
@@ -1517,7 +1527,7 @@
       alert('No hay ediciones publicadas aún.');
       return;
     }
-    openEgregoraArticulo(_egregoraData[0]);
+    showEgregoraPage(_egregoraData[0]);
   }
 
   function abrirArchivoHistorico() {
@@ -1556,7 +1566,7 @@
         <div style="display:flex;flex-direction:column;gap:2px;">`;
       articulos.forEach(a => {
         html += `
-          <div onclick="document.getElementById('modal-egregora-archivo').remove();openEgregoraArticulo(${JSON.stringify(a).replace(/"/g,'&quot;')})" style="display:flex;align-items:center;gap:20px;padding:16px 20px;background:var(--dark-3);border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--border-bright)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div onclick="openArticuloEnPagina('${a.id}')" style="display:flex;align-items:center;gap:20px;padding:16px 20px;background:var(--dark-3);border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--border-bright)'" onmouseout="this.style.borderColor='var(--border)'">
             ${a.imagen_url ? `<img src="${a.imagen_url}" style="width:56px;height:56px;object-fit:cover;flex-shrink:0;">` : `<div style="width:56px;height:56px;background:var(--dark-5);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;opacity:0.3;">◈</div>`}
             <div style="flex:1;">
               <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);margin-bottom:4px;">${a.titulo}</div>
