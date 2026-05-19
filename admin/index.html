@@ -3066,13 +3066,9 @@ function renderCalendario() {
     cell.appendChild(numEl);
 
     // Eventos de ese día
-    const dayStart = new Date(_calYear, _calMonth, d);
-    const dayEnd   = new Date(_calYear, _calMonth, d, 23, 59, 59);
-    const parseFe  = s => new Date((s||'').replace(' ', 'T').replace('+00', 'Z'));
-    const dayEvts  = _calEventos.filter(e => {
-      const fe = parseFe(e.fecha_inicio);
-      return fe >= dayStart && fe <= dayEnd;
-    });
+    // Comparar solo YYYY-MM-DD del string para evitar desfase de timezone
+    const dayStr = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEvts  = _calEventos.filter(e => (e.fecha_inicio||'').startsWith(dayStr));
 
     dayEvts.slice(0, 2).forEach(e => {
       const dot = document.createElement('div');
@@ -3095,10 +3091,10 @@ function renderCalendario() {
 function renderCalList() {
   const list = document.getElementById('cal-list');
   if (!list) return;
-  const now = new Date();
-  const parseFecha = s => new Date((s||'').replace(' ', 'T').replace('+00', 'Z'));
+  // Comparar fechas como strings YYYY-MM-DD para evitar desfase de timezone
+  const todayStr = new Date().toISOString().slice(0, 10);
   const proximos = _calEventos
-    .filter(e => { const d = parseFecha(e.fecha_inicio); return !isNaN(d) && d >= now; })
+    .filter(e => (e.fecha_inicio || '').slice(0, 10) >= todayStr)
     .slice(0, 20);
 
   if (!proximos.length) {
@@ -3112,9 +3108,10 @@ function renderCalList() {
     div.onmouseover = () => div.style.background = 'rgba(201,168,76,0.05)';
     div.onmouseout  = () => div.style.background = 'transparent';
     div.onclick = () => openEditEvento(e);
-    const fecha = parseFecha(e.fecha_inicio);
+    const [fy,fm,fd] = (e.fecha_inicio||'').slice(0,10).split('-').map(Number);
+    const fecha = new Date(fy, fm-1, fd);
     const fechaStr = fecha.toLocaleDateString('es-CL', {day:'numeric',month:'short',year:'numeric'});
-    const horaStr  = e.todo_el_dia ? 'Todo el día' : fecha.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const horaStr  = e.todo_el_dia ? 'Todo el día' : (e.fecha_inicio||'').slice(11,16) || '';
     const rolesStr = (e.roles||[]).includes('todos') ? 'Todos' : (e.roles||[]).map(r=>({aprendiz:'Apz',companero:'Cmp',maestro:'Mtro'}[r]||r)).join(', ');
     div.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
