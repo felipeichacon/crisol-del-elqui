@@ -62,7 +62,7 @@
   .pillar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, var(--gold), transparent); opacity: 0; transition: opacity 0.4s; }
   .pillar:hover { background: var(--dark-4); } .pillar:hover::before { opacity: 1; }
   .pillar-roman { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.3em; color: var(--gold-dim); margin-bottom: 20px; }
-  .pillar-name { font-family: 'Cinzel', serif; font-size: 20px; color: var(--cream); margin-bottom: 16px; font-weight: 600; }
+  .pillar-name { font-family: 'Cinzel', serif; font-size: clamp(13px,1.3vw,20px); color: var(--cream); margin-bottom: 16px; font-weight: 600; white-space: nowrap; }
   .pillar-text { font-size: 16px; color: var(--text-dim); line-height: 1.8; flex: 1; }
 
   /* NEWS */
@@ -294,11 +294,11 @@
     <polygon points="200,10 208,40 238,30 220,55 248,68 218,70 218,100 200,78 182,100 182,70 152,68 180,55 162,30 192,40" stroke="#C9A84C" stroke-width="0.5" fill="none"/>
     <polygon points="200,80 100,330 300,330" stroke="#C9A84C" stroke-width="0.6" fill="none"/>
   </svg>
-  <div style="display:inline-block;margin-bottom:28px;animation:fadeUp 1s ease both;position:relative;z-index:1;filter:drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 4px rgba(255,255,255,0.3));"><div style="width:160px;height:160px;border-radius:50%;overflow:hidden;"><img src="/logo-crisol.png" alt="Escudo Logia Crisol del Elqui" style="width:104%;height:104%;object-fit:cover;margin-left:-2%;margin-top:-2%;display:block;"></div></div>
-  <p class="hero-eyebrow">Fundada el 8 de marzo de 2021 &infin;</p>
+  <div style="display:inline-block;margin-bottom:28px;animation:fadeUp 1s ease both;position:relative;z-index:1;filter:drop-shadow(0 0 10px rgba(255,255,255,0.5)) drop-shadow(0 0 4px rgba(255,255,255,0.3));"><div style="width:160px;height:160px;border-radius:50%;overflow:hidden;"><img src="/logo-crisol.png" alt="Escudo Logia Crisol del Elqui" style="width:104%;height:110%;object-fit:cover;margin-left:-2%;margin-top:-5%;display:block;"></div></div>
+  <p class="hero-eyebrow">Fundada el 8 de marzo de 2002 &infin;</p>
   <h1 class="hero-title">Respetable Logia<br><span>Crisol del Elqui</span><br>N°189</h1>
   <div class="hero-divider"><div class="hero-divider-gem"></div></div>
-  <p class="hero-subtitle">Libertad, Igualdad, Fraternidad.<br>Un espacio de reflexión, perfeccionamiento y servicio al hombre y a la sociedad.</p>
+  <p class="hero-subtitle">En este Crisol, se funden voluntades, se templan espíritus y se forja una comunidad viva en búsqueda del perfeccionamiento del hombre y la sociedad.</p>
   <a href="#valores" class="hero-badge" style="margin-left:auto;margin-right:auto;">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="7,1 8.5,5.5 13,5.5 9.5,8.5 11,13 7,10 3,13 4.5,8.5 1,5.5 5.5,5.5" stroke="#C9A84C" stroke-width="0.8" fill="none"/></svg>
     Conoce nuestra logia
@@ -411,7 +411,7 @@
       <div class="egregora-cover">
         <div class="egregora-cover-badge">Egrégora</div>
         <div class="egregora-cover-sub" id="egregora-edicion">Revista · 2025</div>
-        <p class="egregora-issue">Publicación trimestral de reflexión masónica, filosofía e historia del Valle del Elqui.</p>
+        <p class="egregora-issue">Publicación de nuestras reflexiones en torno a un mundo siempre cambiante.</p>
         <a href="#" class="btn-corp" style="margin-bottom:12px;" onclick="abrirUltimaEdicion();return false;">Leer edición completa</a>
         <a href="#" class="btn-corp" style="margin-top:12px;" onclick="abrirArchivoHistorico();return false;">Ver archivo histórico</a>
       </div>
@@ -430,7 +430,7 @@
     <div>
       <p class="section-label">Extensión y servicio</p>
       <h2 class="corp-title">Corporación <span>Elqui</span></h2>
-      <p class="corp-desc">La Corporación Elqui es el brazo civil y cultural de nuestra logia, abierta a la comunidad del Valle. Desarrolla proyectos de educación, cultura y servicio social con presencia activa en la región de Coquimbo.</p>
+      <p class="corp-desc">La Corporación Elqui desarrolla proyectos de educación, cultura y servicio social con presencia activa en la Región de Coquimbo.</p>
       <div class="corp-links">
         <a href="#" class="btn-corp primary" onclick="showCorpPage(); return false;">Visitar sitio de la Corporación</a>
         <a href="#contacto" class="btn-corp">Contactar</a>
@@ -449,7 +449,7 @@
     <p class="section-label">Acceso abierto al conocimiento</p>
     <h2 class="section-title">Biblioteca Pública</h2>
     <div class="divider-line"></div>
-    <p style="font-size:17px;color:var(--text-dim);max-width:640px;line-height:1.9;margin-bottom:32px;">Colección de libre acceso en filosofía, historia, ciencia y humanidades. Disponible para todos los ciudadanos del Valle del Elqui sin necesidad de registro.</p>
+    <p style="font-size:17px;color:var(--text-dim);max-width:640px;line-height:1.9;margin-bottom:32px;">Colección de libre acceso en filosofía, historia, ciencia y humanidades.</p>
 
     <!-- Buscador funcional -->
     <div class="bib-search" style="margin-bottom:40px;">
@@ -499,9 +499,9 @@
     <h2 class="section-title">Acceso a Pasos Perdidos</h2>
     <div class="divider-line"></div>
     <div class="intranet-grid">
-      <div class="intranet-group" style="background:linear-gradient(rgba(0,10,30,0.72),rgba(0,10,30,0.72)),url('/Contenido/Portadas/Portada Aprendices.png') center/cover no-repeat" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 58 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="30" y1="46" x2="30" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Aprendices</div><p class="intranet-group-desc">Área de formación, documentos de iniciación y recursos para el primer grado.</p><span class="btn-acceso">Ingresar</span></div>
-      <div class="intranet-group" style="background:linear-gradient(rgba(0,10,30,0.72),rgba(0,10,30,0.72)),url('/Contenido/Portadas/Portada Compañeros.png') center/cover no-repeat" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 38 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="46" x2="18" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="46" x2="42" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Compañeros</div><p class="intranet-group-desc">Recursos del segundo grado, galería, mensajería y calendario fraterno.</p><span class="btn-acceso">Ingresar</span></div>
-      <div class="intranet-group" style="background:linear-gradient(rgba(0,10,30,0.72),rgba(0,10,30,0.72)),url('/Contenido/Portadas/Portada Maestros.png') center/cover no-repeat" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 30 Q30 22 38 30" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="30" x2="18" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="30" x2="42" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Maestros</div><p class="intranet-group-desc">Acceso completo a la administración, archivo histórico y gestión de la logia.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" style="background:linear-gradient(rgba(0,10,30,0.72),rgba(0,10,30,0.72)),url('/Contenido/Portadas/Portada Aprendices.png') center/cover no-repeat" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol" style="filter:none;"><img src="/logo-crisol-01.png" alt="Aprendices" style="width:90px;height:90px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;"></span><div class="intranet-group-name">Aprendices</div><p class="intranet-group-desc">Área de formación, documentos de iniciación y recursos para el primer grado.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" style="background:linear-gradient(rgba(0,10,30,0.72),rgba(0,10,30,0.72)),url('/Contenido/Portadas/Portada Compañeros.png') center/cover no-repeat" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol" style="filter:none;"><img src="/logo-crisol-02.png" alt="Compañeros" style="width:90px;height:90px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;"></span><div class="intranet-group-name">Compañeros</div><p class="intranet-group-desc">Recursos del segundo grado, galería, mensajería y calendario fraterno.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" style="background:linear-gradient(rgba(0,10,30,0.72),rgba(0,10,30,0.72)),url('/Contenido/Portadas/Portada Maestros.png') center/cover no-repeat" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol" style="filter:none;"><img src="/logo-crisol-03.png" alt="Maestros" style="width:90px;height:90px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;"></span><div class="intranet-group-name">Maestros</div><p class="intranet-group-desc">Acceso completo a la administración, archivo histórico y gestión de la logia.</p><span class="btn-acceso">Ingresar</span></div>
     </div>
   </div>
 </section>
@@ -1307,7 +1307,7 @@
     if (!nombre || !correo) { alert('Por favor completa nombre y correo.'); return; }
     const sub = encodeURIComponent('Biblioteca Pública — ' + asunto + ' — ' + nombre);
     const body = encodeURIComponent('Nombre: ' + nombre + '\nCorreo: ' + correo + '\nAsunto: ' + asunto + '\n\n' + mensaje);
-    window.location.href = 'mailto:secretario.rl189@gmail.com?subject=' + sub + '&body=' + body;
+    window.location.href = 'mailto:bibliotecario.rl189@gmail.com?subject=' + sub + '&body=' + body;
   }
 
   loadBibliotecaPublica();
