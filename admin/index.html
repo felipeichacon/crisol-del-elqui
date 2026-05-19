@@ -1206,14 +1206,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
 <script>
 const SUPABASE_URL     = 'https://rpzigsvocrychahsrzfj.supabase.co';
 const SUPABASE_ANON    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODYzNzAsImV4cCI6MjA5MTI2MjM3MH0.RCtxrM0KzzBjeijgSTomlFPCDKiu9SzutUgpb6PPwUo';
-const SUPABASE_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTY4NjM3MCwiZXhwIjoyMDkxMjYyMzcwfQ.JKP0_9G9zKyWb67gr72cntpYbpxiry2LH79MKNKG5rc';
-
-// Cliente normal para auth del admin
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-// Cliente con permisos completos para gestión de usuarios y datos
-const sbAdmin = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
 
 let currentUser = null, currentProfile = null;
 let allUsers = [], allPosts = [], allDocs = [], allGallery = [];
@@ -1301,8 +1294,8 @@ async function loadPermisosAdmin() {
   container.innerHTML = '<div style="padding:20px;color:var(--text-dim);">Cargando…</div>';
 
   const [profRes, permRes] = await Promise.all([
-    sbAdmin.from('profiles').select('id,nombre,apellido,role,cargo,avatar_url').neq('role','admin').order('apellido'),
-    sbAdmin.from('permisos_admin').select('*')
+    sb.from('profiles').select('id,nombre,apellido,role,cargo,avatar_url').neq('role','admin').order('apellido'),
+    sb.from('permisos_admin').select('*')
   ]);
 
   const permisoMap = {};
@@ -1424,7 +1417,7 @@ function togglePermisoCard(perfilId) {
 
 async function aplicarSugerencia(perfilId, cargo) {
   const sugeridos = PERMISOS_SUGERIDOS[cargo] || [];
-  await sbAdmin.from('permisos_admin').upsert(
+  await sb.from('permisos_admin').upsert(
     { perfil_id: perfilId, modulos: sugeridos, otorgado_por: currentProfile.id, updated_at: new Date() },
     { onConflict: 'perfil_id' }
   );
@@ -1433,14 +1426,14 @@ async function aplicarSugerencia(perfilId, cargo) {
 }
 
 async function togglePermiso(perfilId, modulo, activo, cbEl) {
-  const { data: existing } = await sbAdmin.from('permisos_admin')
+  const { data: existing } = await sb.from('permisos_admin')
     .select('modulos').eq('perfil_id', perfilId).maybeSingle();
 
   let mods = existing?.modulos || [];
   if (activo) { if (!mods.includes(modulo)) mods.push(modulo); }
   else { mods = mods.filter(m => m !== modulo); }
 
-  await sbAdmin.from('permisos_admin').upsert(
+  await sb.from('permisos_admin').upsert(
     { perfil_id: perfilId, modulos: mods, otorgado_por: currentProfile.id, updated_at: new Date() },
     { onConflict: 'perfil_id' }
   );
@@ -1463,7 +1456,7 @@ async function togglePermiso(perfilId, modulo, activo, cbEl) {
 }
 
 async function darTodosPermisos(perfilId) {
-  await sbAdmin.from('permisos_admin').upsert(
+  await sb.from('permisos_admin').upsert(
     { perfil_id: perfilId, modulos: [...MODULOS_PERMISABLES], otorgado_por: currentProfile.id, updated_at: new Date() },
     { onConflict: 'perfil_id' }
   );
@@ -1472,7 +1465,7 @@ async function darTodosPermisos(perfilId) {
 }
 
 async function quitarTodosPermisos(perfilId) {
-  await sbAdmin.from('permisos_admin').upsert(
+  await sb.from('permisos_admin').upsert(
     { perfil_id: perfilId, modulos: [], otorgado_por: currentProfile.id, updated_at: new Date() },
     { onConflict: 'perfil_id' }
   );
@@ -1482,7 +1475,7 @@ async function quitarTodosPermisos(perfilId) {
 
 // ── GALERÍA ADMIN ──
 async function loadGalleryAdmin() {
-  const { data } = await sbAdmin.from('gallery').select('*').order('created_at', {ascending:false});
+  const { data } = await sb.from('gallery').select('*').order('created_at', {ascending:false});
   const grid = document.getElementById('admin-gallery-grid');
   if (!grid) return;
   grid.innerHTML = '';
@@ -1505,14 +1498,14 @@ async function loadGalleryAdmin() {
 
 async function deleteGalleryImg(id) {
   if (!confirm('¿Eliminar esta imagen?')) return;
-  await sbAdmin.from('gallery').delete().eq('id', id);
+  await sb.from('gallery').delete().eq('id', id);
   toast('Imagen eliminada');
   loadGalleryAdmin();
 }
 
 // ── ADMIN: GRUPOS ──
 async function loadGruposAdmin() {
-  const { data: grupos } = await sbAdmin.from('grupos').select('*').order('created_at', {ascending:false});
+  const { data: grupos } = await sb.from('grupos').select('*').order('created_at', {ascending:false});
   const tbody = document.getElementById('grupos-tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
@@ -1521,7 +1514,7 @@ async function loadGruposAdmin() {
     return;
   }
   for (const g of grupos) {
-    const {count} = await sbAdmin.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('grupo_id',g.id);
+    const {count} = await sb.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('grupo_id',g.id);
     const tr = document.createElement('tr');
     const modoLabel = g.modo_escritura === 'restringido'
       ? `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:#c47ad4;border:1px solid rgba(196,122,212,0.4);padding:3px 8px;">Restringido</span>`
@@ -1549,8 +1542,8 @@ function abrirModalNuevoGrupo() {
 }
 
 async function editarGrupo(grupoId) {
-  const {data: grupo} = await sbAdmin.from('grupos').select('*').eq('id',grupoId).single();
-  const {data: miembros} = await sbAdmin.from('grupo_miembros').select('perfil_id,puede_escribir').eq('grupo_id',grupoId);
+  const {data: grupo} = await sb.from('grupos').select('*').eq('id',grupoId).single();
+  const {data: miembros} = await sb.from('grupo_miembros').select('perfil_id,puede_escribir').eq('grupo_id',grupoId);
   const miembroIds  = (miembros||[]).map(m=>m.perfil_id);
   const escritorIds = (miembros||[]).filter(m=>m.puede_escribir).map(m=>m.perfil_id);
   document.getElementById('modal-grupos-titulo').textContent = 'Editar grupo — ' + (grupo?.nombre||'');
@@ -1641,7 +1634,7 @@ function marcarTodosMiembros(checked) {
 }
 
 async function cargarMiembrosGrupoForm(seleccionados, escritores = []) {
-  const {data} = await sbAdmin.from('profiles').select('id,nombre,apellido,role,cargo').order('apellido');
+  const {data} = await sb.from('profiles').select('id,nombre,apellido,role,cargo').order('apellido');
   const list = document.getElementById('grupo-miembros-list');
   if (!list || !data) return;
   list.innerHTML = '';
@@ -1697,7 +1690,7 @@ async function guardarGrupo() {
 
   let grupoId = editId;
   if (!editId) {
-    const {data, error} = await sbAdmin.from('grupos').insert({
+    const {data, error} = await sb.from('grupos').insert({
       nombre, descripcion: desc,
       creado_por: currentProfile.id,
       modo_escritura: modo,
@@ -1706,11 +1699,11 @@ async function guardarGrupo() {
     if (error) { toast('Error: '+error.message,'error'); return; }
     grupoId = data.id;
   } else {
-    await sbAdmin.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo, roles:rolesF}).eq('id',editId);
-    await sbAdmin.from('grupo_miembros').delete().eq('grupo_id',editId);
+    await sb.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo, roles:rolesF}).eq('id',editId);
+    await sb.from('grupo_miembros').delete().eq('grupo_id',editId);
   }
 
-  await sbAdmin.from('grupo_miembros').insert(
+  await sb.from('grupo_miembros').insert(
     miembroIds.map(pid => ({
       grupo_id:  grupoId,
       perfil_id: pid,
@@ -1726,7 +1719,7 @@ async function guardarGrupo() {
 
 async function eliminarGrupo(grupoId) {
   if (!confirm('¿Eliminar este grupo y todos sus mensajes?')) return;
-  await sbAdmin.from('grupos').delete().eq('id',grupoId);
+  await sb.from('grupos').delete().eq('id',grupoId);
   toast('Grupo eliminado');
   loadGruposAdmin();
 }
@@ -1757,8 +1750,8 @@ async function init() {
 }
 
 async function loadProfile() {
-  // Usamos sbAdmin (service role) para leer el perfil sin problemas de RLS
-  const { data, error } = await sbAdmin.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+  // Leer perfil propio (RLS permite al usuario leer su propio perfil)
+  const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
   if (error) { toast('Error al conectar con la base de datos: ' + error.message, 'error'); return; }
   if (!data) { toast('Perfil no encontrado. Contacta al administrador.', 'error'); return; }
   if (data.role !== 'admin') {
@@ -1821,11 +1814,11 @@ function showModule(name) {
 // ── DASHBOARD ──
 async function loadDashboard() {
   const [users, posts, docs, msgs, unread] = await Promise.all([
-    sbAdmin.from('profiles').select('role'),
-    sbAdmin.from('posts').select('id', {count:'exact', head:true}),
-    sbAdmin.from('documents').select('id', {count:'exact', head:true}),
-    sbAdmin.from('messages').select('id', {count:'exact', head:true}),
-    sbAdmin.from('messages').select('id', {count:'exact', head:true}).eq('leido',false)
+    sb.from('profiles').select('role'),
+    sb.from('posts').select('id', {count:'exact', head:true}),
+    sb.from('documents').select('id', {count:'exact', head:true}),
+    sb.from('messages').select('id', {count:'exact', head:true}),
+    sb.from('messages').select('id', {count:'exact', head:true}).eq('leido',false)
   ]);
   const u = users.data || [];
   document.getElementById('stat-total').textContent      = u.length;
@@ -1840,7 +1833,7 @@ async function loadDashboard() {
 
 // ── USERS ──
 async function loadUsers() {
-  const { data } = await sbAdmin.from('profiles').select('*').order('apellido').order('nombre');
+  const { data } = await sb.from('profiles').select('*').order('apellido').order('nombre');
   // Ordenar por primer apellido, luego primer nombre
   if (data) data.sort((a,b) => {
     const ap1 = (a.apellido||'').trim().split(' ')[0].toLowerCase();
@@ -1885,7 +1878,7 @@ function filterUsers(role, btn) {
 }
 
 async function toggleUser(id, active) {
-  await sbAdmin.from('profiles').update({ activo: !active }).eq('id', id);
+  await sb.from('profiles').update({ activo: !active }).eq('id', id);
   toast(active ? 'Usuario desactivado' : 'Usuario activado', 'success');
   loadUsers();
 }
@@ -1907,7 +1900,7 @@ function changeRole(id, currentRole) {
 
 async function saveRole(id) {
   const role = document.getElementById('new-role-sel').value;
-  await sbAdmin.from('profiles').update({ role }).eq('id', id);
+  await sb.from('profiles').update({ role }).eq('id', id);
   toast('Rol actualizado', 'success'); closeModal(); loadUsers();
 }
 
@@ -2119,13 +2112,13 @@ function previewEuAvatar(input) {
 async function saveEditUser(id) {
   toast('Guardando…');
   // Leer perfil actual para no perder datos que no están en el formulario
-  const { data: current } = await sbAdmin.from('profiles').select('*').eq('id', id).maybeSingle();
+  const { data: current } = await sb.from('profiles').select('*').eq('id', id).maybeSingle();
   let avatarUrl = current?.avatar_url || null;
   if (window.euAvatarFile) {
     const ext  = window.euAvatarFile.name.split('.').pop();
     const path = id + '/avatar.' + ext;
-    await sbAdmin.storage.from('Avatars').upload(path, window.euAvatarFile, {upsert:true});
-    const { data: { publicUrl } } = sbAdmin.storage.from('Avatars').getPublicUrl(path);
+    await sb.storage.from('Avatars').upload(path, window.euAvatarFile, {upsert:true});
+    const { data: { publicUrl } } = sb.storage.from('Avatars').getPublicUrl(path);
     avatarUrl = publicUrl;
   }
   const corpChecked = document.getElementById('eu-corp')?.checked || false;
@@ -2187,7 +2180,7 @@ async function saveEditUser(id) {
    'raw_user_meta_data','is_super_admin','encrypted_password',
    'confirmation_token','recovery_token','aud','role_auth'
   ].forEach(k => delete updates[k]);
-  const { error } = await sbAdmin.from('profiles').update(updates).eq('id', id);
+  const { error } = await sb.from('profiles').update(updates).eq('id', id);
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
   toast('Perfil actualizado correctamente', 'success');
   await loadUsers();
@@ -2358,12 +2351,15 @@ async function createUser() {
   if (!email||!pass||!nombre) { toast('Correo, contraseña y nombre son obligatorios', 'error'); return; }
   if (pass.length < 8) { toast('La contraseña debe tener al menos 8 caracteres', 'error'); return; }
   toast('Creando usuario…');
-  const { data, error } = await sbAdmin.auth.admin.createUser({
-    email, password: pass,
-    user_metadata: { role, nombre },
-    email_confirm: true
+  const _sess = (await sb.auth.getSession()).data.session;
+  const _resp = await fetch(`${SUPABASE_URL}/functions/v1/crear-usuario`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_sess.access_token}`, 'apikey': SUPABASE_ANON },
+    body: JSON.stringify({ email, password: pass, user_metadata: { role, nombre } })
   });
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  const _result = await _resp.json();
+  if (!_resp.ok || _result.error) { toast('Error: ' + (_result.error || 'Error desconocido'), 'error'); return; }
+  const data = _result.data;
   const userId = data.user.id;
 
   // Subir foto si existe
@@ -2371,8 +2367,8 @@ async function createUser() {
   if (nuAvatarFile) {
     const ext  = nuAvatarFile.name.split('.').pop();
     const path = userId + '/avatar.' + ext;
-    await sbAdmin.storage.from('Avatars').upload(path, nuAvatarFile, { upsert:true });
-    const { data: { publicUrl } } = sbAdmin.storage.from('Avatars').getPublicUrl(path);
+    await sb.storage.from('Avatars').upload(path, nuAvatarFile, { upsert:true });
+    const { data: { publicUrl } } = sb.storage.from('Avatars').getPublicUrl(path);
     avatarUrl = publicUrl;
   }
 
@@ -2390,7 +2386,7 @@ async function createUser() {
     correo:    document.getElementById('nu-em2-correo')?.value.trim()||null,
     direccion: document.getElementById('nu-em2-direccion')?.value.trim()||null
   };
-  await sbAdmin.from('profiles').update({
+  await sb.from('profiles').update({
     role, nombre, apellido, email,
     grado:               document.getElementById('nu-grado').value,
     cargo:               document.getElementById('nu-cargo').value || null,
@@ -2451,7 +2447,7 @@ function showBlog(role) {
 
 // ── POSTS ──
 async function loadPosts(type) {
-  const { data } = await sbAdmin.from('posts').select('*').order('created_at', {ascending:false});
+  const { data } = await sb.from('posts').select('*').order('created_at', {ascending:false});
   allPosts = data || [];
   const gridId = type==='noticia' ? 'noticias-grid' : 'blog-grid';
   const posts = (type==='blog' && currentBlogRole)
@@ -2488,14 +2484,14 @@ function filterPosts(role, btn) {
 }
 
 async function togglePost(id, pub) {
-  await sbAdmin.from('posts').update({ publicado: !pub }).eq('id', id);
+  await sb.from('posts').update({ publicado: !pub }).eq('id', id);
   toast(pub?'Post despublicado':'Post publicado', 'success');
   loadPosts('blog');
 }
 
 async function deletePost(id) {
   if (!confirm('¿Eliminar esta publicación?')) return;
-  await sbAdmin.from('posts').delete().eq('id', id);
+  await sb.from('posts').delete().eq('id', id);
   toast('Publicación eliminada'); loadPosts('blog');
 }
 
@@ -2532,7 +2528,7 @@ async function savePostModal(publish) {
   const contenido = document.getElementById('mp-contenido').value.trim();
   const role      = document.getElementById('mp-role').value;
   if (!titulo||!contenido) { toast('Completa título y contenido', 'error'); return; }
-  await sbAdmin.from('posts').insert({
+  await sb.from('posts').insert({
     role, titulo, contenido, extracto: contenido.substring(0,200),
     autor_id: currentProfile.id,
     autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
@@ -2641,11 +2637,11 @@ async function saveBibDoc() {
   // Usar primer rol como carpeta de storage, o 'docs' si es todos
   const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
   const path    = storeFolder + '/' + Date.now() + '-' + safeName;
-  const { error: upErr } = await sbAdmin.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
+  const { error: upErr } = await sb.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
   if (upErr) { toast('Error al subir: '+upErr.message,'error'); return; }
-  const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
+  const { data: { publicUrl } } = sb.storage.from('Documents').getPublicUrl(path);
 
-  const { error } = await sbAdmin.from('documents').insert({
+  const { error } = await sb.from('documents').insert({
     nombre, descripcion: desc||null,
     url: publicUrl,
     tipo: tipDoc,
@@ -2693,9 +2689,9 @@ async function saveBibVideo() {
     toast('Subiendo portada…');
     const safeName = sanitizeFilename(bibVideoThumb.name);
     const path = 'thumbs/' + Date.now() + '-' + safeName;
-    const { error: tErr } = await sbAdmin.storage.from('Documents').upload(path, bibVideoThumb, {upsert:true});
+    const { error: tErr } = await sb.storage.from('Documents').upload(path, bibVideoThumb, {upsert:true});
     if (!tErr) {
-      const { data: { publicUrl } } = sbAdmin.storage.from('Documents').getPublicUrl(path);
+      const { data: { publicUrl } } = sb.storage.from('Documents').getPublicUrl(path);
       thumbUrl = publicUrl;
     }
   }
@@ -2705,7 +2701,7 @@ async function saveBibVideo() {
     if (match) thumbUrl = 'https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg';
   }
 
-  const { error } = await sbAdmin.from('documents').insert({
+  const { error } = await sb.from('documents').insert({
     nombre, descripcion: desc||null,
     youtube_url: ytUrl,
     thumbnail_url: thumbUrl,
@@ -2740,10 +2736,10 @@ async function loadDocuments() {
   const catFilter  = document.getElementById('bib-cat-filter')?.value  || '';
 
   // Cargar carpetas para el explorador
-  const { data: carpData } = await sbAdmin.from('doc_carpetas').select('*').order('nombre');
+  const { data: carpData } = await sb.from('doc_carpetas').select('*').order('nombre');
   _explorerCarpetas = carpData || [];
 
-  let q = sbAdmin.from('documents')
+  let q = sb.from('documents')
     .select('*')
     .neq('tipo','youtube')
     .order('nombre', {ascending:true});
@@ -2868,7 +2864,7 @@ function _admRenderContent(carpetaId) {
 
 // ── LOAD VIDEOS ──
 async function loadBibVideos() {
-  const { data } = await sbAdmin.from('documents')
+  const { data } = await sb.from('documents')
     .select('*').eq('tipo','youtube').order('created_at',{ascending:false});
   const grid = document.getElementById('bibv-grid');
   if (!grid) return;
@@ -2902,7 +2898,7 @@ async function loadBibVideos() {
 async function loadCarpetasSel() {
   const sel = document.getElementById('bib-carpeta-sel');
   const selParent = document.getElementById('bib-carpeta-parent');
-  const { data } = await sbAdmin.from('doc_carpetas').select('*').order('nombre');
+  const { data } = await sb.from('doc_carpetas').select('*').order('nombre');
   bibCarpetas = data || [];
   _explorerCarpetas = data || [];
   const opts = (data||[]).map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
@@ -2911,7 +2907,7 @@ async function loadCarpetasSel() {
 }
 
 async function loadCarpetas() {
-  const { data } = await sbAdmin.from('doc_carpetas').select('*').order('nombre');
+  const { data } = await sb.from('doc_carpetas').select('*').order('nombre');
   bibCarpetas = data || [];
   const grid = document.getElementById('bib-carpetas-grid');
   if (!grid) return;
@@ -2946,9 +2942,9 @@ async function guardarCarpeta() {
 
   const parentId = document.getElementById('bib-carpeta-parent')?.value || null;
   if (editId) {
-    await sbAdmin.from('doc_carpetas').update({nombre,descripcion:desc,roles,parent_id:parentId}).eq('id',editId);
+    await sb.from('doc_carpetas').update({nombre,descripcion:desc,roles,parent_id:parentId}).eq('id',editId);
   } else {
-    await sbAdmin.from('doc_carpetas').insert({nombre,descripcion:desc,roles,parent_id:parentId});
+    await sb.from('doc_carpetas').insert({nombre,descripcion:desc,roles,parent_id:parentId});
   }
   document.getElementById('bib-carpeta-form').style.display='none';
   document.getElementById('bib-carpeta-nombre').value='';
@@ -2959,14 +2955,14 @@ async function guardarCarpeta() {
 
 async function deleteCarpeta(id) {
   if (!confirm('¿Eliminar esta carpeta? Los documentos dentro no se eliminarán.')) return;
-  await sbAdmin.from('doc_carpetas').delete().eq('id',id);
+  await sb.from('doc_carpetas').delete().eq('id',id);
   toast('Carpeta eliminada');
   loadCarpetas();
 }
 
 async function deleteDoc(id) {
   if (!confirm('¿Eliminar este recurso?')) return;
-  await sbAdmin.from('documents').delete().eq('id',id);
+  await sb.from('documents').delete().eq('id',id);
   toast('Recurso eliminado');
   loadDocuments();
   loadBibVideos();
@@ -2986,7 +2982,7 @@ async function loadCalendario() {
   const autorSel   = document.getElementById('cal-autor-plancha');
   const relatorSel = document.getElementById('cal-relator-plancha');
   if (autorSel && autorSel.options.length <= 1) {
-    const { data: members } = await sbAdmin
+    const { data: members } = await sb
       .from('profiles')
       .select('id,nombre,apellido,cargo')
       .order('nombre');
@@ -3000,7 +2996,7 @@ async function loadCalendario() {
     });
   }
 
-  let q = sbAdmin.from('calendario').select('*').order('fecha_inicio', {ascending:true});
+  let q = sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
   if (tipoFilter) q = q.eq('tipo', tipoFilter);
 
   const { data } = await q;
@@ -3251,10 +3247,10 @@ async function saveEvento(editId = null) {
 
   let error;
   if (editId) {
-    ({ error } = await sbAdmin.from('calendario').update(payload).eq('id', editId));
+    ({ error } = await sb.from('calendario').update(payload).eq('id', editId));
   } else {
     payload.autor_id = currentProfile.id;
-    ({ error } = await sbAdmin.from('calendario').insert(payload));
+    ({ error } = await sb.from('calendario').insert(payload));
   }
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
 
@@ -3347,7 +3343,7 @@ function editEvento(e) {
 
 async function deleteEvento(id) {
   if (!confirm('¿Eliminar este evento?')) return;
-  await sbAdmin.from('calendario').delete().eq('id', id);
+  await sb.from('calendario').delete().eq('id', id);
   toast('Evento eliminado'); closeModal(); loadCalendario();
 }
 
@@ -3356,7 +3352,7 @@ async function deleteEvento(id) {
 
 // ── PORTADAS ──
 async function loadHeroes() {
-  const { data } = await sbAdmin.from('hero_images').select('*');
+  const { data } = await sb.from('hero_images').select('*');
   const grid = document.getElementById('heroes-grid'); grid.innerHTML='';
   const heroRoles = ['aprendiz','companero','maestro'];
   heroRoles.forEach(heroRole => {
@@ -3385,12 +3381,12 @@ async function uploadHeroAdmin(input, role) {
   const file = input.files[0]; if(!file) return;
   toast('Subiendo portada…');
   const path = role+'/hero-'+Date.now()+'.'+file.name.split('.').pop();
-  const { error: upErr } = await sbAdmin.storage.from('Heroes').upload(path, file, {upsert:true});
+  const { error: upErr } = await sb.storage.from('Heroes').upload(path, file, {upsert:true});
   if (upErr) { toast('Error al subir: ' + upErr.message, 'error'); return; }
-  const { data: { publicUrl } } = sbAdmin.storage.from('Heroes').getPublicUrl(path);
+  const { data: { publicUrl } } = sb.storage.from('Heroes').getPublicUrl(path);
   const titulo    = document.getElementById('hero-t-'+role)?.value.trim() || '';
   const subtitulo = document.getElementById('hero-s-'+role)?.value.trim() || '';
-  const { error } = await sbAdmin.from('hero_images').upsert(
+  const { error } = await sb.from('hero_images').upsert(
     { role, url: publicUrl, titulo, subtitulo, updated_at: new Date() },
     { onConflict: 'role' }
   );
@@ -3405,12 +3401,12 @@ async function saveHero(role) {
   const titulo    = document.getElementById('hero-t-'+role).value.trim();
   const subtitulo = document.getElementById('hero-s-'+role).value.trim();
   // Usar UPDATE para no sobreescribir la url existente
-  const { data: existing } = await sbAdmin.from('hero_images').select('id').eq('role', role).maybeSingle();
+  const { data: existing } = await sb.from('hero_images').select('id').eq('role', role).maybeSingle();
   let error;
   if (existing) {
-    ({ error } = await sbAdmin.from('hero_images').update({ titulo, subtitulo, updated_at: new Date() }).eq('role', role));
+    ({ error } = await sb.from('hero_images').update({ titulo, subtitulo, updated_at: new Date() }).eq('role', role));
   } else {
-    ({ error } = await sbAdmin.from('hero_images').insert({ role, titulo, subtitulo, updated_at: new Date() }));
+    ({ error } = await sb.from('hero_images').insert({ role, titulo, subtitulo, updated_at: new Date() }));
   }
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
   toast('Portada guardada correctamente', 'success');
@@ -3418,7 +3414,7 @@ async function saveHero(role) {
 
 // ── MENSAJERÍA ADMIN ──
 async function loadConversations() {
-  const { data: profiles } = await sbAdmin.from('profiles').select('id,nombre,apellido,role').neq('id', currentProfile.id).order('nombre');
+  const { data: profiles } = await sb.from('profiles').select('id,nombre,apellido,role').neq('id', currentProfile.id).order('nombre');
   const list = document.getElementById('admin-conv-list'); list.innerHTML='';
   (profiles||[]).forEach(p => {
     const div = document.createElement('div'); div.className='msg-item'; div.onclick=()=>openAdminConv(p);
@@ -3431,10 +3427,10 @@ async function openAdminConv(profile) {
   activeConvUserId = profile.id;
   document.getElementById('admin-conv-name').textContent = 'H∴ '+profile.nombre+' '+(profile.apellido||'');
   document.getElementById('admin-conv-role').textContent = ROLE_LABELS[profile.role]||profile.role;
-  const { data: msgs } = await sbAdmin.from('messages').select('*')
+  const { data: msgs } = await sb.from('messages').select('*')
     .or(`and(from_id.eq.${currentProfile.id},to_id.eq.${profile.id}),and(from_id.eq.${profile.id},to_id.eq.${currentProfile.id})`)
     .order('created_at');
-  await sbAdmin.from('messages').update({leido:true}).eq('to_id',currentProfile.id).eq('from_id',profile.id);
+  await sb.from('messages').update({leido:true}).eq('to_id',currentProfile.id).eq('from_id',profile.id);
   const bubbles = document.getElementById('admin-bubbles'); bubbles.innerHTML='';
   (msgs||[]).forEach(m => {
     const div = document.createElement('div');
@@ -3451,14 +3447,14 @@ async function adminSendMsg() {
   if (!activeConvUserId) { toast('Selecciona un hermano', 'error'); return; }
   const input = document.getElementById('admin-msg-input');
   const text = input.value.trim(); if (!text) return;
-  await sbAdmin.from('messages').insert({ from_id:currentProfile.id, to_id:activeConvUserId, contenido:text });
+  await sb.from('messages').insert({ from_id:currentProfile.id, to_id:activeConvUserId, contenido:text });
   input.value='';
   const p = { id:activeConvUserId };
   await openAdminConv(allUsers.find(u=>u.id===activeConvUserId) || p);
 }
 
 async function loadUnread() {
-  const { count } = await sbAdmin.from('messages').select('id',{count:'exact',head:true}).eq('to_id',currentProfile.id).eq('leido',false);
+  const { count } = await sb.from('messages').select('id',{count:'exact',head:true}).eq('to_id',currentProfile.id).eq('leido',false);
   const badge = document.getElementById('badge-msg');
   if (count>0) { badge.textContent=count; badge.classList.remove('hidden'); }
   else { badge.classList.add('hidden'); }
@@ -3474,11 +3470,11 @@ async function sendBroadcast() {
   const mensaje = document.getElementById('bc-mensaje').value.trim();
   if (!roles.length) { toast('Selecciona al menos un rol', 'error'); return; }
   if (!mensaje) { toast('Escribe un mensaje', 'error'); return; }
-  const { data: targets } = await sbAdmin.from('profiles').select('id').in('role', roles).eq('activo',true);
+  const { data: targets } = await sb.from('profiles').select('id').in('role', roles).eq('activo',true);
   if (!targets?.length) { toast('No hay miembros activos en los roles seleccionados', 'error'); return; }
   toast('Enviando a '+targets.length+' miembros…');
   const msgs = targets.map(t => ({ from_id:currentProfile.id, to_id:t.id, contenido:mensaje }));
-  const { error } = await sbAdmin.from('messages').insert(msgs);
+  const { error } = await sb.from('messages').insert(msgs);
   if (error) { toast('Error al enviar', 'error'); return; }
   document.getElementById('broadcast-log').textContent = '✓ Mensaje enviado a '+targets.length+' miembros el '+new Date().toLocaleString('es-CL');
   document.getElementById('bc-mensaje').value='';
@@ -3514,16 +3510,16 @@ async function saveNoticia(publish) {
   let imgUrl = '';
   if (noticiaImgFile) {
     const path = Date.now() + '-' + noticiaImgFile.name.replace(/\\\\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Noticias').upload(path, noticiaImgFile, {upsert:true});
+    const { error: upErr } = await sb.storage.from('Noticias').upload(path, noticiaImgFile, {upsert:true});
     if (upErr) {
       toast('Error al subir imagen: ' + upErr.message, 'error');
       return;
     }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Noticias').getPublicUrl(path);
+    const { data: { publicUrl } } = sb.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
   }
 
-  const { error } = await sbAdmin.from('noticias').insert({
+  const { error } = await sb.from('noticias').insert({
     titulo,
     contenido,
     extracto:   contenido.substring(0, 220),
@@ -3537,7 +3533,7 @@ async function saveNoticia(publish) {
 
   if (error) {
     // Si la tabla no existe, usar posts como fallback
-    await sbAdmin.from('posts').insert({
+    await sb.from('posts').insert({
       role:        'todos',
       titulo,
       contenido,
@@ -3560,11 +3556,11 @@ async function saveNoticia(publish) {
 async function loadNoticias() {
   // Intentar tabla noticias primero, fallback a posts
   let data = null;
-  const { data: d1, error: e1 } = await sbAdmin.from('noticias').select('*').order('fecha_pub', {ascending:false});
+  const { data: d1, error: e1 } = await sb.from('noticias').select('*').order('fecha_pub', {ascending:false});
   if (!e1) {
     data = d1;
   } else {
-    const { data: d2 } = await sbAdmin.from('posts').select('*').order('created_at', {ascending:false});
+    const { data: d2 } = await sb.from('posts').select('*').order('created_at', {ascending:false});
     data = d2;
   }
 
@@ -3595,14 +3591,14 @@ async function loadNoticias() {
 }
 
 async function toggleNoticia(id, pub) {
-  await sbAdmin.from('noticias').update({ publicado: !pub }).eq('id', id);
+  await sb.from('noticias').update({ publicado: !pub }).eq('id', id);
   toast(pub ? 'Despublicada' : 'Publicada', 'success');
   loadNoticias();
 }
 
 async function deleteNoticia(id) {
   if (!confirm('¿Eliminar esta noticia?')) return;
-  await sbAdmin.from('noticias').delete().eq('id', id);
+  await sb.from('noticias').delete().eq('id', id);
   toast('Noticia eliminada'); loadNoticias();
 }
 
@@ -3612,7 +3608,7 @@ function openContentModal(type) {
 
 // ── RADIO ÁGORA ──
 async function loadEpisodios() {
-  const { data } = await sbAdmin.from('episodios').select('*').order('numero');
+  const { data } = await sb.from('episodios').select('*').order('numero');
   const grid = document.getElementById('radio-grid'); grid.innerHTML='';
   if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay episodios aún.</div>'; return; }
   data.forEach(ep => {
@@ -3654,14 +3650,14 @@ async function saveEpisodio(publish) {
     toast('Subiendo audio… esto puede tardar unos momentos');
     const ext  = radioAudioFile.name.split('.').pop().toLowerCase();
     const path = 'episodios/ep-' + num + '-' + Date.now() + '.' + ext;
-    const { error: upErr } = await sbAdmin.storage.from('Audio').upload(path, radioAudioFile, { upsert: true });
+    const { error: upErr } = await sb.storage.from('Audio').upload(path, radioAudioFile, { upsert: true });
     if (upErr) { toast('Error al subir audio: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Audio').getPublicUrl(path);
+    const { data: { publicUrl } } = sb.storage.from('Audio').getPublicUrl(path);
     audioUrl = publicUrl;
     toast('Audio subido correctamente');
   }
 
-  const { error } = await sbAdmin.from('episodios').insert({
+  const { error } = await sb.from('episodios').insert({
     numero:               num,
     titulo,
     descripcion:          document.getElementById('radio-desc').value.trim()||null,
@@ -3690,12 +3686,12 @@ async function saveEpisodio(publish) {
 }
 
 async function toggleEpisodio(id, pub) {
-  await sbAdmin.from('episodios').update({publicado:!pub}).eq('id',id);
+  await sb.from('episodios').update({publicado:!pub}).eq('id',id);
   toast(pub?'Despublicado':'Publicado','success'); loadEpisodios();
 }
 async function deleteEpisodio(id) {
   if(!confirm('¿Eliminar este episodio?')) return;
-  await sbAdmin.from('episodios').delete().eq('id',id);
+  await sb.from('episodios').delete().eq('id',id);
   toast('Episodio eliminado'); loadEpisodios();
 }
 
@@ -3723,13 +3719,13 @@ async function saveEgregoraArticulo(publish) {
   let imgUrl = null;
   if (egrImgFile) {
     const path = Date.now() + '-' + egrImgFile.name.replace(/\\\\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Egregora').upload(path, egrImgFile, {upsert:true});
+    const { error: upErr } = await sb.storage.from('Egregora').upload(path, egrImgFile, {upsert:true});
     if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Egregora').getPublicUrl(path);
+    const { data: { publicUrl } } = sb.storage.from('Egregora').getPublicUrl(path);
     imgUrl = publicUrl;
   }
 
-  const { error } = await sbAdmin.from('egregora_articulos').insert({
+  const { error } = await sb.from('egregora_articulos').insert({
     titulo, contenido,
     extracto:     contenido.substring(0, 240),
     edicion:      document.getElementById('egr-edicion').value.trim() || null,
@@ -3752,7 +3748,7 @@ async function saveEgregoraArticulo(publish) {
 }
 
 async function loadEgregoraAdmin() {
-  const { data } = await sbAdmin.from('egregora_articulos').select('*').order('created_at', {ascending:false});
+  const { data } = await sb.from('egregora_articulos').select('*').order('created_at', {ascending:false});
   const grid = document.getElementById('egregora-admin-grid');
   grid.innerHTML = '';
   if (!data?.length) { grid.innerHTML = '<div style=\"color:var(--text-dim);font-style:italic;\">No hay artículos aún.</div>'; return; }
@@ -3779,12 +3775,12 @@ async function loadEgregoraAdmin() {
 }
 
 async function toggleEgregoraArticulo(id, pub) {
-  await sbAdmin.from('egregora_articulos').update({publicado:!pub}).eq('id',id);
+  await sb.from('egregora_articulos').update({publicado:!pub}).eq('id',id);
   toast(pub?'Despublicado':'Publicado','success'); loadEgregoraAdmin();
 }
 async function deleteEgregoraArticulo(id) {
   if(!confirm('¿Eliminar este artículo?')) return;
-  await sbAdmin.from('egregora_articulos').delete().eq('id',id);
+  await sb.from('egregora_articulos').delete().eq('id',id);
   toast('Artículo eliminado'); loadEgregoraAdmin();
 }
 
@@ -3809,12 +3805,12 @@ async function saveCorpNoticia(publish) {
   let imgUrl = null;
   if (corpNoticiaImgFile) {
     const path = 'corp/' + Date.now() + '-' + corpNoticiaImgFile.name.replace(/\\\\s/g,'_');
-    const { error: upErr } = await sbAdmin.storage.from('Noticias').upload(path, corpNoticiaImgFile, {upsert:true});
+    const { error: upErr } = await sb.storage.from('Noticias').upload(path, corpNoticiaImgFile, {upsert:true});
     if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
-    const { data: { publicUrl } } = sbAdmin.storage.from('Noticias').getPublicUrl(path);
+    const { data: { publicUrl } } = sb.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
   }
-  const { error } = await sbAdmin.from('corp_noticias').insert({
+  const { error } = await sb.from('corp_noticias').insert({
     titulo, contenido, extracto: contenido.substring(0,220),
     tag:       document.getElementById('corp-noticia-tag').value,
     fecha_pub: document.getElementById('corp-noticia-fecha').value || new Date().toISOString().split('T')[0],
@@ -3834,7 +3830,7 @@ async function saveCorpNoticia(publish) {
 }
 
 async function loadCorpNoticiasAdmin() {
-  const { data } = await sbAdmin.from('corp_noticias').select('*').order('fecha_pub',{ascending:false});
+  const { data } = await sb.from('corp_noticias').select('*').order('fecha_pub',{ascending:false});
   const grid = document.getElementById('corp-noticias-grid'); grid.innerHTML='';
   if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay noticias aún.</div>'; return; }
   data.forEach(n => {
@@ -3852,12 +3848,12 @@ async function loadCorpNoticiasAdmin() {
   });
 }
 
-async function toggleCorpNoticia(id,pub) { await sbAdmin.from('corp_noticias').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicada':'Publicada','success'); loadCorpNoticiasAdmin(); }
-async function deleteCorpNoticia(id) { if(!confirm('¿Eliminar?')) return; await sbAdmin.from('corp_noticias').delete().eq('id',id); toast('Eliminada'); loadCorpNoticiasAdmin(); }
+async function toggleCorpNoticia(id,pub) { await sb.from('corp_noticias').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicada':'Publicada','success'); loadCorpNoticiasAdmin(); }
+async function deleteCorpNoticia(id) { if(!confirm('¿Eliminar?')) return; await sb.from('corp_noticias').delete().eq('id',id); toast('Eliminada'); loadCorpNoticiasAdmin(); }
 
 // ── CORPORACIÓN — BLOG ──
 async function loadCorpBlogAdmin() {
-  const { data } = await sbAdmin.from('corp_posts').select('*').order('created_at',{ascending:false});
+  const { data } = await sb.from('corp_posts').select('*').order('created_at',{ascending:false});
   const grid = document.getElementById('corp-blog-admin-grid'); grid.innerHTML='';
   if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay entradas aún.</div>'; return; }
   data.forEach(p => {
@@ -3896,7 +3892,7 @@ async function saveCorpPost(publish) {
   const titulo    = document.getElementById('cp-titulo').value.trim();
   const contenido = document.getElementById('cp-contenido').value.trim();
   if (!titulo||!contenido) { toast('Completa título y contenido','error'); return; }
-  await sbAdmin.from('corp_posts').insert({
+  await sb.from('corp_posts').insert({
     titulo, contenido, extracto: contenido.substring(0,200),
     categoria: document.getElementById('cp-cat').value,
     autor_id: currentProfile.id,
@@ -3907,8 +3903,8 @@ async function saveCorpPost(publish) {
   closeModal(); loadCorpBlogAdmin();
 }
 
-async function toggleCorpPost(id,pub) { await sbAdmin.from('corp_posts').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicado':'Publicado','success'); loadCorpBlogAdmin(); }
-async function deleteCorpPost(id) { if(!confirm('¿Eliminar?')) return; await sbAdmin.from('corp_posts').delete().eq('id',id); toast('Eliminado'); loadCorpBlogAdmin(); }
+async function toggleCorpPost(id,pub) { await sb.from('corp_posts').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicado':'Publicado','success'); loadCorpBlogAdmin(); }
+async function deleteCorpPost(id) { if(!confirm('¿Eliminar?')) return; await sb.from('corp_posts').delete().eq('id',id); toast('Eliminado'); loadCorpBlogAdmin(); }
 
 
 
@@ -3923,9 +3919,9 @@ let admPollOpts = [];
 
 async function loadConversationsAdmin() {
   const [profRes, grupRes, encRes] = await Promise.all([
-    sbAdmin.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).order('apellido'),
-    sbAdmin.from('grupos').select('*').order('created_at', {ascending:false}),
-    sbAdmin.from('encuestas').select('*').eq('activa', true).order('created_at', {ascending:false})
+    sb.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).order('apellido'),
+    sb.from('grupos').select('*').order('created_at', {ascending:false}),
+    sb.from('encuestas').select('*').eq('activa', true).order('created_at', {ascending:false})
   ]);
   admWaAllProfiles = (profRes.data||[]).sort((a,b) => (a.apellido||'').localeCompare(b.apellido||'','es'));
   admWaGrupos      = grupRes.data || [];
@@ -4043,7 +4039,7 @@ async function admOpenGrupo(grupo) {
       <button class="adm-wa-send" onclick="admSendGrupo('${grupo.id}')">➤</button>
     </div>
   </div>`;
-  const {data} = await sbAdmin.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
+  const {data} = await sb.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
   renderAdmMsgs(data||[], true);
 }
 
@@ -4051,19 +4047,19 @@ async function admSendGrupo(grupoId) {
   const input = document.getElementById('admin-msg-input');
   const text = input?.value.trim(); if (!text) return;
   input.value = ''; input.style.height = 'auto';
-  await sbAdmin.from('grupo_mensajes').insert({
+  await sb.from('grupo_mensajes').insert({
     grupo_id: grupoId, autor_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
     contenido: text
   });
-  const {data} = await sbAdmin.from('grupo_mensajes').select('*').eq('grupo_id',grupoId).order('created_at').limit(100);
+  const {data} = await sb.from('grupo_mensajes').select('*').eq('grupo_id',grupoId).order('created_at').limit(100);
   renderAdmMsgs(data||[], true);
 }
 
 async function admOpenEncuesta(enc) {
   admWaConvId = enc.id;
   admRenderConvList();
-  const {data: encFresh} = await sbAdmin.from('encuestas').select('*').eq('id',enc.id).single();
+  const {data: encFresh} = await sb.from('encuestas').select('*').eq('id',enc.id).single();
   if (!encFresh) return;
   const opciones = encFresh.opciones || [];
   const totalVotos = opciones.reduce((s,o)=>s+(o.votos||[]).length,0);
@@ -4095,9 +4091,9 @@ async function admOpenEncuesta(enc) {
 }
 
 async function admCerrarEncuesta(encId) {
-  await sbAdmin.from('encuestas').update({activa:false}).eq('id',encId);
+  await sb.from('encuestas').update({activa:false}).eq('id',encId);
   toast('Encuesta cerrada','success');
-  const {data} = await sbAdmin.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
+  const {data} = await sb.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
   admWaEncuestas = data||[];
   admRenderConvList();
 }
@@ -4131,7 +4127,7 @@ async function admGuardarEncuesta() {
   const opts = admPollOpts2.filter(o=>o.trim());
   if (opts.length < 2) { toast('Agrega al menos 2 opciones','error'); return; }
   const opciones = opts.map((texto,i) => ({ id:'op_'+(Date.now()+'_'+i), texto:texto.trim(), votos:[] }));
-  const {error} = await sbAdmin.from('encuestas').insert({
+  const {error} = await sb.from('encuestas').insert({
     titulo,
     descripcion: document.getElementById('adm-poll-desc')?.value.trim()||null,
     tipo: document.getElementById('adm-poll-tipo')?.value,
@@ -4144,7 +4140,7 @@ async function admGuardarEncuesta() {
   if (error) { toast('Error: '+error.message,'error'); return; }
   closeModal();
   toast('Encuesta publicada','success');
-  const {data} = await sbAdmin.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
+  const {data} = await sb.from('encuestas').select('*').eq('activa',true).order('created_at',{ascending:false});
   admWaEncuestas = data||[];
   admSwitchTab('encuestas');
 }
