@@ -215,6 +215,12 @@
   .footer-links a:hover { color: var(--gold); }
   .footer-bottom { display: flex; justify-content: space-between; align-items: center; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); }
 
+  /* PÁGINA EGRÉGORA */
+  #page-egregora input::placeholder,
+  #page-egregora textarea::placeholder { color: var(--text-dim); }
+  #page-egregora input:focus,
+  #page-egregora textarea:focus { border-color: var(--border-bright) !important; }
+
   /* HAMBURGER & MOBILE MENU */
   .nav-hamburger { display: none; flex-direction: column; gap: 5px; background: transparent; border: none; cursor: pointer; padding: 4px; z-index: 200; }
   .nav-hamburger span { display: block; width: 24px; height: 2px; background: var(--gold); transition: all 0.3s; border-radius: 1px; }
@@ -412,7 +418,7 @@
         <div class="egregora-cover-badge">Egrégora</div>
         <div class="egregora-cover-sub" id="egregora-edicion">Revista · 2025</div>
         <p class="egregora-issue">Publicación de nuestras reflexiones en torno a un mundo siempre cambiante.</p>
-        <a href="#" class="btn-corp" style="margin-bottom:12px;" onclick="abrirUltimaEdicion();return false;">Leer edición completa</a>
+        <a href="#" class="btn-corp" style="margin-bottom:12px;" onclick="showEgregoraPage();return false;">Leer edición completa</a>
         <a href="#" class="btn-corp" style="margin-top:12px;" onclick="abrirArchivoHistorico();return false;">Ver archivo histórico</a>
       </div>
       <div class="egregora-articles" id="egregora-articles">
@@ -616,6 +622,80 @@
   </div>
 </footer>
 </div><!-- /page-corp -->
+
+<!-- ═══════════ REVISTA EGRÉGORA ═══════════ -->
+<div id="page-egregora" style="display:none;">
+
+<nav style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 36px;background:rgba(0,26,71,0.98);border-bottom:1px solid var(--border);">
+  <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;">Revista Egrégora</div>
+  <ul style="display:flex;gap:24px;list-style:none;">
+    <li><a href="#egr-articulo" onclick="document.getElementById('egr-articulo').scrollIntoView({behavior:'smooth'});return false;" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:uppercase;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-dim)'">Artículo</a></li>
+    <li><a href="#egr-foro" onclick="document.getElementById('egr-foro').scrollIntoView({behavior:'smooth'});return false;" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--text-dim);text-decoration:none;text-transform:uppercase;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-dim)'">Foro</a></li>
+  </ul>
+  <button onclick="showLandingFromEgregora()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:10px 18px;cursor:pointer;">← Volver a la Logia</button>
+</nav>
+
+<div style="padding:130px 48px 70px;text-align:center;background:var(--dark-2);border-bottom:1px solid var(--border);">
+  <p style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.4em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;">Publicación institucional</p>
+  <h1 style="font-family:'Cinzel Decorative',serif;font-size:clamp(28px,5vw,52px);color:var(--cream);margin-bottom:20px;line-height:1.2;">Revista <span style="color:var(--gold);">Egrégora</span></h1>
+  <p style="font-size:19px;font-style:italic;color:var(--text-dim);max-width:560px;margin:0 auto;line-height:1.8;">Reflexiones y pensamiento masónico de la Respetable Logia Crisol del Elqui N°189.</p>
+</div>
+
+<!-- Último artículo -->
+<section style="background:var(--dark);" id="egr-articulo">
+  <div class="section-inner" style="max-width:860px;">
+    <p class="section-label">Último número</p>
+    <h2 class="section-title">Edición Reciente</h2>
+    <div class="divider-line"></div>
+    <div id="egr-page-articulo">
+      <div style="opacity:0.3;display:flex;flex-direction:column;gap:12px;">
+        <div style="height:14px;background:var(--dark-4);width:60%;"></div>
+        <div style="height:28px;background:var(--dark-4);width:90%;"></div>
+        <div style="height:14px;background:var(--dark-4);width:40%;"></div>
+        <div style="height:200px;background:var(--dark-4);width:100%;margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Foro público -->
+<section style="background:var(--dark-2);" id="egr-foro">
+  <div class="section-inner" style="max-width:860px;">
+    <p class="section-label">Conversación abierta</p>
+    <h2 class="section-title">Foro Público</h2>
+    <div class="divider-line"></div>
+
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:48px;">
+      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;">Participa en la conversación</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <input id="foro-nombre" type="text" placeholder="Tu nombre" style="background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:12px 16px;outline:none;width:100%;transition:border-color 0.3s;">
+        <input id="foro-email" type="email" placeholder="Tu correo electrónico" style="background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:12px 16px;outline:none;width:100%;transition:border-color 0.3s;">
+      </div>
+      <textarea id="foro-texto" rows="4" placeholder="Escribe tu reflexión o comentario…" style="background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:12px 16px;outline:none;resize:vertical;width:100%;margin-bottom:16px;transition:border-color 0.3s;"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <p style="font-size:13px;color:var(--text-dim);font-style:italic;">Tu correo no será publicado.</p>
+        <button onclick="submitForoPublico()" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:14px 28px;cursor:pointer;transition:background 0.3s;" onmouseover="this.style.background='var(--gold-light)'" onmouseout="this.style.background='var(--gold)'">Enviar →</button>
+      </div>
+      <div id="foro-msg" style="margin-top:16px;display:none;font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.15em;"></div>
+    </div>
+
+    <div id="egr-foro-comentarios">
+      <div style="opacity:0.4;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--text-dim);text-transform:uppercase;text-align:center;padding:24px 0;">Cargando comentarios…</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;gap:16px;">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);">Revista Egrégora</div>
+      <button onclick="showLandingFromEgregora()" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:10px 20px;cursor:pointer;">← Volver al sitio de la Logia</button>
+    </div>
+    <div class="footer-bottom"><span>© 2025 R∴L∴ Crisol del Elqui N°189 · Valle de Coquimbo · Chile</span></div>
+  </div>
+</footer>
+
+</div><!-- /page-egregora -->
 
 <script>
   // ── SUPABASE — noticias dinámicas ──
@@ -1311,6 +1391,132 @@
   }
 
   loadBibliotecaPublica();
+
+  // ── PÁGINA REVISTA EGRÉGORA ──
+  let _egrPageArticuloId = null;
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s ?? '');
+    return d.innerHTML;
+  }
+
+  function showEgregoraPage() {
+    document.getElementById('page-landing').style.display = 'none';
+    document.getElementById('page-egregora').style.display = 'block';
+    window.scrollTo(0, 0);
+    loadEgregoraPage();
+  }
+
+  function showLandingFromEgregora() {
+    document.getElementById('page-egregora').style.display = 'none';
+    document.getElementById('page-landing').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  async function loadEgregoraPage() {
+    const container = document.getElementById('egr-page-articulo');
+    const { data, error } = await _sb
+      .from('egregora_articulos')
+      .select('*')
+      .eq('publicado', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      container.innerHTML = `<p style="text-align:center;color:var(--text-dim);font-style:italic;padding:40px 0;">No hay artículos publicados aún.</p>`;
+      document.getElementById('egr-foro-comentarios').innerHTML = '';
+      return;
+    }
+
+    _egrPageArticuloId = data.id;
+
+    const [fy, fm, fd] = (data.created_at || '').slice(0, 10).split('-').map(Number);
+    const fecha = (fy && fm && fd)
+      ? new Date(fy, fm - 1, fd).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '';
+
+    container.innerHTML = `
+      <div style="border:1px solid var(--border);padding:48px;background:var(--dark-2);">
+        ${data.imagen_url ? `<img src="${escHtml(data.imagen_url)}" style="width:100%;max-height:380px;object-fit:cover;margin-bottom:36px;display:block;">` : ''}
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.35em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">${escHtml(data.categoria || 'Reflexión')}${data.edicion ? ' · ' + escHtml(data.edicion) : ''}</div>
+        <h2 style="font-family:'Cinzel Decorative',serif;font-size:clamp(22px,3vw,36px);color:var(--cream);margin-bottom:16px;line-height:1.3;">${escHtml(data.titulo)}</h2>
+        ${data.autor_nombre ? `<div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">Por ${escHtml(data.autor_nombre)}</div>` : ''}
+        <div style="font-size:13px;color:var(--text-dim);font-style:italic;margin-bottom:36px;">${escHtml(fecha)}</div>
+        <div style="width:50px;height:1px;background:var(--gold);margin-bottom:36px;"></div>
+        <div style="font-size:18px;line-height:1.9;color:var(--text);white-space:pre-wrap;">${escHtml(data.contenido || '')}</div>
+      </div>`;
+
+    loadForoComentarios(data.id);
+  }
+
+  async function loadForoComentarios(articuloId) {
+    const container = document.getElementById('egr-foro-comentarios');
+    const { data, error } = await _sb
+      .from('egregora_comentarios')
+      .select('id, autor_nombre, contenido, created_at')
+      .eq('articulo_id', articuloId)
+      .order('created_at', { ascending: false });
+
+    if (error || !data?.length) {
+      container.innerHTML = `<p style="text-align:center;color:var(--text-dim);font-style:italic;padding:24px 0;">Sé el primero en comentar.</p>`;
+      return;
+    }
+
+    container.innerHTML = data.map(c => {
+      const [cy, cm, cd] = (c.created_at || '').slice(0, 10).split('-').map(Number);
+      const fecha = (cy && cm && cd)
+        ? new Date(cy, cm - 1, cd).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '';
+      return `
+        <div style="border-bottom:1px solid var(--border);padding:28px 0;">
+          <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:12px;flex-wrap:wrap;">
+            <span style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);">${escHtml(c.autor_nombre || 'Anónimo')}</span>
+            <span style="font-size:13px;color:var(--text-dim);font-style:italic;">${escHtml(fecha)}</span>
+          </div>
+          <p style="font-size:17px;line-height:1.8;color:var(--text);white-space:pre-wrap;">${escHtml(c.contenido)}</p>
+        </div>`;
+    }).join('');
+  }
+
+  async function submitForoPublico() {
+    const nombreEl = document.getElementById('foro-nombre');
+    const emailEl  = document.getElementById('foro-email');
+    const textoEl  = document.getElementById('foro-texto');
+    const msgEl    = document.getElementById('foro-msg');
+
+    const nombre = nombreEl.value.trim();
+    const email  = emailEl.value.trim();
+    const texto  = textoEl.value.trim();
+
+    const showMsg = (txt, ok) => {
+      msgEl.style.display = 'block';
+      msgEl.style.color = ok ? 'var(--gold)' : '#d47a7a';
+      msgEl.textContent = txt;
+    };
+
+    if (!nombre) { showMsg('Por favor ingresa tu nombre.', false); return; }
+    if (!email || !email.includes('@')) { showMsg('Por favor ingresa un correo válido.', false); return; }
+    if (!texto) { showMsg('Por favor escribe un comentario.', false); return; }
+    if (!_egrPageArticuloId) { showMsg('Error: no hay artículo activo.', false); return; }
+
+    const { error } = await _sb.from('egregora_comentarios').insert({
+      articulo_id:  _egrPageArticuloId,
+      autor_nombre: nombre,
+      autor_email:  email,
+      contenido:    texto,
+    });
+
+    if (error) { showMsg('Error al enviar. Inténtalo de nuevo.', false); return; }
+
+    nombreEl.value = '';
+    emailEl.value  = '';
+    textoEl.value  = '';
+    showMsg('Comentario publicado. ¡Gracias por participar!', true);
+    setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+    loadForoComentarios(_egrPageArticuloId);
+  }
 
   // ── EGRÉGORA — botones portada ──
   function abrirUltimaEdicion() {
