@@ -267,7 +267,10 @@ tr:hover td { background: rgba(201,168,76,0.04); }
     <div class="nav-item" onclick="showModule('nuevo-usuario')"><span class="nav-icon">+</span>Nuevo miembro</div>
     <div class="sidebar-label">Contenido Logia</div>
     <div class="nav-item" onclick="showModule('noticias')"><span class="nav-icon">◫</span>Noticias</div>
-    <div class="nav-item" onclick="showModule('blog')"><span class="nav-icon">✦</span>Blog Venerable</div>
+    <div class="nav-item" data-blog="venerable" onclick="showBlog('venerable')"><span class="nav-icon">✦</span>Blog V∴M∴</div>
+    <div class="nav-item" data-blog="aprendiz"  onclick="showBlog('aprendiz')"><span class="nav-icon">✦</span>Blog 2° Vigilante</div>
+    <div class="nav-item" data-blog="companero"  onclick="showBlog('companero')"><span class="nav-icon">✦</span>Blog 1° Vigilante</div>
+    <div class="nav-item" data-blog="maestro"    onclick="showBlog('maestro')"><span class="nav-icon">✦</span>Blog Orador</div>
     <div class="nav-item" onclick="showModule('egregora')"><span class="nav-icon">◈</span>Revista Egrégora</div>
     <div class="nav-item" onclick="showModule('radio-agora')"><span class="nav-icon">◉</span>Radio Ágora</div>
     <div class="nav-item" onclick="showModule('biblioteca')"><span class="nav-icon">📄</span>Biblioteca</div>
@@ -600,17 +603,10 @@ tr:hover td { background: rgba(201,168,76,0.04); }
 
     <!-- BLOG -->
     <div class="module hidden" id="mod-blog">
-      <div class="module-title">Blog</div>
-      <div class="module-sub">Publicaciones del Segundo Vigilante, Primer Vigilante y Orador</div>
+      <div class="module-title" id="blog-module-title">Blog</div>
+      <div class="module-sub" id="blog-module-sub">Selecciona un blog desde el menú lateral</div>
       <div class="gold-line"></div>
-      <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
-        <button class="filter-btn btn-secondary active" onclick="filterPosts('todos',this)">Todos</button>
-        <button class="filter-btn btn-secondary" onclick="filterPosts('venerable',this)">Venerable Maestro</button>
-        <button class="filter-btn btn-secondary" onclick="filterPosts('aprendiz',this)">2° Vigilante</button>
-        <button class="filter-btn btn-secondary" onclick="filterPosts('companero',this)">1° Vigilante</button>
-        <button class="filter-btn btn-secondary" onclick="filterPosts('maestro',this)">Orador</button>
-      </div>
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="openPostModal()">+ Nueva entrada</button>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="openPostModal(currentBlogRole)">+ Nueva entrada</button>
       <div class="content-grid" id="blog-grid"></div>
     </div>
 
@@ -2439,12 +2435,27 @@ async function createUser() {
   showModule('usuarios');
 }
 
+// ── BLOG POR ROL ──
+let currentBlogRole = null;
+const BLOG_TITLES = { venerable:'Blog Venerable Maestro', aprendiz:'Blog 2° Vigilante', companero:'Blog 1° Vigilante', maestro:'Blog Orador' };
+
+function showBlog(role) {
+  currentBlogRole = role;
+  showModule('blog');
+  document.getElementById('blog-module-title').textContent = BLOG_TITLES[role] || 'Blog';
+  document.getElementById('blog-module-sub').textContent   = BLOG_LABELS[role] || role;
+  document.querySelectorAll('[data-blog]').forEach(el => {
+    el.classList.toggle('active', el.dataset.blog === role);
+  });
+}
+
 // ── POSTS ──
 async function loadPosts(type) {
   const { data } = await sbAdmin.from('posts').select('*').order('created_at', {ascending:false});
   allPosts = data || [];
   const gridId = type==='noticia' ? 'noticias-grid' : 'blog-grid';
-  renderPostsGrid(allPosts, gridId);
+  const posts = (type==='blog' && currentBlogRole) ? allPosts.filter(p=>p.role===currentBlogRole) : allPosts;
+  renderPostsGrid(posts, gridId);
 }
 
 function renderPostsGrid(posts, gridId) {
@@ -2484,16 +2495,16 @@ async function deletePost(id) {
   toast('Publicación eliminada'); loadPosts('blog');
 }
 
-function openPostModal() {
+function openPostModal(preRole) {
   document.getElementById('modal-title').textContent = 'Nueva entrada de blog';
   document.getElementById('modal-sub').textContent = 'Se publicará en la intranet según el rol seleccionado';
   document.getElementById('modal-body').innerHTML=`
     <div class="field"><label>Rol destino</label>
       <select id="mp-role">
-        <option value="venerable">Venerable Maestro (Landing page)</option>
-        <option value="aprendiz">2° Vigilante (Aprendices)</option>
-        <option value="companero">1° Vigilante (Compañeros)</option>
-        <option value="maestro">Orador (Maestros)</option>
+        <option value="venerable"${preRole==='venerable'?' selected':''}>Venerable Maestro (Landing page)</option>
+        <option value="aprendiz"${preRole==='aprendiz'?' selected':''}>2° Vigilante (Aprendices)</option>
+        <option value="companero"${preRole==='companero'?' selected':''}>1° Vigilante (Compañeros)</option>
+        <option value="maestro"${preRole==='maestro'?' selected':''}>Orador (Maestros)</option>
       </select>
     </div>
     <div class="field"><label>Título</label><input id="mp-titulo" placeholder="Título de la entrada"></div>
