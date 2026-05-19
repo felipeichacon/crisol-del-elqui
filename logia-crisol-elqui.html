@@ -215,12 +215,28 @@
   .footer-links a:hover { color: var(--gold); }
   .footer-bottom { display: flex; justify-content: space-between; align-items: center; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); }
 
+  /* HAMBURGER & MOBILE MENU */
+  .nav-hamburger { display: none; flex-direction: column; gap: 5px; background: transparent; border: none; cursor: pointer; padding: 4px; z-index: 200; }
+  .nav-hamburger span { display: block; width: 24px; height: 2px; background: var(--gold); transition: all 0.3s; border-radius: 1px; }
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .nav-mobile { display: none; position: fixed; inset: 0; background: rgba(0,15,48,0.98); z-index: 150; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .nav-mobile.open { display: flex; }
+  .nav-mobile a { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.25em; color: var(--text-dim); text-decoration: none; text-transform: uppercase; padding: 13px 0; transition: color 0.3s; width: 100%; text-align: center; }
+  .nav-mobile a:hover { color: var(--gold); }
+  .nav-mobile-divider { width: 40px; height: 1px; background: var(--border); margin: 8px 0; }
+  .nav-mobile .nav-mobile-intranet { color: var(--dark) !important; background: var(--gold); padding: 12px 32px; margin-top: 8px; width: auto; }
+  .nav-mobile .nav-mobile-intranet:hover { background: var(--gold-light); }
+
   /* RESPONSIVE */
   @media (max-width: 1024px) { .footer-top { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 900px) {
     .pillars-grid, .news-grid, .blog-grid, .bib-grid, .intranet-grid { grid-template-columns: 1fr; }
     .podcast-layout, .corp-inner, .contacto-inner, .egregora-grid { grid-template-columns: 1fr; gap: 40px; }
     nav { padding: 14px 20px; } .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
     .section-inner { padding: 72px 24px; }
     .footer-top { grid-template-columns: 1fr; gap: 32px; }
     .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
@@ -246,8 +262,24 @@
     <li><a href="#biblioteca">Biblioteca</a></li>
     <li><a href="#contacto">¿Quieres Pertenecer?</a></li>
   </ul>
-
+  <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Abrir menú">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- MENÚ MÓVIL OVERLAY -->
+<div class="nav-mobile" id="nav-mobile">
+  <a href="#valores" onclick="closeMobileMenu()">¿Quiénes Somos?</a>
+  <a href="#noticias" onclick="closeMobileMenu()">Noticias</a>
+  <a href="#radio-agora" onclick="closeMobileMenu()">Radio Ágora</a>
+  <a href="#venerable" onclick="closeMobileMenu()">Palabras del Venerable</a>
+  <a href="#egregora" onclick="closeMobileMenu()">Revista Egrégora</a>
+  <a href="#corporacion" onclick="closeMobileMenu()">Corp. Crisol</a>
+  <a href="#biblioteca" onclick="closeMobileMenu()">Biblioteca</a>
+  <a href="#contacto" onclick="closeMobileMenu()">¿Quieres Pertenecer?</a>
+  <div class="nav-mobile-divider"></div>
+  <a href="/intranet/pasos-perdidos.html" class="nav-mobile-intranet">Pasos Perdidos</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -466,9 +498,9 @@
     <h2 class="section-title">Acceso a Pasos Perdidos</h2>
     <div class="divider-line"></div>
     <div class="intranet-grid">
-      <div class="intranet-group" onclick="window.location.href='/intranet'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 58 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="30" y1="46" x2="30" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Aprendices</div><p class="intranet-group-desc">Área de formación, documentos de iniciación y recursos para el primer grado.</p><span class="btn-acceso">Ingresar</span></div>
-      <div class="intranet-group" onclick="window.location.href='/intranet'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 38 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="46" x2="18" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="46" x2="42" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Compañeros</div><p class="intranet-group-desc">Recursos del segundo grado, galería, mensajería y calendario fraterno.</p><span class="btn-acceso">Ingresar</span></div>
-      <div class="intranet-group" onclick="window.location.href='/intranet'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 30 Q30 22 38 30" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="30" x2="18" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="30" x2="42" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Maestros</div><p class="intranet-group-desc">Acceso completo a la administración, archivo histórico y gestión de la logia.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 58 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="30" y1="46" x2="30" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Aprendices</div><p class="intranet-group-desc">Área de formación, documentos de iniciación y recursos para el primer grado.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 46 Q30 38 38 46" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="46" x2="18" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="46" x2="42" y2="56" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Compañeros</div><p class="intranet-group-desc">Recursos del segundo grado, galería, mensajería y calendario fraterno.</p><span class="btn-acceso">Ingresar</span></div>
+      <div class="intranet-group" onclick="window.location.href='/intranet/pasos-perdidos.html'"><span class="intranet-symbol"><svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><line x1="30" y1="4" x2="5" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="4" x2="55" y2="52" stroke="#C9A84C" stroke-width="3" stroke-linecap="round"/><line x1="10" y1="38" x2="50" y2="38" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round"/><path d="M22 30 Q30 22 38 30" stroke="#C9A84C" stroke-width="2.5" fill="none" stroke-linecap="round"/><line x1="22" y1="30" x2="18" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/><line x1="38" y1="30" x2="42" y2="20" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/></svg></span><div class="intranet-group-name">Maestros</div><p class="intranet-group-desc">Acceso completo a la administración, archivo histórico y gestión de la logia.</p><span class="btn-acceso">Ingresar</span></div>
     </div>
   </div>
 </section>
@@ -514,7 +546,7 @@
       </div>
       <div>
         <div class="footer-col-title">Pasos Perdidos</div>
-        <ul class="footer-links"><li><a href="#">Aprendices</a></li><li><a href="#">Compañeros</a></li><li><a href="#">Maestros</a></li><li><a href="#">Soporte</a></li></ul>
+        <ul class="footer-links"><li><a href="/intranet/pasos-perdidos.html">Aprendices</a></li><li><a href="/intranet/pasos-perdidos.html">Compañeros</a></li><li><a href="/intranet/pasos-perdidos.html">Maestros</a></li><li><a href="#contacto">Soporte</a></li></ul>
       </div>
     </div>
     <div class="footer-bottom">
@@ -629,7 +661,7 @@
           <div class="news-date">${fecha}</div>
           <h3 class="news-title">${n.titulo}</h3>
           <p class="news-excerpt">${n.extracto||n.contenido.substring(0,160)+'…'}</p>
-          <a href="#" class="news-link" onclick="event.stopPropagation()">Leer más →</a>
+          <a href="#" class="news-link" onclick="event.preventDefault()">Leer más →</a>
         </div>`;
       grid.appendChild(card);
     });
@@ -997,7 +1029,7 @@
       const card = document.createElement('div');
       card.className = 'news-card';
       card.onclick = () => openCorpNoticia(n);
-      card.innerHTML = `${imgHtml}<div class="news-card-body"><div class="news-tag">${n.tag||'Corporación'}</div><div class="news-date">${fecha}</div><h3 class="news-title">${n.titulo}</h3><p class="news-excerpt">${n.extracto||n.contenido.substring(0,160)+'…'}</p><a href="#" class="news-link" onclick="event.stopPropagation()">Leer más →</a></div>`;
+      card.innerHTML = `${imgHtml}<div class="news-card-body"><div class="news-tag">${n.tag||'Corporación'}</div><div class="news-date">${fecha}</div><h3 class="news-title">${n.titulo}</h3><p class="news-excerpt">${n.extracto||n.contenido.substring(0,160)+'…'}</p><a href="#" class="news-link" onclick="event.preventDefault()">Leer más →</a></div>`;
       grid.appendChild(card);
     });
   }
@@ -1361,6 +1393,24 @@
     );
     window.location.href = 'mailto:secretario.rl189@gmail.com?subject=' + asunto + '&body=' + cuerpo;
   }
+
+  // ── MENÚ MÓVIL ──
+  function toggleMobileMenu() {
+    const btn  = document.getElementById('nav-hamburger');
+    const menu = document.getElementById('nav-mobile');
+    const open = menu.classList.toggle('open');
+    btn.classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+  function closeMobileMenu() {
+    document.getElementById('nav-hamburger').classList.remove('open');
+    document.getElementById('nav-mobile').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  // Cerrar menú móvil al hacer clic fuera
+  document.getElementById('nav-mobile').addEventListener('click', function(e) {
+    if (e.target === this) closeMobileMenu();
+  });
 </script>
 </body>
 </html>
