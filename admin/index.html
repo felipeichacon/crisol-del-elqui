@@ -2999,7 +2999,8 @@ async function loadCalendario() {
   let q = sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
   if (tipoFilter) q = q.eq('tipo', tipoFilter);
 
-  const { data } = await q;
+  const { data, error: calErr } = await q;
+  if (calErr) { toast('Error al cargar eventos: ' + calErr.message, 'error'); return; }
   let eventos = data || [];
 
   if (rolFilter === 'oficialidad') {
@@ -3058,8 +3059,9 @@ function renderCalendario() {
     // Eventos de ese día
     const dayStart = new Date(_calYear, _calMonth, d);
     const dayEnd   = new Date(_calYear, _calMonth, d, 23, 59, 59);
+    const parseFe  = s => new Date((s||'').replace(' ', 'T').replace('+00', 'Z'));
     const dayEvts  = _calEventos.filter(e => {
-      const fe = new Date(e.fecha_inicio);
+      const fe = parseFe(e.fecha_inicio);
       return fe >= dayStart && fe <= dayEnd;
     });
 
@@ -3085,8 +3087,9 @@ function renderCalList() {
   const list = document.getElementById('cal-list');
   if (!list) return;
   const now = new Date();
+  const parseFecha = s => new Date((s||'').replace(' ', 'T').replace('+00', 'Z'));
   const proximos = _calEventos
-    .filter(e => new Date(e.fecha_inicio) >= now)
+    .filter(e => { const d = parseFecha(e.fecha_inicio); return !isNaN(d) && d >= now; })
     .slice(0, 20);
 
   if (!proximos.length) {
@@ -3100,7 +3103,7 @@ function renderCalList() {
     div.onmouseover = () => div.style.background = 'rgba(201,168,76,0.05)';
     div.onmouseout  = () => div.style.background = 'transparent';
     div.onclick = () => openEditEvento(e);
-    const fecha = new Date(e.fecha_inicio);
+    const fecha = parseFecha(e.fecha_inicio);
     const fechaStr = fecha.toLocaleDateString('es-CL', {day:'numeric',month:'short',year:'numeric'});
     const horaStr  = e.todo_el_dia ? 'Todo el día' : fecha.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
     const rolesStr = (e.roles||[]).includes('todos') ? 'Todos' : (e.roles||[]).map(r=>({aprendiz:'Apz',companero:'Cmp',maestro:'Mtro'}[r]||r)).join(', ');
