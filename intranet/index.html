@@ -132,6 +132,17 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .post-excerpt { font-size: 15px; color: var(--text-dim); line-height: 1.8; }
 .btn-new-post { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dark); background: var(--gold); border: none; padding: 12px 24px; cursor: pointer; transition: background 0.3s; margin-bottom: 32px; }
 .btn-new-post:hover { background: var(--gold-light); }
+.post-read-more { display: inline-block; margin-top: 16px; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold-dim); }
+/* Blog reader panel */
+.blog-reader { position: fixed; inset: 0; z-index: 500; background: var(--dark); transform: translateX(105%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
+.blog-reader.open { transform: translateX(0); }
+.blog-reader-topbar { position: sticky; top: 0; z-index: 10; background: var(--dark-2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 56px; flex-shrink: 0; }
+.blog-reader-back { background: transparent; border: none; color: var(--gold); font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; padding: 8px 0; }
+.blog-reader-body { max-width: 720px; margin: 0 auto; padding: 48px 48px 100px; width: 100%; }
+.blog-reader-meta { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 20px; }
+.blog-reader-title { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 400; color: var(--cream); line-height: 1.3; margin-bottom: 24px; }
+.blog-reader-divider { width: 48px; height: 1px; background: var(--gold); margin-bottom: 32px; opacity: 0.5; }
+.blog-reader-content { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--text); line-height: 1.9; white-space: pre-wrap; }
 
 /* ── MODULE: CALENDAR ── */
 .calendar-wrap { padding: 0 48px 48px; }
@@ -378,6 +389,10 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
     <div class="nav-item" onclick="showModule('blog')">
       <span class="nav-icon">✦</span> <span id="nav-blog-label">Blog</span>
     </div>
+    <div class="nav-item" onclick="showModule('blog-orador-pub')">
+      <span class="nav-icon">✦</span> Blog del Orador
+      <span class="unread-badge hidden" id="badge-blog">●</span>
+    </div>
     <div class="nav-item" onclick="showModule('calendar')">
       <span class="nav-icon">◷</span> Calendario
     </div>
@@ -442,6 +457,15 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
           <label>Título</label>
           <input type="text" id="post-titulo" placeholder="Título de la entrada">
         </div>
+        <div class="form-field hidden" id="post-grado-wrap" style="margin-bottom:16px;">
+          <label>Visible para</label>
+          <select id="post-grado" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:13px 16px;outline:none;">
+            <option value="todos">Todos los grados</option>
+            <option value="maestro">Solo Maestros</option>
+            <option value="companero">Compañeros y Maestros</option>
+            <option value="aprendiz">Aprendices y superiores</option>
+          </select>
+        </div>
         <div class="form-field" style="margin-bottom:16px;">
           <label>Contenido</label>
           <textarea id="post-contenido" rows="8" placeholder="Escribe aquí…"></textarea>
@@ -453,6 +477,15 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         </div>
       </div>
       <div class="blog-grid" id="blog-posts-grid"></div>
+    </div>
+
+    <!-- BLOG DEL ORADOR MODULE (visible para todos los grados) -->
+    <div class="module hidden" id="mod-blog-orador-pub">
+      <div class="module-header">
+        <h2>Blog del Orador</h2>
+        <div class="gold-line"></div>
+      </div>
+      <div class="blog-grid" id="blog-orador-grid"></div>
     </div>
 
     <!-- CALENDAR MODULE -->
@@ -897,6 +930,7 @@ function showApp() {
   subscribeMessages();
   loadUnreadCount();
   inyectarModulosAdmin();
+  initBlogBadge();
 }
 
 // ── MÓDULOS DE ADMINISTRACIÓN EN LA INTRANET ──
@@ -1205,7 +1239,7 @@ function admMsgModulo(nombre, desc, modKey) {
 }
 
 // ── MODULES ──
-const MODULES = ['hero','gallery','blog','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-orador','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
+const MODULES = ['hero','gallery','blog','blog-orador-pub','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-orador','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   MODULES.forEach(m => {
     const el = document.getElementById('mod-'+m);
@@ -1230,6 +1264,7 @@ function showModule(name) {
   if (name === 'adm-corp-blog')     loadAdmCorpBlog();
   if (name === 'adm-mensajeria')    loadAdmMensajeria();
   if (name === 'blog')       { loadPosts(); }
+  if (name === 'blog-orador-pub') { markBlogSeen(); loadBlogOrador(); }
   if (name === 'profiles')   { if (!allProfiles.length) loadProfiles(); else renderProfiles(); }
   if (name === 'biblioteca') { loadDocuments(); }
   if (name === 'mensajes')   { loadConversations(); }
@@ -1297,6 +1332,14 @@ const BLOG_CARGO_MAP = {
   admin:     'Orador'
 };
 
+// Mapa de visibilidad: cada grado ve los posts de estos roles
+const ROLES_VISIBLES_BLOG = {
+  aprendiz:  ['aprendiz', 'todos'],
+  companero: ['companero', 'aprendiz', 'todos'],
+  maestro:   ['maestro', 'companero', 'aprendiz', 'todos'],
+  admin:     ['maestro', 'companero', 'aprendiz', 'todos'],
+};
+
 async function loadPosts() {
   const rol = currentProfile.role;
   // Mostrar botón solo si el perfil tiene el cargo correcto
@@ -1305,10 +1348,11 @@ async function loadPosts() {
   const btnPost = document.getElementById('btn-nueva-entrada');
   if (btnPost) btnPost.style.display = puedeEscribir ? '' : 'none';
 
-  // Cargar posts filtrados por rol — solo publicados (o propios borradores)
+  // Cargar posts según visibilidad del grado
+  const rolesParaVer = ROLES_VISIBLES_BLOG[rol] || ['todos'];
   const { data } = await sb.from('posts')
     .select('*')
-    .eq('role', rol === 'admin' ? 'maestro' : rol)
+    .in('role', rolesParaVer)
     .order('created_at', { ascending: false });
 
   const grid = document.getElementById('blog-posts-grid');
@@ -1321,13 +1365,81 @@ async function loadPosts() {
     const div = document.createElement('div'); div.className='blog-post-card';
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
     const autorDisplay = 'Q∴H∴ ' + (post.autor_nombre||'Hermano');
-    div.innerHTML=`<div class="post-meta">${autorDisplay} · ${date}${!post.publicado?' · Borrador':''}</div><div class="post-title">${post.titulo}</div><div class="post-excerpt">${post.extracto||post.contenido.substring(0,180)+'…'}</div>`;
+    div.innerHTML=`<div class="post-meta">${autorDisplay} · ${date}${!post.publicado?' · Borrador':''}</div><div class="post-title">${post.titulo}</div><div class="post-excerpt">${post.extracto||post.contenido.substring(0,180)+'…'}</div><span class="post-read-more">Leer →</span>`;
+    div.onclick = () => openPost(post);
+    grid.appendChild(div);
+  });
+
+  checkBlogBadge(posts);
+}
+
+async function loadBlogOrador() {
+  const { data } = await sb.from('posts')
+    .select('*')
+    .in('role', ['maestro', 'todos'])
+    .eq('publicado', true)
+    .order('created_at', { ascending: false });
+
+  const grid = document.getElementById('blog-orador-grid');
+  grid.innerHTML = '';
+  const posts = data || [];
+  if (!posts.length) {
+    grid.innerHTML = '<div style="padding:32px 48px;color:var(--text-dim);font-style:italic;">No hay publicaciones del Orador aún.</div>'; return;
+  }
+  posts.forEach(post => {
+    const div = document.createElement('div'); div.className = 'blog-post-card';
+    const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
+    const autorDisplay = 'Q∴H∴ ' + (post.autor_nombre||'Hermano');
+    div.innerHTML = `<div class="post-meta">${autorDisplay} · ${date}</div><div class="post-title">${post.titulo}</div><div class="post-excerpt">${post.extracto||post.contenido.substring(0,180)+'…'}</div><span class="post-read-more">Leer →</span>`;
+    div.onclick = () => openPost(post);
     grid.appendChild(div);
   });
 }
 
+function checkBlogBadge(posts) {
+  const badge = document.getElementById('badge-blog');
+  if (!badge || !currentProfile) return;
+  const lsKey = 'blog_seen_' + currentProfile.id;
+  const lastSeen = localStorage.getItem(lsKey);
+  const publishedPosts = posts.filter(p => p.publicado);
+  if (!publishedPosts.length) { badge.classList.add('hidden'); return; }
+  const newestAt = publishedPosts[0].created_at;
+  if (!lastSeen || new Date(newestAt) > new Date(lastSeen)) {
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function markBlogSeen() {
+  if (!currentProfile) return;
+  localStorage.setItem('blog_seen_' + currentProfile.id, new Date().toISOString());
+  const badge = document.getElementById('badge-blog');
+  if (badge) badge.classList.add('hidden');
+}
+
+async function initBlogBadge() {
+  if (!currentProfile) return;
+  const { data } = await sb.from('posts')
+    .select('created_at')
+    .in('role', ['maestro', 'todos'])
+    .eq('publicado', true)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (!data || !data.length) return;
+  const badge = document.getElementById('badge-blog');
+  if (!badge) return;
+  const lsKey = 'blog_seen_' + currentProfile.id;
+  const lastSeen = localStorage.getItem(lsKey);
+  if (!lastSeen || new Date(data[0].created_at) > new Date(lastSeen)) {
+    badge.classList.remove('hidden');
+  }
+}
+
 function showNewPostForm() {
   document.getElementById('new-post-form').classList.remove('hidden');
+  const gradoWrap = document.getElementById('post-grado-wrap');
+  if (gradoWrap) gradoWrap.classList.toggle('hidden', currentProfile.role !== 'admin');
   document.getElementById('post-titulo').focus();
 }
 
@@ -1335,8 +1447,10 @@ async function savePost(publish) {
   const titulo = document.getElementById('post-titulo').value.trim();
   const contenido = document.getElementById('post-contenido').value.trim();
   if (!titulo || !contenido) { toast('Completa título y contenido', 'error'); return; }
+  const gradoEl = document.getElementById('post-grado');
+  const rolePost = (currentProfile.role === 'admin' && gradoEl) ? gradoEl.value : currentProfile.role;
   const { error } = await sb.from('posts').insert({
-    role: currentProfile.role, titulo, contenido,
+    role: rolePost, titulo, contenido,
     extracto: contenido.substring(0, 200),
     autor_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').trim().split(' ')[0] + ' ' + ((currentProfile.apellido||'').trim().split(' ')[0]),
@@ -1347,6 +1461,9 @@ async function savePost(publish) {
   document.getElementById('post-contenido').value = '';
   document.getElementById('new-post-form').classList.add('hidden');
   toast(publish ? 'Publicación publicada' : 'Borrador guardado');
+  if (publish && currentProfile) {
+    localStorage.setItem('blog_seen_' + currentProfile.id, new Date().toISOString());
+  }
   loadPosts();
 }
 
@@ -2716,8 +2833,40 @@ async function uploadAvatar(input) {
   toast('Foto de perfil actualizada');
 }
 
+// ── BLOG READER ──
+function openPost(post) {
+  const reader = document.getElementById('blog-reader');
+  if (!reader) return;
+  const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('blog-reader-meta').textContent = 'Q∴H∴ ' + (post.autor_nombre||'Hermano') + ' · ' + date + (post.publicado ? '' : ' · Borrador');
+  document.getElementById('blog-reader-title').textContent = post.titulo;
+  document.getElementById('blog-reader-content').textContent = post.contenido;
+  reader.classList.add('open');
+  reader.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closePost() {
+  document.getElementById('blog-reader').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 // ── START ──
 init();
 </script>
+
+<!-- Blog reader panel -->
+<div class="blog-reader" id="blog-reader">
+  <div class="blog-reader-topbar">
+    <button class="blog-reader-back" onclick="closePost()">← Volver</button>
+  </div>
+  <div class="blog-reader-body">
+    <div id="blog-reader-meta" class="blog-reader-meta"></div>
+    <h1 id="blog-reader-title" class="blog-reader-title"></h1>
+    <div class="blog-reader-divider"></div>
+    <div id="blog-reader-content" class="blog-reader-content"></div>
+  </div>
+</div>
+
 </body>
 </html>
