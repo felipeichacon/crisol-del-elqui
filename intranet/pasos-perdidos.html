@@ -2865,30 +2865,40 @@ function renderPoll(enc, miVoto) {
 }
 
 async function votarEncuesta(encId, opcionId) {
+  // Guardar en BD
   await sb.from('encuesta_votos').insert({
     encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: [opcionId]
   });
-  const {data: enc} = await sb.from('encuestas').select('opciones').eq('id',encId).single();
-  const opciones = enc.opciones.map(o =>
+  // Actualizar opciones localmente y persistir
+  const encActual = waActiveConv?.encuesta || {};
+  const opcionesActualizadas = (encActual.opciones||[]).map(o =>
     o.id === opcionId ? {...o, votos: [...(o.votos||[]), currentProfile.id]} : o
   );
-  await sb.from('encuestas').update({opciones}).eq('id',encId);
-  openEncuesta({id:encId});
+  await sb.from('encuestas').update({ opciones: opcionesActualizadas }).eq('id', encId);
+  // Render inmediato con estado local — sin re-fetch de miVoto
+  const encFinal = { ...encActual, opciones: opcionesActualizadas };
+  waActiveConv.encuesta = encFinal;
+  renderPoll(encFinal, { encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: [opcionId] });
 }
 
 async function submitMultiVoto(encId) {
   if (_pollPendingVotos.size === 0) { toast('Selecciona al menos una opción', 'error'); return; }
   const opcionIds = [..._pollPendingVotos];
+  // Guardar en BD
   await sb.from('encuesta_votos').insert({
     encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: opcionIds
   });
-  const {data: enc} = await sb.from('encuestas').select('opciones').eq('id',encId).single();
-  const opciones = enc.opciones.map(o =>
+  // Actualizar opciones localmente y persistir
+  const encActual = waActiveConv?.encuesta || {};
+  const opcionesActualizadas = (encActual.opciones||[]).map(o =>
     opcionIds.includes(o.id) ? {...o, votos: [...(o.votos||[]), currentProfile.id]} : o
   );
-  await sb.from('encuestas').update({opciones}).eq('id',encId);
+  await sb.from('encuestas').update({ opciones: opcionesActualizadas }).eq('id', encId);
+  // Render inmediato con estado local
+  const encFinal = { ...encActual, opciones: opcionesActualizadas };
+  waActiveConv.encuesta = encFinal;
   _pollPendingVotos.clear();
-  openEncuesta({id:encId});
+  renderPoll(encFinal, { encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: opcionIds });
 }
 
 async function cerrarEncuesta(encId) {
