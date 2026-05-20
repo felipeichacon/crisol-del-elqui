@@ -6,6 +6,18 @@
 <title>Respetable Logia Crisol del Elqui N°189</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#002058">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Crisol N°189">
+<link rel="apple-touch-icon" href="/logo-crisol.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -249,6 +261,160 @@
     .form-row { grid-template-columns: 1fr; }
     .corp-inner, .contacto-inner { padding: 72px 24px; }
   }
+
+  /* ══════════════════════════════════════════
+     BOTTOM NAVIGATION BAR (mobile app)
+  ══════════════════════════════════════════ */
+  .mob-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 300;
+    background: rgba(0,10,40,0.97);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    grid-template-columns: repeat(5, 1fr);
+    align-items: center;
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mob-nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 2px;
+    color: rgba(255,255,255,0.38);
+    transition: color 0.18s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    width: 100%;
+    height: 100%;
+  }
+  .mob-nav-tab span {
+    font-family: 'Cinzel', serif;
+    font-size: 7px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .mob-nav-tab.active { color: var(--gold); }
+  .mob-nav-tab:active { transform: scale(0.9); opacity: 0.8; }
+  /* Centro destacado (Egrégora) */
+  #mnt-revista {
+    position: relative;
+    color: var(--dark-2);
+  }
+  #mnt-revista::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-54%);
+    width: 46px; height: 46px;
+    background: linear-gradient(145deg, var(--gold-light), var(--gold));
+    border-radius: 50%;
+    z-index: -1;
+    box-shadow: 0 -2px 14px rgba(201,168,76,0.4);
+    transition: box-shadow 0.2s;
+  }
+  #mnt-revista.active::before { box-shadow: 0 -2px 22px rgba(201,168,76,0.7); }
+  #mnt-revista span { color: rgba(255,255,255,0.5); margin-top: 26px; position: relative; top: 2px; }
+  #mnt-revista.active span { color: var(--gold-dim); }
+
+  @media (max-width: 900px) {
+    .mob-nav { display: grid; }
+    body { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+    nav#navbar .btn-intranet { display: none; }
+  }
+
+  /* ══════════════════════════════════════════
+     PHONE LAYOUTS ≤ 640px
+  ══════════════════════════════════════════ */
+  @media (max-width: 640px) {
+    /* HERO */
+    .hero { padding: 70px 18px 70px; }
+    .hero-logo-inner { width: 160px !important; height: 160px !important; }
+    .hero-scroll { display: none; }
+    .hero-subtitle { font-size: 17px; max-width: 100%; }
+    .hero-badge { font-size: 9px; letter-spacing: 0.18em; padding: 11px 20px; margin-top: 30px; }
+    .hero-divider::before, .hero-divider::after { width: 50px; }
+
+    /* SECTIONS */
+    .section-inner { padding: 44px 18px; }
+    .section-title { margin-bottom: 28px; }
+
+    /* PILLARS */
+    .pillar { padding: 26px 18px; }
+    .pillar-text { font-size: 15px; }
+
+    /* NEWS */
+    .news-photo { height: 160px; }
+    .news-card-body { padding: 18px 16px; }
+    .news-title { font-size: 15px; }
+    .news-excerpt { font-size: 13px; }
+
+    /* PODCAST */
+    .podcast-layout { gap: 24px; }
+    .player-widget { padding: 24px 18px; }
+    .player-waveform { height: 32px; }
+    .podcast-desc { font-size: 16px; }
+
+    /* EGRÉGORA */
+    .egregora-article { padding: 18px 16px; gap: 8px; flex-direction: column; }
+    .egregora-num { font-size: 20px; min-width: auto; }
+    .egregora-article-title { font-size: 15px; }
+    .egregora-cover { padding: 28px 16px; }
+    .egregora-cover-badge { font-size: 20px; }
+
+    /* CORPORACIÓN */
+    .corp-inner { gap: 24px; }
+    .corp-links { flex-direction: column; }
+    .btn-corp { text-align: center; }
+
+    /* BIBLIOTECA */
+    .bib-grid { grid-template-columns: repeat(2,1fr); }
+    .bib-category { padding: 22px 12px; }
+    .bib-icon { font-size: 24px; }
+    .bib-cat-name { font-size: 12px; }
+    .bib-search { flex-direction: column; }
+    .bib-search input { border-right: 1px solid var(--border); border-bottom: none; }
+
+    /* INTRANET */
+    .intranet-group { padding: 26px 16px; }
+    .intranet-grid { grid-template-columns: 1fr; }
+
+    /* CONTACTO */
+    .contacto-inner { gap: 24px; }
+    .contacto-quote { font-size: 22px; }
+    .form-field input, .form-field textarea, .form-field select { font-size: 16px; } /* evitar zoom iOS */
+
+    /* FOOTER simplificado */
+    .footer-top { display: none; }
+    footer { padding: 18px 18px 10px; }
+    .footer-bottom { flex-direction: column; gap: 6px; font-size: 8.5px; }
+    .footer-bottom a { display: none; } /* ocultar btn admin en mobile */
+
+    /* EGRÉGORA PAGE mobile */
+    #page-egregora > nav { padding: 12px 16px !important; }
+    #page-egregora > nav ul { display: none !important; }
+    #page-egregora > div:first-of-type { padding: 76px 18px 40px !important; }
+    #page-egregora > div:first-of-type h1 { font-size: clamp(24px,7vw,40px) !important; }
+    #page-egregora > div:first-of-type p:last-child { font-size: 16px !important; }
+    .egr-art-wrap { padding: 36px 18px 52px !important; }
+    .foro-inputs-grid { grid-template-columns: 1fr !important; }
+    .egr-art-wrap h2 { font-size: clamp(22px,7vw,36px) !important; }
+    .egr-art-wrap > div[style*="max-height:560px"] img,
+    #egr-page-articulo > div:first-child img { height: 220px !important; }
+  }
+
+  @media (max-width: 400px) {
+    .hero-logo-inner { width: 136px !important; height: 136px !important; }
+    .bib-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -302,6 +468,7 @@
   </svg>
   <div style="display:inline-block;margin-bottom:28px;animation:fadeUp 1s ease both;position:relative;z-index:1;filter:drop-shadow(0 0 18px rgba(255,255,255,0.5)) drop-shadow(0 0 50px rgba(255,255,255,0.22)) drop-shadow(0 0 90px rgba(255,255,255,0.1));">
     <div role="img" aria-label="Escudo Logia Crisol del Elqui"
+         class="hero-logo-inner"
          style="width:220px;height:220px;border-radius:50%;
                 background:url('/logo-crisol.png') center/104% no-repeat,
                            radial-gradient(circle at center, white 81%, #003984 89%, #003984 100%);
@@ -1127,7 +1294,7 @@
     loadCorpNoticias();
     loadCorpBlog();
   }
-  function showLanding() { document.getElementById('page-corp').style.display='none'; document.getElementById('page-landing').style.display='block'; window.scrollTo(0,0); }
+  function showLanding() { document.getElementById('page-corp').style.display='none'; document.getElementById('page-landing').style.display='block'; window.scrollTo(0,0); _mnSetActive('inicio'); }
 
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => { if(document.getElementById('page-landing').style.display!=='none') navbar.classList.toggle('scrolled', window.scrollY>60); });
@@ -1379,6 +1546,7 @@
     document.getElementById('page-egregora').style.display = 'block';
     window.scrollTo(0, 0);
     loadEgregoraPage(articulo);
+    _mnSetActive('revista');
   }
 
   function openArticuloEnPagina(id) {
@@ -1391,6 +1559,7 @@
     document.getElementById('page-egregora').style.display = 'none';
     document.getElementById('page-landing').style.display = 'block';
     window.scrollTo(0, 0);
+    _mnSetActive('inicio');
   }
 
   async function loadEgregoraPage(articulo = null) {
@@ -1421,7 +1590,7 @@
 
     container.innerHTML = `
       ${data.imagen_url ? `<div style="width:100%;max-height:560px;overflow:hidden;"><img src="${escHtml(data.imagen_url)}" style="width:100%;height:560px;object-fit:cover;display:block;"></div>` : ''}
-      <div style="max-width:860px;margin:0 auto;padding:72px 48px 100px;">
+      <div class="egr-art-wrap" style="max-width:860px;margin:0 auto;padding:72px 48px 100px;">
 
         <!-- Artículo -->
         <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.4em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;">${escHtml(data.categoria || 'Reflexión')}${data.edicion ? ' · ' + escHtml(data.edicion) : ''}</div>
@@ -1438,7 +1607,7 @@
 
           <div style="background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:48px;">
             <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;">Participa en la conversación</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="foro-inputs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
               <input id="foro-nombre" type="text" placeholder="Tu nombre" style="background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:12px 16px;outline:none;width:100%;transition:border-color 0.3s;">
               <input id="foro-email" type="email" placeholder="Tu correo electrónico" style="background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:16px;padding:12px 16px;outline:none;width:100%;transition:border-color 0.3s;">
             </div>
@@ -1627,6 +1796,88 @@
   document.getElementById('nav-mobile').addEventListener('click', function(e) {
     if (e.target === this) closeMobileMenu();
   });
+
+  // ── BOTTOM NAV MOBILE ──
+  function _mnSetActive(tab) {
+    document.querySelectorAll('.mob-nav-tab').forEach(t => t.classList.remove('active'));
+    const el = document.getElementById('mnt-' + tab);
+    if (el) el.classList.add('active');
+  }
+
+  function mobNavGoTo(tab) {
+    if (tab === 'revista') { showEgregoraPage(); return; }
+    if (tab === 'intranet') { window.location.href = '/intranet/pasos-perdidos.html'; return; }
+
+    const isLanding = document.getElementById('page-landing').style.display !== 'none';
+    const sectionMap = { inicio: null, noticias: 'noticias', radio: 'radio-agora' };
+    const targetId = sectionMap[tab];
+
+    if (!isLanding) {
+      const corp = document.getElementById('page-corp');
+      const egr  = document.getElementById('page-egregora');
+      if (corp && corp.style.display !== 'none') showLanding();
+      else if (egr && egr.style.display !== 'none') showLandingFromEgregora();
+      if (targetId) setTimeout(() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' }), 80);
+      _mnSetActive(tab);
+      return;
+    }
+
+    if (tab === 'inicio') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (targetId) {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+    }
+    _mnSetActive(tab);
+  }
+
+  // Actualizar tab activo según sección visible
+  (() => {
+    const mnMap = {
+      'valores': 'inicio', 'noticias': 'noticias', 'venerable': 'noticias',
+      'radio-agora': 'radio', 'egregora': 'revista',
+      'corporacion': 'noticias', 'biblioteca': 'noticias', 'contacto': 'noticias'
+    };
+    const mnObs = new IntersectionObserver(entries => {
+      if (document.getElementById('page-landing').style.display === 'none') return;
+      entries.forEach(e => { if (e.isIntersecting) _mnSetActive(mnMap[e.target.id] || 'inicio'); });
+    }, { threshold: 0.35 });
+    document.querySelectorAll('section[id]').forEach(s => mnObs.observe(s));
+    window.addEventListener('scroll', () => { if (window.scrollY < 180) _mnSetActive('inicio'); }, { passive: true });
+  })();
+
+  // Tab inicio activo por defecto
+  _mnSetActive('inicio');
 </script>
+
+<!-- ═══════════ BOTTOM NAVIGATION BAR ═══════════ -->
+<nav class="mob-nav" id="mob-nav" aria-label="Navegación principal">
+
+  <button class="mob-nav-tab" id="mnt-inicio" onclick="mobNavGoTo('inicio')" aria-label="Inicio">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V21H15v-5H9v5H3z"/></svg>
+    <span>Inicio</span>
+  </button>
+
+  <button class="mob-nav-tab" id="mnt-noticias" onclick="mobNavGoTo('noticias')" aria-label="Noticias">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="1"/><path d="M2 9h20M7 4v5M8 14h8M8 17h5"/></svg>
+    <span>Noticias</span>
+  </button>
+
+  <button class="mob-nav-tab" id="mnt-revista" onclick="mobNavGoTo('revista')" aria-label="Revista Egrégora">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7V20M12 7C10 5.5 7 5 4 5v15c3 0 6 .5 8 2M12 7c2-1.5 5-2 8-2v15c-3 0-6 .5-8 2"/></svg>
+    <span>Egrégora</span>
+  </button>
+
+  <button class="mob-nav-tab" id="mnt-radio" onclick="mobNavGoTo('radio')" aria-label="Radio Ágora">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 7.76a6 6 0 0 0 0 8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    <span>Radio</span>
+  </button>
+
+  <button class="mob-nav-tab" id="mnt-intranet" onclick="mobNavGoTo('intranet')" aria-label="Área Reservada">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 6v6c0 5.5 3.5 10.7 8 12 4.5-1.3 8-6.5 8-12V6L12 2z"/></svg>
+    <span>Reservada</span>
+  </button>
+
+</nav>
+
 </body>
 </html>

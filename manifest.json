@@ -1,0 +1,21 @@
+{
+  "name": "Logia Crisol del Elqui N°189",
+  "short_name": "Crisol N°189",
+  "description": "Sitio oficial de la Respetable Logia Masónica Crisol del Elqui N°189 — Valle de Coquimbo, Chile",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#002058",
+  "theme_color": "#002058",
+  "orientation": "portrait-primary",
+  "lang": "es-CL",
+  "categories": ["lifestyle", "social"],
+  "icons": [
+    {
+      "src": "/logo-crisol.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
