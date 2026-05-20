@@ -373,12 +373,19 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .chat-input:focus { border-color: var(--gold-dim); }
 
 /* ── EDIT PROFILE FORM ── */
-.edit-form { padding: 0 48px 48px; max-width: 900px; }
+.edit-form { padding: 0 48px 80px; max-width: 900px; }
+.pf-header-card { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; padding: 20px; background: var(--dark-3); border: 1px solid var(--border); }
+.pf-header-info { flex: 1; min-width: 0; }
+.pf-readonly-wrap { margin-bottom: 28px; padding: 0 0 4px; }
+.pf-ro-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.pf-ro-label { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; }
 .form-section-title { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.2em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; margin-bottom: 32px; }
+.form-field { margin-bottom: 20px; }
 .form-field label { display: block; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 8px; }
-.form-field input, .form-field textarea, .form-field select { width: 100%; background: var(--dark-3); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 17px; padding: 12px 16px; outline: none; transition: border-color 0.3s; resize: vertical; }
-.form-field input:focus, .form-field textarea:focus { border-color: var(--gold-dim); }
+.form-field input, .form-field textarea, .form-field select { width: 100%; background: var(--dark-3); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 17px; padding: 12px 16px; outline: none; transition: border-color 0.3s; resize: vertical; box-sizing: border-box; }
+.form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--gold-dim); }
+.pf-save-bar { margin-top: 8px; }
 .btn-save { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dark); background: var(--gold); border: none; padding: 14px 36px; cursor: pointer; transition: background 0.3s; }
 .btn-save:hover { background: var(--gold-light); }
 
@@ -497,6 +504,36 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
   .detail-row > div:nth-child(n+3) { display: none; }
   .detail-row .col-name { font-size: 14px; }
   .detail-row .col-name .sub { font-size: 14px; }
+
+  /* ── Mi Perfil: mobile ── */
+  .edit-form { padding: 0 0 0; }
+  /* Avatar: stack vertically */
+  .pf-header-card { flex-direction: column; align-items: center; text-align: center; padding: 24px 16px 20px; gap: 14px; margin-bottom: 0; border-left: none; border-right: none; }
+  .pf-header-info { display: flex; flex-direction: column; align-items: center; }
+  /* Section titles: full bleed with side padding */
+  .form-section-title { margin: 24px 0 0; padding: 14px 16px 12px; border-bottom: 1px solid var(--border); border-top: 1px solid rgba(201,168,76,0.08); background: var(--dark-2); }
+  /* All form-fields get side padding */
+  .form-field { padding: 0 16px; margin-bottom: 18px; }
+  /* Grid: single column, no extra padding (fields already have it) */
+  .form-grid { grid-template-columns: 1fr; gap: 0; margin-bottom: 0; padding: 0; }
+  .form-grid .form-field { padding: 0 16px; }
+  /* Spacer between grid and next title */
+  .form-grid + .form-section-title { margin-top: 8px; }
+  /* Inputs: bigger touch targets, prevent iOS zoom (≥16px) */
+  .form-field input, .form-field textarea, .form-field select { font-size: 16px; padding: 14px 12px; }
+  .form-field label { font-size: 9px; margin-bottom: 6px; }
+  /* Readonly grids */
+  .readonly-grid { grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .readonly-section { padding: 14px 16px; margin: 0; border-left: none; border-right: none; border-radius: 0; }
+  /* Info masónica section wrapper */
+  .pf-readonly-wrap { padding: 0 16px 4px; margin-bottom: 0; }
+  /* Familiares list */
+  #familiares-list { padding: 0 16px; }
+  /* Bio field */
+  #pf-bio { margin: 0 16px; width: calc(100% - 32px); }
+  /* Sticky save bar */
+  .pf-save-bar { position: sticky; bottom: 0; z-index: 50; background: var(--dark); border-top: 1px solid var(--border); padding: 12px 16px; }
+  .pf-save-bar .btn-save { width: 100%; padding: 16px; font-size: 12px; text-align: center; }
 
   /* ── WA: single-panel slide system ── */
   .wa-layout {
@@ -876,9 +913,9 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
       <div class="edit-form" style="max-width:860px;">
 
         <!-- FOTO DE PERFIL -->
-        <div style="display:flex;align-items:center;gap:24px;margin-bottom:32px;padding:20px;background:var(--dark-3);border:1px solid var(--border);">
-          <img id="pf-avatar-preview" src="" alt="" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--border-bright);background:var(--dark-4);">
-          <div>
+        <div class="pf-header-card">
+          <img id="pf-avatar-preview" src="" alt="" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--border-bright);background:var(--dark-4);flex-shrink:0;">
+          <div class="pf-header-info">
             <div id="pf-display-name" style="font-family:'Cinzel',serif;font-size:18px;color:var(--cream);margin-bottom:6px;"></div>
             <div id="pf-display-role" style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dim);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:14px;"></div>
             <button onclick="document.getElementById('pf-avatar-file').click()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:8px 16px;cursor:pointer;">Cambiar foto</button>
@@ -887,17 +924,17 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         </div>
 
         <!-- ══ INFORMACIÓN MASÓNICA (solo lectura) ══ -->
-        <div style="margin-bottom:28px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
-            <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;">Información Masónica</span>
+        <div class="pf-readonly-wrap">
+          <div class="pf-ro-header">
+            <span class="pf-ro-label">Información Masónica</span>
             <span class="pf-lock-badge">🔒 Solo administración</span>
           </div>
           <div class="readonly-section" style="margin-bottom:16px;">
             <div class="readonly-grid" id="pf-readonly-masonico"></div>
           </div>
 
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-top:24px;padding-bottom:10px;border-bottom:1px solid var(--border);">
-            <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;">Corporación Elqui</span>
+          <div class="pf-ro-header" style="margin-top:20px;">
+            <span class="pf-ro-label">Corporación Elqui</span>
             <span class="pf-lock-badge">🔒 Solo administración</span>
           </div>
           <div class="readonly-section">
@@ -1000,7 +1037,9 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
           <div class="form-field"><label>Dirección</label><input type="text" id="pf-em2-direccion" placeholder="Dirección"></div>
         </div>
 
-        <button class="btn-save" onclick="saveProfile()">Guardar cambios</button>
+        <div class="pf-save-bar">
+          <button class="btn-save" onclick="saveProfile()">Guardar cambios</button>
+        </div>
       </div>
     </div>
 
