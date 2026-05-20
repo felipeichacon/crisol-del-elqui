@@ -796,7 +796,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <!-- ── PANEL DOCUMENTOS ── -->
       <div id="bibpanel-docs">
         <div id="bib-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:820px;">
-          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo documento</div>
+          <div id="bib-form-title" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo documento</div>
           <div class="form-grid" style="margin-bottom:16px;">
             <div class="field"><label>Nombre del recurso</label>
               <input type="text" id="bib-nombre" placeholder="Título o nombre del documento" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
@@ -853,8 +853,8 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <span id="bib-file-name" style="font-size:13px;color:var(--text-dim);margin-left:12px;">Ningún archivo seleccionado</span>
           </div>
           <div style="display:flex;gap:12px;">
-            <button class="btn-primary" onclick="saveBibDoc()">Guardar documento</button>
-            <button class="btn-secondary" onclick="document.getElementById('bib-form').style.display='none'">Cancelar</button>
+            <button id="bib-btn-save" class="btn-primary" onclick="saveBibDoc()">Guardar documento</button>
+            <button class="btn-secondary" onclick="cancelBibDocForm()">Cancelar</button>
           </div>
         </div>
         <!-- Controles -->
@@ -880,7 +880,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <!-- ── PANEL VIDEOS ── -->
       <div id="bibpanel-videos" style="display:none;">
         <div id="bib-video-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:32px;margin-bottom:28px;max-width:820px;">
-          <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo video</div>
+          <div id="bib-video-form-title" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo video</div>
           <div class="form-grid" style="margin-bottom:16px;">
             <div class="field"><label>Nombre del video</label>
               <input type="text" id="bibv-nombre" placeholder="Título del video" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
@@ -935,8 +935,8 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             </div>
           </div>
           <div style="display:flex;gap:12px;">
-            <button class="btn-primary" onclick="saveBibVideo()">Guardar video</button>
-            <button class="btn-secondary" onclick="document.getElementById('bib-video-form').style.display='none'">Cancelar</button>
+            <button id="bibv-btn-save" class="btn-primary" onclick="saveBibVideo()">Guardar video</button>
+            <button class="btn-secondary" onclick="cancelBibVideoForm()">Cancelar</button>
           </div>
         </div>
         <div style="display:flex;gap:12px;margin-bottom:24px;">
@@ -2602,15 +2602,111 @@ function bibSwitchTab(tab) {
   if (tab==='carpetas') loadCarpetas();
 }
 
-function abrirBibForm() {
-  document.getElementById('bib-form').style.display = 'block';
+let bibDocEditId   = null;
+let bibVideoEditId = null;
+let _bibVideos     = [];
+
+function abrirBibForm(doc = null) {
+  bibDocEditId = doc ? doc.id : null;
+
+  // Reset campos
+  ['bib-nombre','bib-autor','bib-desc','bib-editorial'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('bib-fecha-doc').value = '';
+  document.getElementById('bib-cat').value = '';
+  document.getElementById('bib-file-name').textContent = 'Ningún archivo seleccionado';
+  document.getElementById('bib-file-name').style.color = 'var(--text-dim)';
+  document.querySelectorAll('input[name="bib-rol"]').forEach(cb => cb.checked = cb.value === 'todos');
+  bibFileNew = null;
   loadCarpetasSel();
+
+  if (doc) {
+    document.getElementById('bib-form-title').textContent = 'Editar documento';
+    document.getElementById('bib-btn-save').textContent   = 'Guardar cambios';
+    document.getElementById('bib-nombre').value    = doc.nombre || '';
+    document.getElementById('bib-autor').value     = doc.autor_nombre || '';
+    document.getElementById('bib-desc').value      = doc.descripcion || '';
+    document.getElementById('bib-editorial').value = doc.editorial || '';
+    if (doc.fecha_doc) document.getElementById('bib-fecha-doc').value = doc.fecha_doc;
+    if (doc.categoria) document.getElementById('bib-cat').value = doc.categoria;
+    // Roles
+    const roles = doc.roles || (doc.role ? [doc.role] : []);
+    document.querySelectorAll('input[name="bib-rol"]').forEach(cb => cb.checked = roles.includes(cb.value));
+    // Carpeta: se asignará cuando loadCarpetasSel() complete
+    if (doc.carpeta_id) {
+      const trySetCarpeta = () => {
+        const sel = document.getElementById('bib-carpeta-sel');
+        if (sel) sel.value = doc.carpeta_id;
+      };
+      setTimeout(trySetCarpeta, 300);
+    }
+    // Nota de archivo existente
+    if (doc.url) {
+      document.getElementById('bib-file-name').textContent = 'Archivo actual guardado — selecciona otro para reemplazar';
+      document.getElementById('bib-file-name').style.color = 'var(--gold-dim)';
+    }
+  } else {
+    document.getElementById('bib-form-title').textContent = 'Nuevo documento';
+    document.getElementById('bib-btn-save').textContent   = 'Guardar documento';
+  }
+
+  document.getElementById('bib-form').style.display = 'block';
   document.getElementById('bib-form').scrollIntoView({behavior:'smooth'});
 }
 
-function abrirBibVideoForm() {
+function cancelBibDocForm() {
+  bibDocEditId = null;
+  bibFileNew   = null;
+  document.getElementById('bib-form').style.display = 'none';
+}
+
+function abrirBibVideoForm(video = null) {
+  bibVideoEditId = video ? video.id : null;
+  bibVideoThumb  = null;
+
+  // Reset campos
+  ['bibv-nombre','bibv-autor','bibv-desc','bibv-youtube-url','bibv-editorial'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('bibv-fecha-doc').value = '';
+  document.getElementById('bibv-cat').value = '';
+  document.getElementById('bibv-thumb-file-name').textContent = '';
+  const pi = document.getElementById('bibv-thumb-preview'); if (pi) { pi.src=''; pi.style.display='none'; }
+  const pw = document.getElementById('bibv-thumb-preview-wrap'); if (pw) pw.style.display='none';
+  document.querySelectorAll('input[name="bibv-rol"]').forEach(cb => cb.checked = cb.value === 'todos');
+
+  if (video) {
+    document.getElementById('bib-video-form-title').textContent = 'Editar video';
+    document.getElementById('bibv-btn-save').textContent        = 'Guardar cambios';
+    document.getElementById('bibv-nombre').value    = video.nombre || '';
+    document.getElementById('bibv-autor').value     = video.autor_nombre || '';
+    document.getElementById('bibv-desc').value      = video.descripcion || '';
+    document.getElementById('bibv-editorial').value = video.editorial || '';
+    document.getElementById('bibv-youtube-url').value = video.youtube_url || '';
+    if (video.youtube_url) previewYoutubeThumbnail(video.youtube_url);
+    if (video.fecha_doc) document.getElementById('bibv-fecha-doc').value = video.fecha_doc;
+    if (video.categoria) document.getElementById('bibv-cat').value = video.categoria;
+    const roles = video.roles || (video.role ? [video.role] : []);
+    document.querySelectorAll('input[name="bibv-rol"]').forEach(cb => cb.checked = roles.includes(cb.value));
+    // Thumbnail existente
+    if (video.thumbnail_url && !video.youtube_url) {
+      document.getElementById('bibv-thumb-file-name').textContent = 'Portada actual guardada — selecciona otra para reemplazar';
+      document.getElementById('bibv-thumb-file-name').style.color = 'var(--gold-dim)';
+    }
+  } else {
+    document.getElementById('bib-video-form-title').textContent = 'Nuevo video';
+    document.getElementById('bibv-btn-save').textContent        = 'Guardar video';
+  }
+
   document.getElementById('bib-video-form').style.display = 'block';
   document.getElementById('bib-video-form').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelBibVideoForm() {
+  bibVideoEditId = null;
+  bibVideoThumb  = null;
+  document.getElementById('bib-video-form').style.display = 'none';
 }
 
 function abrirCarpetaForm(carpeta=null) {
@@ -2662,66 +2758,72 @@ async function saveBibDoc() {
   const editorial= document.getElementById('bib-editorial')?.value.trim()||null;
   const desc     = document.getElementById('bib-desc').value.trim();
   const roles    = Array.from(document.querySelectorAll('input[name="bib-rol"]:checked')).map(cb=>cb.value);
-  if (!nombre)         { toast('El nombre es obligatorio','error'); return; }
-  if (!cat)            { toast('Selecciona una categoría','error'); return; }
-  if (!roles.length)   { toast('Selecciona al menos un rol','error'); return; }
-  if (!bibFileNew)     { toast('Selecciona un archivo','error'); return; }
+  if (!nombre)       { toast('El nombre es obligatorio','error'); return; }
+  if (!cat)          { toast('Selecciona una categoría','error'); return; }
+  if (!roles.length) { toast('Selecciona al menos un rol','error'); return; }
+  if (!bibDocEditId && !bibFileNew) { toast('Selecciona un archivo','error'); return; }
 
-  toast('Subiendo archivo…');
-  const ext     = bibFileNew.name.split('.').pop().toLowerCase();
-  const tipDoc  = ext==='pdf'?'pdf':['docx','doc'].includes(ext)?'docx':['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
-  const safeName= sanitizeFilename(bibFileNew.name);
-  // Usar primer rol como carpeta de storage, o 'docs' si es todos
-  const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
-  const path    = storeFolder + '/' + Date.now() + '-' + safeName;
-  const { error: upErr } = await sb.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
-  if (upErr) { toast('Error al subir: '+upErr.message,'error'); return; }
-  const { data: { publicUrl } } = sb.storage.from('Documents').getPublicUrl(path);
+  let publicUrl = null;
+  let tipDoc    = null;
 
-  const { error } = await sb.from('documents').insert({
+  if (bibFileNew) {
+    toast('Subiendo archivo…');
+    const ext     = bibFileNew.name.split('.').pop().toLowerCase();
+    tipDoc        = ext==='pdf'?'pdf':['docx','doc'].includes(ext)?'docx':['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
+    const safeName= sanitizeFilename(bibFileNew.name);
+    const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
+    const path    = storeFolder + '/' + Date.now() + '-' + safeName;
+    const { error: upErr } = await sb.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
+    if (upErr) { toast('Error al subir: '+upErr.message,'error'); return; }
+    ({ data: { publicUrl } } = sb.storage.from('Documents').getPublicUrl(path));
+  }
+
+  const payload = {
     nombre, descripcion: desc||null,
-    url: publicUrl,
-    tipo: tipDoc,
     categoria: cat||null,
     carpeta_id: carpetaId||null,
     autor_nombre: autor||null,
     editorial: editorial||null,
     fecha_doc: fechaDoc,
     roles,
-    role: roles[0], // compatibilidad con intranet antigua
-    autor_id: currentProfile.id
-  });
+    role: roles[0]
+  };
+  if (publicUrl) { payload.url = publicUrl; payload.tipo = tipDoc; }
+
+  let error;
+  if (bibDocEditId) {
+    ({ error } = await sb.from('documents').update(payload).eq('id', bibDocEditId));
+  } else {
+    payload.autor_id = currentProfile.id;
+    ({ error } = await sb.from('documents').insert(payload));
+  }
   if (error) { toast('Error al guardar: '+error.message,'error'); return; }
 
-  bibFileNew = null;
-  ['bib-nombre','bib-autor','bib-desc','bib-editorial'].forEach(id => document.getElementById(id) && (document.getElementById(id).value=''));
-  document.getElementById('bib-fecha-doc').value='';
-  document.getElementById('bib-cat').value='';
-  document.getElementById('bib-file-name').textContent='Ningún archivo seleccionado';
-  document.getElementById('bib-file-name').style.color='var(--text-dim)';
-  document.getElementById('bib-form').style.display='none';
-  document.querySelectorAll('input[name="bib-rol"]').forEach(cb=>cb.checked=cb.value==='todos');
-  toast('Documento guardado','success');
+  toast(bibDocEditId ? 'Documento actualizado' : 'Documento guardado','success');
+  cancelBibDocForm();
   loadDocuments();
 }
 
 // ── GUARDAR VIDEO ──
 async function saveBibVideo() {
-  const nombre  = document.getElementById('bibv-nombre').value.trim();
-  const autor   = document.getElementById('bibv-autor').value.trim();
-  const ytUrl   = document.getElementById('bibv-youtube-url').value.trim();
-  const cat     = document.getElementById('bibv-cat').value;
-  const fechaDoc= document.getElementById('bibv-fecha-doc').value||null;
+  const nombre   = document.getElementById('bibv-nombre').value.trim();
+  const autor    = document.getElementById('bibv-autor').value.trim();
+  const ytUrl    = document.getElementById('bibv-youtube-url').value.trim();
+  const cat      = document.getElementById('bibv-cat').value;
+  const fechaDoc = document.getElementById('bibv-fecha-doc').value||null;
   const editorial= document.getElementById('bibv-editorial')?.value.trim()||null;
-  const desc    = document.getElementById('bibv-desc').value.trim();
-  const roles   = Array.from(document.querySelectorAll('input[name="bibv-rol"]:checked')).map(cb=>cb.value);
+  const desc     = document.getElementById('bibv-desc').value.trim();
+  const roles    = Array.from(document.querySelectorAll('input[name="bibv-rol"]:checked')).map(cb=>cb.value);
 
-  if (!nombre) { toast('El nombre es obligatorio','error'); return; }
-  if (!ytUrl)  { toast('Ingresa la URL de YouTube','error'); return; }
+  if (!nombre)       { toast('El nombre es obligatorio','error'); return; }
+  if (!ytUrl)        { toast('Ingresa la URL de YouTube','error'); return; }
   if (!roles.length) { toast('Selecciona al menos un rol','error'); return; }
 
-  // Thumbnail: personalizado o automático de YouTube
-  let thumbUrl = null;
+  // Thumbnail: nuevo personalizado, o auto-YouTube
+  let thumbUrl = bibVideoEditId
+    ? (_bibVideos.find(v=>v.id===bibVideoEditId)?.thumbnail_url || null)
+    : null;
+
   if (bibVideoThumb) {
     toast('Subiendo portada…');
     const safeName = sanitizeFilename(bibVideoThumb.name);
@@ -2732,13 +2834,15 @@ async function saveBibVideo() {
       thumbUrl = publicUrl;
     }
   }
-  if (!thumbUrl) {
-    // Thumbnail automático de YouTube
+  // Si la URL de YouTube cambió (o no hay thumb personalizado guardado), recalcular automático
+  const existingVideo = bibVideoEditId ? _bibVideos.find(v=>v.id===bibVideoEditId) : null;
+  const ytChanged = !existingVideo || existingVideo.youtube_url !== ytUrl;
+  if (ytChanged || !thumbUrl) {
     const match = ytUrl.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
     if (match) thumbUrl = 'https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg';
   }
 
-  const { error } = await sb.from('documents').insert({
+  const payload = {
     nombre, descripcion: desc||null,
     youtube_url: ytUrl,
     thumbnail_url: thumbUrl,
@@ -2748,22 +2852,20 @@ async function saveBibVideo() {
     editorial: editorial||null,
     fecha_doc: fechaDoc,
     roles,
-    role: roles[0],
-    autor_id: currentProfile.id
-  });
+    role: roles[0]
+  };
+
+  let error;
+  if (bibVideoEditId) {
+    ({ error } = await sb.from('documents').update(payload).eq('id', bibVideoEditId));
+  } else {
+    payload.autor_id = currentProfile.id;
+    ({ error } = await sb.from('documents').insert(payload));
+  }
   if (error) { toast('Error: '+error.message,'error'); return; }
 
-  bibVideoThumb = null;
-  ['bibv-nombre','bibv-autor','bibv-desc','bibv-youtube-url','bibv-editorial'].forEach(id => {
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-  document.getElementById('bibv-fecha-doc').value='';
-  document.getElementById('bibv-cat').value='';
-  const pi=document.getElementById('bibv-thumb-preview'); if(pi){pi.style.display='none';}
-  const pw=document.getElementById('bibv-thumb-preview-wrap'); if(pw){pw.style.display='none';}
-  document.getElementById('bib-video-form').style.display='none';
-  document.querySelectorAll('input[name="bibv-rol"]').forEach(cb=>cb.checked=cb.value==='todos');
-  toast('Video guardado','success');
+  toast(bibVideoEditId ? 'Video actualizado' : 'Video guardado','success');
+  cancelBibVideoForm();
   loadBibVideos();
 }
 
@@ -2892,7 +2994,10 @@ function _admRenderContent(carpetaId) {
       <div>${catBadge}</div>
       <div class="col-meta">${fechaStr}</div>
       <div class="col-meta">${d.editorial||'—'}</div>
-      <div><button onclick="event.stopPropagation();deleteDoc('${d.id}')" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:4px 7px;cursor:pointer;">✕</button></div>`;
+      <div style="display:flex;gap:4px;">
+        <button onclick="event.stopPropagation();editarDoc('${d.id}')" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-dim);background:transparent;border:1px solid var(--border-bright);padding:4px 7px;cursor:pointer;">Editar</button>
+        <button onclick="event.stopPropagation();deleteDoc('${d.id}')" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:4px 7px;cursor:pointer;">✕</button>
+      </div>`;
     rows.appendChild(row);
   });
 
@@ -2903,13 +3008,14 @@ function _admRenderContent(carpetaId) {
 async function loadBibVideos() {
   const { data } = await sb.from('documents')
     .select('*').eq('tipo','youtube').order('created_at',{ascending:false});
+  _bibVideos = data || [];
   const grid = document.getElementById('bibv-grid');
   if (!grid) return;
   grid.innerHTML = '';
   (data||[]).forEach(v => {
     const thumb = v.thumbnail_url || (v.youtube_url && (() => {
-      const m = v.youtube_url.match(/(?:v=|youtu\.be\/)[\w-]{11}/);
-      return m ? 'https://img.youtube.com/vi/'+m[0].replace(/.*[\/=]/,'')+'/hqdefault.jpg' : '';
+      const m = v.youtube_url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+      return m ? 'https://img.youtube.com/vi/'+m[1]+'/hqdefault.jpg' : '';
     })()) || '';
     const card = document.createElement('div');
     card.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);overflow:hidden;';
@@ -2924,7 +3030,10 @@ async function loadBibVideos() {
         <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--cream);margin-bottom:4px;line-height:1.4;">${v.nombre}</div>
         ${v.autor_nombre?`<div style="font-size:12px;color:var(--text-dim);">Q∴H∴ ${v.autor_nombre}</div>`:''}
         <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${v.categoria||''}</div>
-        <button class="btn-danger" style="margin-top:10px;padding:5px 10px;font-size:9px;" onclick="deleteDoc('${v.id}')">Eliminar</button>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-secondary" style="padding:5px 10px;font-size:9px;" onclick="editarVideo('${v.id}')">Editar</button>
+          <button class="btn-danger"    style="padding:5px 10px;font-size:9px;" onclick="deleteDoc('${v.id}')">Eliminar</button>
+        </div>
       </div>`;
     grid.appendChild(card);
   });
@@ -2995,6 +3104,15 @@ async function deleteCarpeta(id) {
   await sb.from('doc_carpetas').delete().eq('id',id);
   toast('Carpeta eliminada');
   loadCarpetas();
+}
+
+function editarDoc(id) {
+  const doc = allDocs.find(d => d.id === id);
+  if (doc) { bibSwitchTab('docs'); abrirBibForm(doc); }
+}
+function editarVideo(id) {
+  const video = _bibVideos.find(v => v.id === id);
+  if (video) { bibSwitchTab('videos'); abrirBibVideoForm(video); }
 }
 
 async function deleteDoc(id) {
