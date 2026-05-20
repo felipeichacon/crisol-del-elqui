@@ -695,9 +695,22 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <audio id="radio-audio-preview" controls style="width:100%;height:36px;"></audio>
           </div>
         </div>
-        <div class="field" style="margin-bottom:24px;">
+        <div class="field" style="margin-bottom:16px;">
           <label>O pegar URL externa <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(Spotify, SoundCloud, etc. — opcional si subiste archivo)</span></label>
           <input type="url" id="radio-url" placeholder="https://…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+        </div>
+        <div class="field" style="margin-bottom:24px;">
+          <label>Visibilidad</label>
+          <div style="display:flex;gap:24px;margin-top:8px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);">
+              <input type="radio" name="radio-visibilidad" id="radio-vis-publico" value="publico" checked style="accent-color:var(--gold);width:16px;height:16px;">
+              <span>Público <span style="color:var(--text-dim);font-size:14px;">(aparece en la landing)</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--text);">
+              <input type="radio" name="radio-visibilidad" id="radio-vis-privado" value="privado" style="accent-color:var(--gold);width:16px;height:16px;">
+              <span>Privado <span style="color:var(--text-dim);font-size:14px;">(solo miembros de la intranet)</span></span>
+            </label>
+          </div>
         </div>
         <div style="display:flex;gap:12px;">
           <button class="btn-primary" onclick="saveEpisodio(true)">Publicar episodio</button>
@@ -3644,7 +3657,7 @@ async function loadEpisodios() {
   data.forEach(ep => {
     const div = document.createElement('div'); div.className='content-card';
     div.innerHTML=`
-      <div class=\"content-card-tag\">${ep.programa||'Radio Ágora'} · T${ep.temporada||1} · Ep.${String(ep.numero).padStart(2,'0')} · ${ep.publicado?'Publicado':'Borrador'}</div>
+      <div class=\"content-card-tag\">${ep.programa||'Radio Ágora'} · T${ep.temporada||1} · Ep.${String(ep.numero).padStart(2,'0')} · ${ep.publicado?'Publicado':'Borrador'} · ${ep.visibilidad==='privado'?'🔒 Privado':'🌐 Público'}</div>
       <div class=\"content-card-title\">${ep.titulo}</div>
       <div class=\"content-card-meta\">${ep.duracion||'—'} · ${ep.categoria||'—'}</div>
       <div class=\"content-card-actions\" style=\"margin-top:12px;\">
@@ -3698,7 +3711,8 @@ async function saveEpisodio(publish) {
     temporada:            parseInt(document.getElementById('radio-temporada').value)||1,
     descripcion_programa: document.getElementById('radio-desc-programa').value.trim()||null,
     autor_id:             currentProfile.id,
-    publicado:            publish
+    publicado:            publish,
+    visibilidad:          document.querySelector('input[name="radio-visibilidad"]:checked')?.value || 'publico'
   });
 
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
