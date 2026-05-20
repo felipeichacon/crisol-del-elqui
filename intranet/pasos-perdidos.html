@@ -164,35 +164,49 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .gallery-lightbox img { max-width: 96vw; max-height: 92vh; object-fit: contain; border-radius: 3px; display: block; }
 .gallery-lightbox-close { position: absolute; top: 14px; right: 18px; font-size: 36px; color: rgba(255,255,255,0.85); cursor: pointer; line-height: 1; background: none; border: none; padding: 4px 8px; }
 
-/* ── MODULE: RADIO ÁGORA ── */
-.radio-layout { display: grid; grid-template-columns: 1fr 360px; gap: 0; padding: 0 48px 48px; max-width: 1100px; }
-.radio-episode-list { display: flex; flex-direction: column; gap: 2px; padding-right: 32px; }
-.radio-ep-item { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: var(--dark-3); border: 1px solid var(--border); cursor: pointer; transition: border-color 0.2s, background 0.15s; }
-.radio-ep-item:hover, .radio-ep-item.active { border-color: var(--border-bright); background: var(--dark-4); }
-.radio-ep-item.active { border-left: 3px solid var(--gold); }
-.radio-ep-num { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold-dim); min-width: 36px; text-align: center; }
-.radio-ep-info { flex: 1; min-width: 0; }
-.radio-ep-prog { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 4px; }
-.radio-ep-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.radio-ep-meta { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
-.radio-ep-lock { font-size: 11px; color: var(--gold-dim); flex-shrink: 0; }
-.radio-player { position: sticky; top: 80px; background: var(--dark-3); border: 1px solid var(--border); padding: 28px 24px; height: fit-content; }
-.radio-player-label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.35em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 16px; }
-.radio-player-prog { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
-.radio-player-title { font-family: 'Cinzel', serif; font-size: 17px; color: var(--cream); line-height: 1.4; margin-bottom: 6px; }
-.radio-player-desc { font-size: 13px; color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
-.radio-player-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.radio-play-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--gold); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s, transform 0.15s; }
-.radio-play-btn:hover { background: var(--gold-light); transform: scale(1.06); }
-.radio-play-btn svg { color: var(--dark); }
-.radio-progress-wrap { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.radio-progress-bar { width: 100%; height: 4px; background: rgba(201,168,76,0.2); border-radius: 2px; cursor: pointer; position: relative; }
-.radio-progress-fill { height: 100%; background: var(--gold); border-radius: 2px; width: 0%; transition: width 0.3s linear; pointer-events: none; }
-.radio-time-row { display: flex; justify-content: space-between; font-family: 'Cinzel', serif; font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; }
+/* ── MODULE: RADIO ÁGORA — Buzzsprout style ── */
+.radio-layout { display: grid; grid-template-columns: 1fr 380px; gap: 0; padding: 0 48px 48px; max-width: 1140px; align-items: start; }
+.radio-episode-list { display: flex; flex-direction: column; gap: 0; padding-right: 32px; }
+.radio-prog-header { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.35em; color: var(--gold); text-transform: uppercase; padding: 20px 16px 8px; border-bottom: 1px solid var(--border); }
+.radio-ep-item { display: flex; align-items: center; gap: 0; padding: 0; background: var(--dark-3); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; overflow: hidden; }
+.radio-ep-item:first-of-type { border-top: 1px solid var(--border); }
+.radio-ep-item:hover { background: var(--dark-4); }
+.radio-ep-item.active { background: var(--dark-4); box-shadow: inset 3px 0 0 var(--gold); }
+.radio-ep-play-col { width: 52px; min-width: 52px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.radio-ep-play-ico { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--border-bright); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, background 0.2s; flex-shrink: 0; }
+.radio-ep-item:hover .radio-ep-play-ico, .radio-ep-item.active .radio-ep-play-ico { border-color: var(--gold); background: rgba(201,168,76,0.12); }
+.radio-ep-item.active.playing .radio-ep-play-ico { background: var(--gold); border-color: var(--gold); }
+.radio-ep-item.active.playing .radio-ep-play-ico svg { color: var(--dark); }
+.radio-ep-body { flex: 1; min-width: 0; padding: 14px 14px 14px 0; }
+.radio-ep-num-label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.2em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 4px; }
+.radio-ep-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.radio-ep-meta { font-size: 12px; color: var(--text-dim); }
+.radio-ep-lock { padding: 0 14px 0 0; font-size: 12px; color: var(--gold-dim); flex-shrink: 0; }
+.radio-player { position: sticky; top: 72px; background: var(--dark-2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; height: fit-content; }
+.rap-show-bar { background: var(--gold); padding: 6px 16px; display: flex; align-items: center; gap: 8px; }
+.rap-show-name { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dark); font-weight: 600; }
+.rap-body { padding: 20px 20px 16px; }
+.rap-ep-prog { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 6px; }
+.rap-ep-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--cream); line-height: 1.35; margin-bottom: 6px; }
+.rap-ep-desc { font-size: 13px; color: var(--text-dim); line-height: 1.65; margin-bottom: 18px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+.rap-waveform { display: flex; align-items: flex-end; gap: 2px; height: 52px; cursor: pointer; margin-bottom: 8px; padding: 0 2px; user-select: none; }
+.rap-wf-bar { flex: 1; border-radius: 2px 2px 0 0; background: rgba(201,168,76,0.18); transition: background 0.08s; min-width: 2px; max-width: 6px; }
+.rap-wf-bar.played { background: var(--gold); }
+.rap-wf-bar.current { background: var(--gold-light); }
+.rap-time-row { display: flex; justify-content: space-between; font-family: 'Cinzel', serif; font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; margin-bottom: 16px; }
+.rap-controls { display: flex; align-items: center; justify-content: center; gap: 8px; padding-bottom: 4px; }
+.rap-btn-skip { background: transparent; border: none; cursor: pointer; color: var(--text-dim); padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: color 0.15s, background 0.15s; }
+.rap-btn-skip:hover { color: var(--gold); background: rgba(201,168,76,0.08); }
+.rap-play-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--gold); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, transform 0.15s; flex-shrink: 0; }
+.rap-play-btn:hover { background: var(--gold-light); transform: scale(1.07); }
+.rap-play-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+.rap-play-btn svg { color: var(--dark); display: block; }
+.rap-speed-btn { background: transparent; border: 1.5px solid var(--border-bright); color: var(--gold-dim); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.05em; padding: 5px 9px; cursor: pointer; border-radius: 3px; transition: color 0.15s, border-color 0.15s; margin-left: 4px; }
+.rap-speed-btn:hover { color: var(--gold); border-color: var(--gold); }
 @media (max-width: 860px) {
   .radio-layout { grid-template-columns: 1fr; padding: 0 0 80px; }
   .radio-episode-list { padding-right: 0; }
-  .radio-player { position: static; margin-top: 0; border-top: none; order: -1; }
+  .radio-player { position: static; border-radius: 0; order: -1; border-left: none; border-right: none; border-top: none; }
 }
 
 /* ── MODULE: BLOG ── */
@@ -839,24 +853,32 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
       </div>
       <div class="radio-layout">
         <div class="radio-episode-list" id="radio-agora-list"></div>
-        <div class="radio-player" id="radio-agora-player">
-          <div class="radio-player-label">Reproduciendo ahora</div>
-          <div class="radio-player-prog" id="rap-prog">—</div>
-          <div class="radio-player-title" id="rap-title">Selecciona un episodio</div>
-          <div class="radio-player-desc" id="rap-desc"></div>
-          <audio id="rap-audio" preload="none" style="display:none"></audio>
-          <div class="radio-player-controls">
-            <button class="radio-play-btn" id="rap-play-btn" onclick="rapTogglePlay()" disabled>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-            </button>
-            <div class="radio-progress-wrap">
-              <div class="radio-progress-bar" id="rap-bar" onclick="rapScrub(event)">
-                <div class="radio-progress-fill" id="rap-fill"></div>
-              </div>
-              <div class="radio-time-row">
-                <span id="rap-cur">0:00</span>
-                <span id="rap-dur">0:00</span>
-              </div>
+        <div class="radio-player">
+          <div class="rap-show-bar">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+            <span class="rap-show-name">Radio Ágora</span>
+          </div>
+          <div class="rap-body">
+            <div class="rap-ep-prog" id="rap-prog">Logia Crisol del Elqui N°189</div>
+            <div class="rap-ep-title" id="rap-title">Selecciona un episodio</div>
+            <div class="rap-ep-desc" id="rap-desc"></div>
+            <audio id="rap-audio" preload="none" style="display:none"></audio>
+            <div class="rap-waveform" id="rap-waveform" onclick="rapWaveformClick(event)"></div>
+            <div class="rap-time-row">
+              <span id="rap-cur">0:00</span>
+              <span id="rap-dur">0:00</span>
+            </div>
+            <div class="rap-controls">
+              <button class="rap-btn-skip" onclick="rapSkip(-15)" title="−15 segundos">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><text x="7.5" y="16" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" font-weight="bold">15</text></svg>
+              </button>
+              <button class="rap-play-btn" id="rap-play-btn" onclick="rapTogglePlay()" disabled>
+                <svg id="rap-play-ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+              </button>
+              <button class="rap-btn-skip" onclick="rapSkip(30)" title="+30 segundos">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><text x="8" y="16" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" font-weight="bold">30</text></svg>
+              </button>
+              <button class="rap-speed-btn" id="rap-speed-btn" onclick="rapCycleSpeed()">1×</button>
             </div>
           </div>
         </div>
@@ -1955,14 +1977,27 @@ async function savePost(publish) {
   loadPosts();
 }
 
-// ── RADIO ÁGORA (intranet) ──
-let _rapEpisodios = [];
-let _rapPlaying = false;
+// ── RADIO ÁGORA (intranet) — Buzzsprout style ──
+let _rapEpisodios  = [];
+let _rapPlaying    = false;
+let _rapSpeeds     = [1, 1.5, 2];
+let _rapSpeedIdx   = 0;
+let _rapCurrentEp  = null;
 
 function rapFmt(s) {
   if (!isFinite(s) || s < 0) return '0:00';
   const m = Math.floor(s / 60), ss = Math.floor(s % 60);
   return m + ':' + String(ss).padStart(2, '0');
+}
+
+function rapGenWaveform(seed) {
+  let x = seed;
+  const bars = [];
+  for (let i = 0; i < 60; i++) {
+    x = (x * 1664525 + 1013904223) & 0xffffffff;
+    bars.push(20 + Math.abs((x >>> 1) % 80));
+  }
+  return bars;
 }
 
 async function loadRadioAgoraIntranet() {
@@ -1973,7 +2008,7 @@ async function loadRadioAgoraIntranet() {
     .select('*')
     .eq('publicado', true)
     .order('temporada', { ascending: true })
-    .order('numero', { ascending: true });
+    .order('numero',   { ascending: true });
 
   _rapEpisodios = data || [];
   list.innerHTML = '';
@@ -1994,19 +2029,24 @@ async function loadRadioAgoraIntranet() {
   Object.entries(grupos).forEach(([prog, eps]) => {
     if (Object.keys(grupos).length > 1) {
       const header = document.createElement('div');
-      header.style.cssText = 'font-family:"Cinzel",serif;font-size:10px;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;padding:18px 18px 8px;';
+      header.className = 'radio-prog-header';
       header.textContent = prog;
       list.appendChild(header);
     }
     eps.forEach(ep => {
-      const div = document.createElement('div');
-      div.className = 'radio-ep-item';
+      const div  = document.createElement('div');
+      div.className  = 'radio-ep-item';
       div.dataset.id = ep.id;
-      const lock = ep.visibilidad === 'privado' ? '<span class="radio-ep-lock" title="Solo intranet">🔒</span>' : '';
+      const lock = ep.visibilidad === 'privado'
+        ? '<span class="radio-ep-lock" title="Solo intranet">🔒</span>' : '';
       div.innerHTML = `
-        <div class="radio-ep-num">T${ep.temporada||1}·${String(ep.numero).padStart(2,'0')}</div>
-        <div class="radio-ep-info">
-          <div class="radio-ep-prog">${ep.programa||'Radio Ágora'}</div>
+        <div class="radio-ep-play-col">
+          <div class="radio-ep-play-ico">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+          </div>
+        </div>
+        <div class="radio-ep-body">
+          <div class="radio-ep-num-label">T${ep.temporada||1} · Ep. ${String(ep.numero).padStart(2,'0')}</div>
           <div class="radio-ep-title">${ep.titulo}</div>
           <div class="radio-ep-meta">${ep.duracion||''} ${ep.categoria ? '· '+ep.categoria : ''}</div>
         </div>
@@ -2019,8 +2059,38 @@ async function loadRadioAgoraIntranet() {
   if (_rapEpisodios[0]) rapSelectEpisodio(_rapEpisodios[0]);
 }
 
+function rapBuildWaveform(ep) {
+  const container = document.getElementById('rap-waveform');
+  if (!container) return;
+  const seed    = ep ? (ep.id || 1) * 7919 + (ep.numero || 1) * 31 : 42;
+  const heights = rapGenWaveform(seed);
+  container.innerHTML = '';
+  heights.forEach(h => {
+    const bar = document.createElement('div');
+    bar.className    = 'rap-wf-bar';
+    bar.style.height = h + '%';
+    container.appendChild(bar);
+  });
+}
+
+function rapUpdateWaveform() {
+  const audio     = document.getElementById('rap-audio');
+  const container = document.getElementById('rap-waveform');
+  if (!container || !audio.duration) return;
+  const bars  = container.querySelectorAll('.rap-wf-bar');
+  const pct   = audio.currentTime / audio.duration;
+  const total = bars.length;
+  bars.forEach((bar, i) => {
+    const pos = i / total;
+    bar.classList.remove('played', 'current');
+    if (pos < pct - 1 / total) bar.classList.add('played');
+    else if (pos <= pct)       bar.classList.add('current');
+  });
+}
+
 function rapSelectEpisodio(ep) {
-  document.querySelectorAll('.radio-ep-item').forEach(el => el.classList.remove('active'));
+  _rapCurrentEp = ep;
+  document.querySelectorAll('.radio-ep-item').forEach(el => el.classList.remove('active', 'playing'));
   const row = document.querySelector(`.radio-ep-item[data-id="${ep.id}"]`);
   if (row) row.classList.add('active');
 
@@ -2031,48 +2101,71 @@ function rapSelectEpisodio(ep) {
   const audio = document.getElementById('rap-audio');
   const btn   = document.getElementById('rap-play-btn');
   rapStop();
+  rapBuildWaveform(ep);
+
+  document.getElementById('rap-cur').textContent = '0:00';
+  document.getElementById('rap-dur').textContent = ep.duracion || '0:00';
 
   if (ep.audio_url) {
-    audio.src  = ep.audio_url;
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>';
+    audio.src          = ep.audio_url;
+    audio.playbackRate = _rapSpeeds[_rapSpeedIdx];
+    btn.disabled       = false;
   } else {
-    audio.src = '';
+    audio.src    = '';
     btn.disabled = true;
-    document.getElementById('rap-fill').style.width = '0%';
-    document.getElementById('rap-cur').textContent  = '0:00';
-    document.getElementById('rap-dur').textContent  = '0:00';
   }
 }
 
 function rapStop() {
   const audio = document.getElementById('rap-audio');
-  audio.pause();
+  if (!audio.paused) audio.pause();
   _rapPlaying = false;
-  document.getElementById('rap-play-btn').innerHTML =
-    '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>';
+  const ico = document.getElementById('rap-play-ico');
+  if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+  document.querySelectorAll('.radio-ep-item').forEach(el => el.classList.remove('playing'));
 }
 
 function rapTogglePlay() {
   const audio = document.getElementById('rap-audio');
   const btn   = document.getElementById('rap-play-btn');
-  if (!audio.src) return;
+  if (!audio.src || btn.disabled) return;
+  const ico = document.getElementById('rap-play-ico');
+  const row = _rapCurrentEp
+    ? document.querySelector(`.radio-ep-item[data-id="${_rapCurrentEp.id}"]`) : null;
   if (_rapPlaying) {
     audio.pause();
     _rapPlaying = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>';
+    if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+    if (row) row.classList.remove('playing');
   } else {
     audio.play();
     _rapPlaying = true;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+    if (ico) ico.innerHTML = '<rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/>';
+    if (row) row.classList.add('active', 'playing');
   }
 }
 
-function rapScrub(e) {
+function rapSkip(seconds) {
   const audio = document.getElementById('rap-audio');
-  if (!audio.duration) return;
-  const rect = document.getElementById('rap-bar').getBoundingClientRect();
-  const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  if (!audio.src || !audio.duration) return;
+  audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + seconds));
+}
+
+function rapCycleSpeed() {
+  _rapSpeedIdx = (_rapSpeedIdx + 1) % _rapSpeeds.length;
+  const speed  = _rapSpeeds[_rapSpeedIdx];
+  const audio  = document.getElementById('rap-audio');
+  if (audio) audio.playbackRate = speed;
+  const btn = document.getElementById('rap-speed-btn');
+  if (btn)  btn.textContent = speed + '×';
+}
+
+function rapWaveformClick(event) {
+  const audio     = document.getElementById('rap-audio');
+  if (!audio.src || !audio.duration) return;
+  const container = document.getElementById('rap-waveform');
+  const rect      = container.getBoundingClientRect();
+  const pct       = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
   audio.currentTime = pct * audio.duration;
 }
 
@@ -2081,18 +2174,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!audio) return;
   audio.addEventListener('timeupdate', () => {
     if (!audio.duration) return;
-    document.getElementById('rap-fill').style.width = (audio.currentTime / audio.duration * 100) + '%';
-    document.getElementById('rap-cur').textContent  = rapFmt(audio.currentTime);
-    document.getElementById('rap-dur').textContent  = rapFmt(audio.duration);
-  });
-  audio.addEventListener('ended', () => {
-    _rapPlaying = false;
-    document.getElementById('rap-play-btn').innerHTML =
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>';
-    document.getElementById('rap-fill').style.width = '0%';
+    document.getElementById('rap-cur').textContent = rapFmt(audio.currentTime);
+    document.getElementById('rap-dur').textContent = rapFmt(audio.duration);
+    rapUpdateWaveform();
   });
   audio.addEventListener('loadedmetadata', () => {
     document.getElementById('rap-dur').textContent = rapFmt(audio.duration);
+  });
+  audio.addEventListener('ended', () => {
+    _rapPlaying = false;
+    const ico = document.getElementById('rap-play-ico');
+    if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+    document.querySelectorAll('.radio-ep-item').forEach(el => el.classList.remove('playing'));
+    const bars = document.querySelectorAll('#rap-waveform .rap-wf-bar');
+    bars.forEach(bar => { bar.classList.remove('current'); bar.classList.add('played'); });
   });
 });
 
