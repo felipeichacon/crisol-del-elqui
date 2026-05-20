@@ -233,7 +233,30 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .section-divider { height: 1px; background: var(--border); margin: 24px 0; }
 
 /* ── MODULE: BIBLIOTECA ── */
-.docs-filters { display: flex; gap: 12px; flex-wrap: wrap; padding: 0 48px 24px; }
+.bib-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 48px 16px; }
+.bib-search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+.bib-search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-dim); }
+.bib-search { width: 100%; background: var(--dark-3); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 16px; padding: 8px 12px 8px 34px; outline: none; box-sizing: border-box; transition: border-color 0.2s; }
+.bib-search:focus { border-color: var(--gold-dim); }
+.bib-sort-sel { background: var(--dark-3); border: 1px solid var(--border); color: var(--text-dim); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.1em; padding: 9px 12px; outline: none; cursor: pointer; transition: border-color 0.2s; }
+.bib-sort-sel:focus, .bib-sort-sel:hover { border-color: var(--gold-dim); color: var(--text); }
+.bib-sort-sel option { background: var(--dark-3); }
+.bib-adv-toggle { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-dim); background: transparent; border: 1px solid var(--border); padding: 9px 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.25s; white-space: nowrap; }
+.bib-adv-toggle:hover, .bib-adv-toggle.active { color: var(--gold); border-color: var(--border-bright); background: rgba(201,168,76,0.06); }
+.bib-adv-count { background: var(--gold); color: var(--dark); font-size: 9px; font-family: 'Cinzel', serif; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; display: none; }
+.bib-adv-panel { display: none; background: var(--dark-3); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 18px 48px 20px; margin-bottom: 4px; }
+.bib-adv-row { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+.bib-adv-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 130px; }
+.bib-adv-field label { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; color: var(--gold-dim); text-transform: uppercase; }
+.bib-adv-field input, .bib-adv-field select { background: var(--dark-4); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 15px; padding: 7px 11px; outline: none; width: 100%; transition: border-color 0.2s; }
+.bib-adv-field input:focus, .bib-adv-field select:focus { border-color: var(--gold-dim); }
+.bib-adv-field input::placeholder { color: var(--text-dim); }
+.bib-adv-field select option { background: var(--dark-3); }
+.bib-adv-year-wrap { display: flex; gap: 8px; align-items: center; }
+.bib-adv-year-wrap input { width: 78px !important; flex-shrink: 0; }
+.bib-clear-btn { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); background: transparent; border: 1px solid var(--border); padding: 9px 16px; cursor: pointer; transition: all 0.2s; white-space: nowrap; align-self: flex-end; }
+.bib-clear-btn:hover { color: var(--gold); border-color: var(--border-bright); }
+.docs-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .filter-btn { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); background: transparent; border: 1px solid var(--border); padding: 8px 16px; cursor: pointer; transition: all 0.3s; }
 .filter-btn.active, .filter-btn:hover { color: var(--gold); border-color: var(--border-bright); background: rgba(201,168,76,0.06); }
 .docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2px; padding: 0 48px 48px; }
@@ -649,12 +672,63 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <h2>Biblioteca</h2>
         <div class="gold-line"></div>
       </div>
-      <div class="docs-filters">
-        <button class="filter-btn active" onclick="filterDocs('todos',this)">Todos</button>
-        <button class="filter-btn" onclick="filterDocs('pdf',this)">PDF</button>
-        <button class="filter-btn" onclick="filterDocs('docx',this)">Word</button>
-        <button class="filter-btn" onclick="filterDocs('jpg',this)">Imágenes</button>
-        <button class="filter-btn" onclick="filterDocs('youtube',this)">Videos</button>
+      <div class="bib-toolbar">
+        <div class="bib-search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" class="bib-search" id="bib-search" placeholder="Buscar por nombre, autor, editorial…" oninput="bibSearch(this.value)">
+        </div>
+        <select class="bib-sort-sel" id="bib-sort" onchange="bibSort(this.value)" title="Ordenar por">
+          <option value="nombre-asc">Nombre A→Z</option>
+          <option value="nombre-desc">Nombre Z→A</option>
+          <option value="fecha-desc">Fecha más reciente</option>
+          <option value="fecha-asc">Fecha más antigua</option>
+          <option value="autor-asc">Autor A→Z</option>
+        </select>
+        <button class="bib-adv-toggle" id="bib-adv-toggle" onclick="bibToggleAdv()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filtros <span class="bib-adv-count" id="bib-adv-count"></span>
+        </button>
+        <div class="docs-filters">
+          <button class="filter-btn active" onclick="filterDocs('todos',this)">Todos</button>
+          <button class="filter-btn" onclick="filterDocs('pdf',this)">PDF</button>
+          <button class="filter-btn" onclick="filterDocs('docx',this)">Word</button>
+          <button class="filter-btn" onclick="filterDocs('jpg',this)">Imágenes</button>
+          <button class="filter-btn" onclick="filterDocs('youtube',this)">Videos</button>
+        </div>
+      </div>
+      <div id="bib-adv-panel" class="bib-adv-panel">
+        <div class="bib-adv-row">
+          <div class="bib-adv-field">
+            <label>Autor</label>
+            <input type="text" id="bib-adv-autor" placeholder="Nombre del autor…" oninput="bibApplyAdv()">
+          </div>
+          <div class="bib-adv-field">
+            <label>Editorial / Procedencia</label>
+            <input type="text" id="bib-adv-editorial" placeholder="Ej: Gran Logia de Chile…" oninput="bibApplyAdv()">
+          </div>
+          <div class="bib-adv-field">
+            <label>Categoría</label>
+            <select id="bib-adv-cat" onchange="bibApplyAdv()">
+              <option value="">Todas</option>
+              <option>Planchas</option>
+              <option>Filosofía</option>
+              <option>Masonería</option>
+              <option>Literatura</option>
+              <option>Trazados de Cámara</option>
+              <option>Actas de Tenidas</option>
+              <option>Fondo General</option>
+            </select>
+          </div>
+          <div class="bib-adv-field" style="max-width:220px;">
+            <label>Año</label>
+            <div class="bib-adv-year-wrap">
+              <input type="number" id="bib-adv-desde" placeholder="Desde" min="1800" max="2099" oninput="bibApplyAdv()">
+              <span style="color:var(--text-dim);flex-shrink:0;">—</span>
+              <input type="number" id="bib-adv-hasta" placeholder="Hasta" min="1800" max="2099" oninput="bibApplyAdv()">
+            </div>
+          </div>
+          <button class="bib-clear-btn" onclick="bibClearFilters()">Limpiar filtros</button>
+        </div>
       </div>
       <div class="explorer-wrap" id="docs-explorer">
         <div class="explorer-tree" id="explorer-tree"></div>
@@ -1895,8 +1969,81 @@ function openProfileModal(p) {
 // ── EXPLORADOR DE BIBLIOTECA ──
 let _explorerDocs     = [];
 let _explorerCarpetas = [];
-let _explorerCurrent  = null; // null = raíz
+let _explorerCurrent  = null;
 let _explorerFilter   = 'todos';
+let _explorerSearch   = '';
+let _explorerSort     = 'nombre-asc';
+let _explorerAdv      = { autor:'', editorial:'', categoria:'', desde:'', hasta:'' };
+let _explorerAdvOpen  = false;
+
+function bibSearch(q) {
+  _explorerSearch = q.trim().toLowerCase();
+  renderExplorerContent(_explorerCurrent);
+}
+function bibSort(val) {
+  _explorerSort = val;
+  renderExplorerContent(_explorerCurrent);
+}
+function bibToggleAdv() {
+  _explorerAdvOpen = !_explorerAdvOpen;
+  document.getElementById('bib-adv-panel').style.display = _explorerAdvOpen ? 'block' : 'none';
+  document.getElementById('bib-adv-toggle').classList.toggle('active', _explorerAdvOpen);
+}
+function bibApplyAdv() {
+  _explorerAdv = {
+    autor:     (document.getElementById('bib-adv-autor')?.value    || '').trim().toLowerCase(),
+    editorial: (document.getElementById('bib-adv-editorial')?.value || '').trim().toLowerCase(),
+    categoria: (document.getElementById('bib-adv-cat')?.value       || ''),
+    desde:     (document.getElementById('bib-adv-desde')?.value     || ''),
+    hasta:     (document.getElementById('bib-adv-hasta')?.value     || ''),
+  };
+  const n = Object.values(_explorerAdv).filter(v => v !== '').length;
+  const badge = document.getElementById('bib-adv-count');
+  if (badge) { badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+  renderExplorerContent(_explorerCurrent);
+}
+function bibClearFilters() {
+  _explorerSearch = '';
+  _explorerAdv    = { autor:'', editorial:'', categoria:'', desde:'', hasta:'' };
+  const si = document.getElementById('bib-search'); if (si) si.value = '';
+  ['bib-adv-autor','bib-adv-editorial'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  const cat = document.getElementById('bib-adv-cat'); if (cat) cat.value = '';
+  ['bib-adv-desde','bib-adv-hasta'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  const badge = document.getElementById('bib-adv-count'); if (badge) { badge.textContent='0'; badge.style.display='none'; }
+  renderExplorerContent(_explorerCurrent);
+}
+function _bibMatchesFilters(d) {
+  if (_explorerFilter !== 'todos') {
+    if (_explorerFilter === 'youtube') { if (!(d.tipo === 'youtube' || d.youtube_url)) return false; }
+    else { if (d.tipo !== _explorerFilter) return false; }
+  }
+  if (_explorerSearch) {
+    const hay = [d.nombre, d.descripcion, d.autor_nombre, d.editorial, d.categoria].filter(Boolean).join(' ').toLowerCase();
+    if (!hay.includes(_explorerSearch)) return false;
+  }
+  const a = _explorerAdv;
+  if (a.autor     && !(d.autor_nombre||'').toLowerCase().includes(a.autor))     return false;
+  if (a.editorial && !(d.editorial   ||'').toLowerCase().includes(a.editorial)) return false;
+  if (a.categoria && d.categoria !== a.categoria)                                return false;
+  if (a.desde || a.hasta) {
+    const anio = d.fecha_doc ? parseInt(d.fecha_doc.substring(0,4)) : null;
+    if (!anio) return false;
+    if (a.desde && anio < parseInt(a.desde)) return false;
+    if (a.hasta && anio > parseInt(a.hasta)) return false;
+  }
+  return true;
+}
+function _bibSortDocs(docs) {
+  return [...docs].sort((a, b) => {
+    switch (_explorerSort) {
+      case 'nombre-desc': return (b.nombre||'').localeCompare(a.nombre||'', 'es');
+      case 'fecha-desc':  return (b.fecha_doc||'0000').localeCompare(a.fecha_doc||'0000');
+      case 'fecha-asc':   return (a.fecha_doc||'9999').localeCompare(b.fecha_doc||'9999');
+      case 'autor-asc':   return (a.autor_nombre||'').localeCompare(b.autor_nombre||'', 'es');
+      default:            return (a.nombre||'').localeCompare(b.nombre||'', 'es');
+    }
+  });
+}
 
 async function loadDocuments() {
   const rol = currentProfile.role;
@@ -1936,7 +2083,6 @@ function filterDocs(tipo, btn) {
   _explorerFilter = tipo;
   renderExplorerContent(_explorerCurrent);
 }
-
 function renderExplorer() {
   renderExplorerTree();
   renderExplorerContent(null);
@@ -2015,20 +2161,18 @@ function renderExplorerContent(carpetaId) {
   if (!content) return;
 
   const icons = {pdf:'📄', docx:'📝', jpg:'🖼️', png:'🖼️', youtube:'▶', otro:'📁'};
+  const isSearchingGlobally = _explorerSearch ||
+    _explorerAdv.autor || _explorerAdv.editorial || _explorerAdv.categoria ||
+    _explorerAdv.desde || _explorerAdv.hasta;
 
-  // Subcarpetas en esta ubicación
-  const subcarpetas = _explorerCarpetas.filter(c => (carpetaId === null ? !c.parent_id : c.parent_id === carpetaId));
+  const subcarpetas = isSearchingGlobally ? [] :
+    _explorerCarpetas.filter(c => carpetaId === null ? !c.parent_id : c.parent_id === carpetaId);
 
-  // Documentos en esta carpeta, con filtro de tipo
-  const docsAqui = _explorerDocs.filter(d => {
-    const enCarpeta = carpetaId === null ? !d.carpeta_id : d.carpeta_id === carpetaId;
-    if (!enCarpeta) return false;
-    if (_explorerFilter === 'todos') return true;
-    if (_explorerFilter === 'youtube') return d.tipo === 'youtube' || !!d.youtube_url;
-    return d.tipo === _explorerFilter;
-  });
+  const docsBase = isSearchingGlobally
+    ? _explorerDocs
+    : _explorerDocs.filter(d => carpetaId === null ? !d.carpeta_id : d.carpeta_id === carpetaId);
+  const docsAqui = _bibSortDocs(docsBase.filter(_bibMatchesFilters));
 
-  // Breadcrumb
   const path = getBreadcrumb(carpetaId);
   let breadcrumbHtml = `<span class="breadcrumb-item${carpetaId===null?' current':''}" onclick="navigateTo(null)">Biblioteca</span>`;
   path.forEach((c, i) => {
@@ -2037,24 +2181,23 @@ function renderExplorerContent(carpetaId) {
   });
 
   const totalItems = subcarpetas.length + docsAqui.length;
+  const sortLabels = { 'nombre-asc':'Nombre A→Z','nombre-desc':'Nombre Z→A','fecha-desc':'Fecha reciente','fecha-asc':'Fecha antigua','autor-asc':'Autor A→Z' };
+  const headerLabel = isSearchingGlobally
+    ? `<span class="breadcrumb-item current">Resultados en toda la biblioteca</span>`
+    : breadcrumbHtml;
 
   content.innerHTML = `
-    <div class="breadcrumb">${breadcrumbHtml}
+    <div class="breadcrumb">${headerLabel}
+      <span style="font-family:'Cinzel',serif;font-size:9px;color:var(--gold-dim);margin-left:8px;">↕ ${sortLabels[_explorerSort]||''}</span>
       <span style="margin-left:auto;font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);">${totalItems} elemento${totalItems!==1?'s':''}</span>
     </div>
     <div class="detail-header">
-      <span></span>
-      <span>Nombre</span>
-      <span>Autor</span>
-      <span>Categoría</span>
-      <span>Fecha</span>
-      <span>Editorial</span>
+      <span></span><span>Nombre</span><span>Autor</span><span>Categoría</span><span>Fecha</span><span>Editorial</span>
     </div>
     <div id="explorer-rows"></div>`;
 
   const rows = document.getElementById('explorer-rows');
 
-  // Subcarpetas primero
   subcarpetas.forEach(cap => {
     const docsEnCap = _explorerDocs.filter(d => d.carpeta_id === cap.id).length;
     const row = document.createElement('div');
@@ -2062,18 +2205,11 @@ function renderExplorerContent(carpetaId) {
     row.onclick = () => navigateTo(cap.id);
     row.innerHTML = `
       <div style="font-size:18px;">📁</div>
-      <div>
-        <div class="col-name">${cap.nombre}</div>
-        <span class="col-name sub">${docsEnCap} documento${docsEnCap!==1?'s':''}</span>
-      </div>
-      <div class="col-meta">—</div>
-      <div class="col-meta">—</div>
-      <div class="col-meta">—</div>
-      <div class="col-meta">—</div>`;
+      <div><div class="col-name">${cap.nombre}</div><span class="col-name sub">${docsEnCap} doc${docsEnCap!==1?'s':''}</span></div>
+      <div class="col-meta">—</div><div class="col-meta">—</div><div class="col-meta">—</div><div class="col-meta">—</div>`;
     rows.appendChild(row);
   });
 
-  // Documentos
   docsAqui.forEach(d => {
     const url = d.youtube_url || d.url;
     const icon = d.youtube_url ? '▶' : (icons[d.tipo] || '📁');
@@ -2092,6 +2228,7 @@ function renderExplorerContent(carpetaId) {
       <div>
         <div class="col-name">${d.nombre}</div>
         ${d.descripcion ? `<span class="col-name sub">${d.descripcion.substring(0,80)}${d.descripcion.length>80?'…':''}</span>` : ''}
+        ${d.editorial   ? `<span class="col-name sub" style="color:var(--gold-dim);">${d.editorial}</span>` : ''}
       </div>
       <div class="col-meta">${d.autor_nombre ? 'Q∴H∴ '+d.autor_nombre : '—'}</div>
       <div>${catBadge}</div>
