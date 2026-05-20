@@ -663,7 +663,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="module-sub">Gestión de episodios del podcast</div>
       <div class="gold-line"></div>
       <div id="radio-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:32px;max-width:720px;">
-        <div style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo episodio</div>
+        <div id="radio-form-title" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nuevo episodio</div>
         <!-- Portada del programa -->
         <div style="margin-bottom:20px;">
           <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Portada del programa</div>
@@ -727,13 +727,13 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             </label>
           </div>
         </div>
-        <div style="display:flex;gap:12px;">
-          <button class="btn-primary" onclick="saveEpisodio(true)">Publicar episodio</button>
-          <button class="btn-secondary" onclick="saveEpisodio(false)">Guardar borrador</button>
-          <button class="btn-secondary" onclick="document.getElementById('radio-form').style.display='none'">Cancelar</button>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button id="radio-btn-publish" class="btn-primary" onclick="saveEpisodio(true)">Publicar episodio</button>
+          <button id="radio-btn-draft" class="btn-secondary" onclick="saveEpisodio(false)">Guardar borrador</button>
+          <button class="btn-secondary" onclick="cancelRadioForm()">Cancelar</button>
         </div>
       </div>
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="document.getElementById('radio-form').style.display='block'">+ Nuevo episodio</button>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="openRadioForm()">+ Nuevo episodio</button>
       <div class="content-grid" id="radio-grid"></div>
     </div>
 
@@ -3665,8 +3665,11 @@ function openContentModal(type) {
 }
 
 // ── RADIO ÁGORA ──
+let _radioEpisodios = [];
+
 async function loadEpisodios() {
   const { data } = await sb.from('episodios').select('*').order('numero');
+  _radioEpisodios = data || [];
   const grid = document.getElementById('radio-grid'); grid.innerHTML='';
   if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay episodios aún.</div>'; return; }
   data.forEach(ep => {
@@ -3679,6 +3682,7 @@ async function loadEpisodios() {
       <div class=\"content-card-title\">${ep.titulo}</div>
       <div class=\"content-card-meta\">${ep.duracion||'—'} · ${ep.categoria||'—'}</div>
       <div class=\"content-card-actions\" style=\"margin-top:12px;\">
+        <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"editEpisodio('${ep.id}')\">Editar</button>
         <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"toggleEpisodio('${ep.id}',${ep.publicado})\">${ep.publicado?'Despublicar':'Publicar'}</button>
         <button class=\"btn-danger\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"deleteEpisodio('${ep.id}')\">Eliminar</button>
       </div>`;
@@ -3686,8 +3690,90 @@ async function loadEpisodios() {
   });
 }
 
-let radioAudioFile = null;
-let radioImgFile   = null;
+let radioAudioFile      = null;
+let radioImgFile        = null;
+let radioEditId         = null;   // null = nuevo, uuid = editando
+let radioExistingImgUrl = null;   // imagen_url actual al editar
+
+function openRadioForm(ep = null) {
+  radioEditId = ep ? ep.id : null;
+  radioExistingImgUrl = ep ? (ep.imagen_url || null) : null;
+  radioAudioFile = null;
+  radioImgFile   = null;
+
+  // Reset campos
+  ['radio-titulo','radio-num','radio-dur','radio-url','radio-desc','radio-programa','radio-desc-programa']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('radio-temporada').value = '1';
+  document.getElementById('radio-cat').selectedIndex = 0;
+  document.getElementById('radio-vis-publico').checked = true;
+  document.getElementById('radio-audio-name').textContent = 'Ningún archivo seleccionado';
+  document.getElementById('radio-audio-name').style.color = 'var(--text-dim)';
+  document.getElementById('radio-audio-player').style.display = 'none';
+  document.getElementById('radio-audio-preview').src = '';
+  // Reset imagen sin tocar radioExistingImgUrl (ya fue asignado arriba)
+  radioImgFile = null;
+  document.getElementById('radio-img-file').value = '';
+  document.getElementById('radio-img-preview').innerHTML =
+    '<span style="font-family:\'Cinzel\',serif;font-size:8px;letter-spacing:0.15em;color:var(--gold-dim);text-transform:uppercase;text-align:center;padding:8px;">Subir<br>portada</span>';
+  document.getElementById('radio-img-name').textContent = 'Ninguna imagen seleccionada';
+  document.getElementById('radio-img-name').style.color = 'var(--text-dim)';
+  document.getElementById('radio-img-clear').style.display = 'none';
+
+  if (ep) {
+    document.getElementById('radio-form-title').textContent = 'Editar episodio';
+    document.getElementById('radio-btn-publish').textContent = 'Guardar y publicar';
+    document.getElementById('radio-btn-draft').textContent   = 'Guardar borrador';
+    document.getElementById('radio-titulo').value           = ep.titulo || '';
+    document.getElementById('radio-num').value              = ep.numero || '';
+    document.getElementById('radio-dur').value              = ep.duracion || '';
+    document.getElementById('radio-url').value              = ep.audio_url || '';
+    document.getElementById('radio-desc').value             = ep.descripcion || '';
+    document.getElementById('radio-programa').value         = ep.programa || '';
+    document.getElementById('radio-temporada').value        = ep.temporada || 1;
+    document.getElementById('radio-desc-programa').value    = ep.descripcion_programa || '';
+    // Categoría
+    const catSel = document.getElementById('radio-cat');
+    if (ep.categoria) {
+      const opt = Array.from(catSel.options).find(o => o.value === ep.categoria || o.text === ep.categoria);
+      if (opt) catSel.value = opt.value;
+    }
+    // Visibilidad
+    if (ep.visibilidad === 'privado') document.getElementById('radio-vis-privado').checked = true;
+    else document.getElementById('radio-vis-publico').checked = true;
+    // Imagen existente
+    if (ep.imagen_url) {
+      document.getElementById('radio-img-preview').innerHTML =
+        `<img src="${ep.imagen_url}" style="width:100%;height:100%;object-fit:cover;border-radius:3px;">`;
+      document.getElementById('radio-img-name').textContent = 'Imagen actual (selecciona otra para reemplazar)';
+      document.getElementById('radio-img-name').style.color = 'var(--gold-dim)';
+      document.getElementById('radio-img-clear').style.display = '';
+    }
+    // Nota de audio existente
+    if (ep.audio_url) {
+      document.getElementById('radio-audio-name').textContent = 'Audio actual guardado — sube un nuevo archivo para reemplazar';
+      document.getElementById('radio-audio-name').style.color = 'var(--gold-dim)';
+    }
+  } else {
+    document.getElementById('radio-form-title').textContent  = 'Nuevo episodio';
+    document.getElementById('radio-btn-publish').textContent = 'Publicar episodio';
+    document.getElementById('radio-btn-draft').textContent   = 'Guardar borrador';
+  }
+
+  document.getElementById('radio-form').style.display = 'block';
+  document.getElementById('radio-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function editEpisodio(id) {
+  const ep = _radioEpisodios.find(e => e.id === id);
+  if (ep) openRadioForm(ep);
+}
+
+function cancelRadioForm() {
+  radioEditId         = null;
+  radioExistingImgUrl = null;
+  document.getElementById('radio-form').style.display = 'none';
+}
 
 function previewRadioImg(input) {
   const file = input.files[0]; if (!file) return;
@@ -3695,17 +3781,19 @@ function previewRadioImg(input) {
   document.getElementById('radio-img-name').textContent = file.name;
   document.getElementById('radio-img-name').style.color = 'var(--gold)';
   document.getElementById('radio-img-clear').style.display = '';
-  const preview = document.getElementById('radio-img-preview');
   const url = URL.createObjectURL(file);
-  preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:3px;">`;
+  document.getElementById('radio-img-preview').innerHTML =
+    `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:3px;">`;
 }
 function clearRadioImg() {
-  radioImgFile = null;
+  radioImgFile        = null;
+  radioExistingImgUrl = null;
   document.getElementById('radio-img-file').value = '';
   document.getElementById('radio-img-name').textContent = 'Ninguna imagen seleccionada';
   document.getElementById('radio-img-name').style.color = 'var(--text-dim)';
   document.getElementById('radio-img-clear').style.display = 'none';
-  document.getElementById('radio-img-preview').innerHTML = '<span style="font-family:\'Cinzel\',serif;font-size:8px;letter-spacing:0.15em;color:var(--gold-dim);text-transform:uppercase;text-align:center;padding:8px;">Subir<br>portada</span>';
+  document.getElementById('radio-img-preview').innerHTML =
+    '<span style="font-family:\'Cinzel\',serif;font-size:8px;letter-spacing:0.15em;color:var(--gold-dim);text-transform:uppercase;text-align:center;padding:8px;">Subir<br>portada</span>';
 }
 
 function previewAudioFile(input) {
@@ -3725,9 +3813,10 @@ async function saveEpisodio(publish) {
   if (!titulo || !num) { toast('Número y título son obligatorios','error'); return; }
 
   let audioUrl = document.getElementById('radio-url').value.trim() || null;
-  let imgUrl   = null;
+  // En modo edición, si no se subió nuevo archivo, audioUrl ya viene del campo (URL existente)
+  let imgUrl = radioImgFile ? null : radioExistingImgUrl;
 
-  // Subir portada si fue seleccionada
+  // Subir nueva portada si fue seleccionada
   if (radioImgFile) {
     toast('Subiendo portada…');
     const ext  = radioImgFile.name.split('.').pop().toLowerCase();
@@ -3739,7 +3828,7 @@ async function saveEpisodio(publish) {
     toast('Portada subida');
   }
 
-  // Subir archivo de audio si fue seleccionado
+  // Subir nuevo archivo de audio si fue seleccionado
   if (radioAudioFile) {
     toast('Subiendo audio… esto puede tardar unos momentos');
     const ext  = radioAudioFile.name.split('.').pop().toLowerCase();
@@ -3751,7 +3840,7 @@ async function saveEpisodio(publish) {
     toast('Audio subido correctamente');
   }
 
-  const { error } = await sb.from('episodios').insert({
+  const payload = {
     numero:               num,
     titulo,
     descripcion:          document.getElementById('radio-desc').value.trim()||null,
@@ -3762,23 +3851,28 @@ async function saveEpisodio(publish) {
     programa:             document.getElementById('radio-programa').value.trim()||null,
     temporada:            parseInt(document.getElementById('radio-temporada').value)||1,
     descripcion_programa: document.getElementById('radio-desc-programa').value.trim()||null,
-    autor_id:             currentProfile.id,
     publicado:            publish,
     visibilidad:          document.querySelector('input[name="radio-visibilidad"]:checked')?.value || 'publico'
-  });
+  };
+
+  let error;
+  if (radioEditId) {
+    ({ error } = await sb.from('episodios').update(payload).eq('id', radioEditId));
+  } else {
+    payload.autor_id = currentProfile.id;
+    ({ error } = await sb.from('episodios').insert(payload));
+  }
 
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
 
-  document.getElementById('radio-form').style.display='none';
-  ['radio-titulo','radio-num','radio-dur','radio-url','radio-desc','radio-programa','radio-desc-programa'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('radio-temporada').value='1';
+  const wasEdit = !!radioEditId;
+  cancelRadioForm();
+  radioAudioFile = null;
   document.getElementById('radio-audio-name').textContent = 'Ningún archivo seleccionado';
   document.getElementById('radio-audio-name').style.color = 'var(--text-dim)';
   document.getElementById('radio-audio-player').style.display = 'none';
   document.getElementById('radio-audio-preview').src = '';
-  radioAudioFile = null;
-  clearRadioImg();
-  toast(publish?'Episodio publicado':'Borrador guardado','success');
+  toast(wasEdit ? 'Cambios guardados' : (publish ? 'Episodio publicado' : 'Borrador guardado'), 'success');
   loadEpisodios();
 }
 
