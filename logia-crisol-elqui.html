@@ -105,7 +105,7 @@
 
   /* RADIO AGORA */
   .podcast { background: var(--dark-2); }
-  .podcast-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; margin-top: 60px; }
+  .podcast-layout { display: grid; grid-template-columns: 1fr 380px; gap: 48px; align-items: start; margin-top: 60px; }
   .podcast-desc { font-size: 18px; color: var(--text-dim); line-height: 1.9; font-style: italic; margin-bottom: 36px; }
   .episode-list { list-style: none; }
   .episode-item { display: flex; align-items: flex-start; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: color 0.3s; }
@@ -113,18 +113,34 @@
   .ep-num { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold-dim); min-width: 28px; padding-top: 3px; }
   .ep-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--cream); margin-bottom: 4px; font-weight: 400; transition: color 0.3s; }
   .ep-meta { font-size: 13px; color: var(--text-dim); }
-  .player-widget { background: var(--dark-4); border: 1px solid var(--border); padding: 40px; }
-  .player-ep-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 16px; }
-  .player-ep-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--cream); margin-bottom: 32px; font-weight: 400; line-height: 1.4; }
-  .player-waveform { display: flex; align-items: center; gap: 3px; height: 48px; margin-bottom: 24px; }
-  .wf-bar { flex: 1; background: var(--gold-dim); border-radius: 2px; opacity: 0.5; transition: background 0.2s; }
-  .wf-bar.active { background: var(--gold); opacity: 1; }
-  .player-controls { display: flex; align-items: center; gap: 20px; }
-  .btn-play { width: 48px; height: 48px; border: 1px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: background 0.3s; flex-shrink: 0; }
-  .btn-play:hover { background: rgba(201,168,76,0.12); }
-  .player-time { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; }
-  .player-progress { flex: 1; height: 2px; background: var(--dark-5); position: relative; cursor: pointer; }
-  .player-progress-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 35%; background: var(--gold); }
+  /* ── Player Buzzsprout style ── */
+  .player-widget { position: sticky; top: 72px; background: var(--dark-2); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; height: fit-content; }
+  .rap-show-bar { background: var(--gold); padding: 6px 16px; display: flex; align-items: center; gap: 8px; }
+  .rap-show-name { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dark); font-weight: 600; }
+  .rap-body { padding: 14px 16px 12px; }
+  .rap-top { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .rap-artwork { width: 68px; height: 68px; flex-shrink: 0; border-radius: 4px; background: rgba(201,168,76,0.10); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .rap-artwork img { width: 100%; height: 100%; object-fit: cover; border-radius: 3px; }
+  .rap-info { flex: 1; min-width: 0; }
+  .rap-ep-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--cream); line-height: 1.35; margin-bottom: 5px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .rap-ep-prog { font-family: 'Cinzel', serif; font-size: 8px; letter-spacing: 0.22em; color: var(--gold-dim); text-transform: uppercase; }
+  .rap-wave-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .rap-waveform { flex: 1; display: flex; align-items: flex-end; gap: 1px; height: 44px; cursor: pointer; padding: 0 1px; user-select: none; }
+  .rap-wf-bar { flex: 1; border-radius: 1px 1px 0 0; background: rgba(201,168,76,0.18); transition: background 0.08s; min-width: 2px; max-width: 5px; }
+  .rap-wf-bar.played { background: var(--gold); }
+  .rap-wf-bar.current { background: var(--gold-light, #e5c96a); }
+  .rap-time-badge { font-family: 'Cinzel', serif; font-size: 9px; color: var(--text-dim); letter-spacing: 0.06em; white-space: nowrap; flex-shrink: 0; }
+  .rap-pipe { color: var(--border-bright); margin: 0 3px; }
+  .rap-controls { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .rap-btn-skip { background: transparent; border: none; cursor: pointer; color: var(--text-dim); padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: color 0.15s, background 0.15s; }
+  .rap-btn-skip:hover { color: var(--gold); background: rgba(201,168,76,0.08); }
+  .rap-btn-skip svg { display: block; }
+  .rap-play-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--gold); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, transform 0.15s; flex-shrink: 0; }
+  .rap-play-btn:hover { background: var(--gold-light, #e5c96a); transform: scale(1.07); }
+  .rap-play-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .rap-play-btn svg { color: var(--dark); display: block; }
+  .rap-speed-btn { background: transparent; border: 1.5px solid var(--border-bright); color: var(--gold-dim); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.05em; padding: 5px 9px; cursor: pointer; border-radius: 3px; transition: color 0.15s, border-color 0.15s; margin-left: 4px; }
+  .rap-speed-btn:hover { color: var(--gold); border-color: var(--gold); }
 
   /* BLOG VENERABLE */
   .venerable { background: var(--dark); }
@@ -342,9 +358,8 @@
     .news-excerpt { font-size: 13px; }
 
     /* PODCAST */
-    .podcast-layout { gap: 24px; }
-    .player-widget { padding: 24px 18px; }
-    .player-waveform { height: 32px; }
+    .podcast-layout { grid-template-columns: 1fr; gap: 24px; }
+    .player-widget { position: static; border-radius: 0; border-left: none; border-right: none; border-top: none; }
     .podcast-desc { font-size: 16px; }
 
     /* EGRÉGORA */
@@ -534,16 +549,39 @@
         </ul>
       </div>
       <div class="player-widget">
-        <div class="player-ep-label">Reproduciendo ahora</div>
-        <div class="player-ep-title" id="player-title">Selecciona un episodio</div>
-        <div class="player-waveform" id="waveform"></div>
-        <div id="player-no-audio" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;display:none;">Sin archivo de audio disponible</div>
-        <audio id="real-audio-player" style="display:none;" preload="none"></audio>
-        <div class="player-controls">
-          <button class="btn-play" id="play-btn" onclick="togglePlay()">▶</button>
-          <span class="player-time" id="current-time">00:00</span>
-          <div class="player-progress" onclick="scrubProgress(event)"><div class="player-progress-fill" id="progress-fill"></div></div>
-          <span class="player-time" id="player-duration">00:00</span>
+        <div class="rap-show-bar">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+          <span class="rap-show-name">Radio Ágora</span>
+        </div>
+        <div class="rap-body">
+          <div class="rap-top">
+            <div class="rap-artwork" id="land-artwork">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gold-dim)"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+            </div>
+            <div class="rap-info">
+              <div class="rap-ep-title" id="player-title">Selecciona un episodio</div>
+              <div class="rap-ep-prog" id="land-prog">Logia Crisol del Elqui N°189</div>
+            </div>
+          </div>
+          <audio id="real-audio-player" style="display:none;" preload="none"></audio>
+          <div class="rap-wave-row">
+            <div class="rap-waveform" id="waveform" onclick="landWaveformClick(event)"></div>
+            <div class="rap-time-badge">
+              <span id="current-time">0:00</span><span class="rap-pipe"> | </span><span id="player-duration">0:00</span>
+            </div>
+          </div>
+          <div class="rap-controls">
+            <button class="rap-btn-skip" onclick="landSkip(-15)" title="−15 segundos">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><text x="7.5" y="16" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" font-weight="bold">15</text></svg>
+            </button>
+            <button class="rap-play-btn" id="play-btn" onclick="togglePlay()" disabled>
+              <svg id="land-play-ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+            </button>
+            <button class="rap-btn-skip" onclick="landSkip(30)" title="+30 segundos">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><text x="8" y="16" font-size="6" fill="currentColor" stroke="none" font-family="sans-serif" font-weight="bold">30</text></svg>
+            </button>
+            <button class="rap-speed-btn" id="land-speed-btn" onclick="landCycleSpeed()">1×</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1154,22 +1192,31 @@
   }
 
   function selectEpFromDB(ep) {
+    _landCurrentEp = ep;
     document.getElementById('player-title').textContent = ep.titulo;
-    document.getElementById('player-no-audio').style.display = 'none';
+    document.getElementById('land-prog').textContent = ep.programa || 'Radio Ágora';
+    // Artwork
+    const art = document.getElementById('land-artwork');
+    if (art) {
+      art.innerHTML = ep.imagen_url
+        ? `<img src="${ep.imagen_url}" alt="${ep.titulo}">`
+        : '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gold-dim)"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>';
+    }
     _audio.pause();
-    document.getElementById('play-btn').textContent = '▶';
-    document.getElementById('progress-fill').style.width = '0%';
-    document.getElementById('current-time').textContent = '00:00';
-    document.querySelectorAll('.wf-bar').forEach(b => b.classList.remove('active'));
-
+    _landPlaying = false;
+    const ico = document.getElementById('land-play-ico');
+    if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+    document.getElementById('current-time').textContent = '0:00';
+    document.getElementById('player-duration').textContent = ep.duracion || '0:00';
+    landBuildWaveform(ep);
+    const btn = document.getElementById('play-btn');
     if (ep.audio_url) {
       _audio.src = ep.audio_url;
-      _audio.load();
-      document.getElementById('player-duration').textContent = ep.duracion || '—';
+      _audio.playbackRate = _landSpeeds[_landSpeedIdx];
+      if (btn) btn.disabled = false;
     } else {
       _audio.src = '';
-      document.getElementById('player-duration').textContent = ep.duracion || '00:00';
-      document.getElementById('player-no-audio').style.display = 'block';
+      if (btn) btn.disabled = true;
     }
   }
 
@@ -1284,64 +1331,110 @@
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => { if(document.getElementById('page-landing').style.display!=='none') navbar.classList.toggle('scrolled', window.scrollY>60); });
 
-  const wf = document.getElementById('waveform');
-  const bars = 52;
-  for (let i=0; i<bars; i++) { const b=document.createElement('div'); b.className='wf-bar'+(i<18?' active':''); b.style.height=(12+Math.random()*36)+'px'; wf.appendChild(b); }
-
-  // ── REPRODUCTOR REAL ──
+  // ── REPRODUCTOR REAL — Buzzsprout style ──
   const _audio = document.getElementById('real-audio-player');
+  let _landPlaying  = false;
+  let _landSpeeds   = [1, 1.5, 2];
+  let _landSpeedIdx = 0;
+  let _landCurrentEp = null;
+
+  function landFmt(s) {
+    if (!isFinite(s) || s < 0) return '0:00';
+    return Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0');
+  }
+
+  function landGenWaveform(seed) {
+    let x = seed;
+    const h = [];
+    for (let i = 0; i < 60; i++) {
+      x = (x * 1664525 + 1013904223) & 0xffffffff;
+      h.push(20 + Math.abs((x >>> 1) % 80));
+    }
+    return h;
+  }
+
+  function landBuildWaveform(ep) {
+    const container = document.getElementById('waveform');
+    if (!container) return;
+    const seed = ep ? (ep.numero || 1) * 997 + (ep.temporada || 1) * 31 : 42;
+    container.innerHTML = '';
+    landGenWaveform(seed).forEach(h => {
+      const bar = document.createElement('div');
+      bar.className    = 'rap-wf-bar';
+      bar.style.height = h + '%';
+      container.appendChild(bar);
+    });
+  }
+
+  function landUpdateWaveform() {
+    const container = document.getElementById('waveform');
+    if (!container || !_audio.duration) return;
+    const bars  = container.querySelectorAll('.rap-wf-bar');
+    const pct   = _audio.currentTime / _audio.duration;
+    const total = bars.length;
+    bars.forEach((bar, i) => {
+      const pos = i / total;
+      bar.classList.remove('played', 'current');
+      if (pos < pct - 1/total) bar.classList.add('played');
+      else if (pos <= pct)     bar.classList.add('current');
+    });
+  }
 
   _audio.addEventListener('timeupdate', () => {
-    const dur = _audio.duration || 0;
-    const cur = _audio.currentTime || 0;
-    const pct = dur ? (cur/dur)*100 : 0;
-    document.getElementById('progress-fill').style.width = pct+'%';
-    const m = Math.floor(cur/60), s = String(Math.floor(cur%60)).padStart(2,'0');
-    document.getElementById('current-time').textContent = m+':'+s;
-    const active = Math.floor((pct/100)*bars);
-    document.querySelectorAll('.wf-bar').forEach((b,i)=>b.classList.toggle('active',i<active));
+    if (!_audio.duration) return;
+    document.getElementById('current-time').textContent    = landFmt(_audio.currentTime);
+    document.getElementById('player-duration').textContent = landFmt(_audio.duration);
+    landUpdateWaveform();
   });
 
   _audio.addEventListener('loadedmetadata', () => {
-    const dur = _audio.duration || 0;
-    const m = Math.floor(dur/60), s = String(Math.floor(dur%60)).padStart(2,'0');
-    document.getElementById('player-duration').textContent = m+':'+s;
+    document.getElementById('player-duration').textContent = landFmt(_audio.duration);
   });
 
   _audio.addEventListener('ended', () => {
-    document.getElementById('play-btn').textContent = '▶';
+    _landPlaying = false;
+    const ico = document.getElementById('land-play-ico');
+    if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+    document.querySelectorAll('#waveform .rap-wf-bar').forEach(b => { b.classList.remove('current'); b.classList.add('played'); });
   });
 
   function togglePlay() {
-    if (!_audio.src || _audio.src === window.location.href) {
-      document.getElementById('player-no-audio').style.display = 'block';
-      return;
-    }
-    if (_audio.paused) {
-      _audio.play();
-      document.getElementById('play-btn').textContent = '⏸';
-    } else {
+    const btn = document.getElementById('play-btn');
+    if (!_audio.src || btn.disabled) return;
+    const ico = document.getElementById('land-play-ico');
+    if (_landPlaying) {
       _audio.pause();
-      document.getElementById('play-btn').textContent = '▶';
+      _landPlaying = false;
+      if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+    } else {
+      _audio.play();
+      _landPlaying = true;
+      if (ico) ico.innerHTML = '<rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/>';
     }
   }
 
-  function updateProgress() {
-    const pct = _audio.duration ? (_audio.currentTime/_audio.duration)*100 : 0;
-    document.getElementById('progress-fill').style.width = pct+'%';
+  function landSkip(seconds) {
+    if (!_audio.src || !_audio.duration) return;
+    _audio.currentTime = Math.max(0, Math.min(_audio.duration, _audio.currentTime + seconds));
   }
 
-  function scrubProgress(e) {
-    if (!_audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    _audio.currentTime = ((e.clientX-rect.left)/rect.width) * _audio.duration;
+  function landCycleSpeed() {
+    _landSpeedIdx = (_landSpeedIdx + 1) % _landSpeeds.length;
+    const speed = _landSpeeds[_landSpeedIdx];
+    _audio.playbackRate = speed;
+    const btn = document.getElementById('land-speed-btn');
+    if (btn) btn.textContent = speed + '×';
   }
 
-  function selectEp(el, title) {
-    document.getElementById('player-title').textContent = title;
-    _audio.pause();
-    document.getElementById('play-btn').textContent = '▶';
+  function landWaveformClick(event) {
+    if (!_audio.src || !_audio.duration) return;
+    const container = document.getElementById('waveform');
+    const rect = container.getBoundingClientRect();
+    _audio.currentTime = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) * _audio.duration;
   }
+
+  // Waveform inicial (placeholder)
+  landBuildWaveform(null);
 
   function loadCorpPhoto(input,idx) { const file=input.files[0]; if(!file)return; const r=new FileReader(); r.onload=e=>{const img=document.getElementById('corp-img-'+idx); img.src=e.target.result; img.onload=()=>{img.classList.add('loaded');img.closest('.news-photo').querySelector('.news-photo-placeholder').style.display='none';};}; r.readAsDataURL(file); }
 
