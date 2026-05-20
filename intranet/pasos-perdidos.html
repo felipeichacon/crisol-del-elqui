@@ -2835,7 +2835,11 @@ function renderPoll(enc, miVoto) {
           }
         });
       } else {
-        row.addEventListener('click', () => votarEncuesta(enc.id, op.id));
+        row.addEventListener('click', async () => {
+          if (row.classList.contains('pending')) return; // evitar doble clic
+          row.classList.add('pending'); // feedback inmediato
+          await votarEncuesta(enc.id, op.id);
+        });
         row.style.cursor = 'pointer';
       }
     }
