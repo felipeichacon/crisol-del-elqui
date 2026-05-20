@@ -275,9 +275,10 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     grid-template-columns: repeat(5, 1fr);
-    align-items: center;
-    height: 60px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    align-items: stretch;
+    overflow: hidden;
+    /* altura base + zona segura iPhone */
+    height: calc(54px + env(safe-area-inset-bottom, 0px));
   }
   .mob-nav-tab {
     display: flex;
@@ -288,46 +289,35 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px 2px;
+    padding: 8px 4px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     color: rgba(255,255,255,0.38);
     transition: color 0.18s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
     width: 100%;
-    height: 100%;
   }
+  .mob-nav-tab svg { flex-shrink: 0; }
   .mob-nav-tab span {
     font-family: 'Cinzel', serif;
     font-size: 7px;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     line-height: 1;
+    white-space: nowrap;
   }
   .mob-nav-tab.active { color: var(--gold); }
-  .mob-nav-tab:active { transform: scale(0.9); opacity: 0.8; }
-  /* Centro destacado (Egrégora) */
-  #mnt-revista {
-    position: relative;
-    color: var(--dark-2);
-  }
-  #mnt-revista::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-54%);
-    width: 46px; height: 46px;
-    background: linear-gradient(145deg, var(--gold-light), var(--gold));
-    border-radius: 50%;
-    z-index: -1;
-    box-shadow: 0 -2px 14px rgba(201,168,76,0.4);
-    transition: box-shadow 0.2s;
-  }
-  #mnt-revista.active::before { box-shadow: 0 -2px 22px rgba(201,168,76,0.7); }
-  #mnt-revista span { color: rgba(255,255,255,0.5); margin-top: 26px; position: relative; top: 2px; }
-  #mnt-revista.active span { color: var(--gold-dim); }
+  .mob-nav-tab:active { transform: scale(0.88); opacity: 0.75; }
+  /* Egrégora: solo icono más grande, sin etiqueta */
+  #mnt-revista span { display: none; }
+  #mnt-revista svg { width: 24px; height: 24px; }
+  #mnt-revista.active { color: var(--gold); }
+  /* Reservada: solo icono */
+  #mnt-intranet span { display: none; }
+  #mnt-intranet svg { width: 22px; height: 22px; }
 
   @media (max-width: 900px) {
     .mob-nav { display: grid; }
-    body { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+    body { padding-bottom: calc(54px + env(safe-area-inset-bottom, 0px)); }
     nav#navbar .btn-intranet { display: none; }
   }
 
