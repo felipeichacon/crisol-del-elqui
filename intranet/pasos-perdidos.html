@@ -166,13 +166,25 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 
 /* ── MODULE: BLOG ── */
 .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2px; padding: 0 48px 48px; }
-.blog-post-card { background: var(--dark-3); border: 1px solid var(--border); padding: 32px 28px; transition: border-color 0.3s; cursor: pointer; }
-.blog-post-card:hover { border-color: var(--border-bright); }
+.blog-post-card { background: var(--dark-3); border: 1px solid var(--border); padding: 32px 28px; transition: border-color 0.3s, background 0.2s; cursor: pointer; }
+.blog-post-card:hover { border-color: var(--border-bright); background: var(--dark-4); }
 .post-meta { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 12px; }
 .post-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--cream); margin-bottom: 12px; font-weight: 400; line-height: 1.4; }
 .post-excerpt { font-size: 15px; color: var(--text-dim); line-height: 1.8; }
+.post-read-more { display: inline-block; margin-top: 16px; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold-dim); }
 .btn-new-post { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dark); background: var(--gold); border: none; padding: 12px 24px; cursor: pointer; transition: background 0.3s; margin-bottom: 32px; }
 .btn-new-post:hover { background: var(--gold-light); }
+/* ── Blog reader panel ── */
+.blog-reader { position: fixed; inset: 0; z-index: 500; background: var(--dark); transform: translateX(105%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; display: flex; flex-direction: column; }
+.blog-reader.open { transform: translateX(0); }
+.blog-reader-topbar { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--dark); z-index: 2; backdrop-filter: blur(8px); }
+.blog-reader-back { background: none; border: none; color: var(--gold); cursor: pointer; display: flex; align-items: center; gap: 10px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; padding: 6px 0; }
+.blog-reader-back svg { flex-shrink: 0; }
+.blog-reader-body { padding: 40px 48px 80px; max-width: 720px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+.blog-reader-meta { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 20px; }
+.blog-reader-title { font-family: 'Cinzel', serif; font-size: 28px; color: var(--cream); margin-bottom: 28px; font-weight: 400; line-height: 1.3; }
+.blog-reader-divider { width: 50px; height: 1px; background: var(--gold); margin-bottom: 32px; opacity: 0.6; }
+.blog-reader-content { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--text); line-height: 1.9; white-space: pre-wrap; }
 
 /* ── MODULE: CALENDAR ── */
 .calendar-wrap { padding: 0 48px 48px; }
@@ -431,6 +443,15 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
   .module-header { padding: 28px 20px 0; }
   .hero-content { padding: 32px 24px 48px; }
 
+  /* ── Blog: single-column feed ── */
+  .blog-grid { grid-template-columns: 1fr; padding: 0 0 80px; gap: 0; }
+  .blog-post-card { border-left: none; border-right: none; border-radius: 0; padding: 24px 20px 28px; }
+  .post-title { font-size: 20px; }
+  .post-excerpt { font-size: 16px; line-height: 1.75; }
+  #new-post-form { padding: 0 16px 32px !important; }
+  /* Blog reader body padding */
+  .blog-reader-body { padding: 28px 20px 100px; }
+
   /* ── WA: single-panel slide system ── */
   .wa-layout {
     grid-template-columns: 1fr;
@@ -616,6 +637,22 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
     <div class="gallery-lightbox" id="gallery-lightbox" onclick="closeGalleryLightbox()">
       <button class="gallery-lightbox-close" onclick="closeGalleryLightbox()">×</button>
       <img id="gallery-lightbox-img" src="" alt="">
+    </div>
+
+    <!-- Blog Reader Panel (full-screen slide-in) -->
+    <div class="blog-reader" id="blog-reader">
+      <div class="blog-reader-topbar">
+        <button class="blog-reader-back" onclick="closePost()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Volver
+        </button>
+      </div>
+      <div class="blog-reader-body">
+        <div id="blog-reader-meta" class="blog-reader-meta"></div>
+        <h1 id="blog-reader-title" class="blog-reader-title"></h1>
+        <div class="blog-reader-divider"></div>
+        <div id="blog-reader-content" class="blog-reader-content"></div>
+      </div>
     </div>
 
     <!-- BLOG MODULE -->
@@ -1016,9 +1053,12 @@ async function init() {
   } else {
     document.getElementById('screen-login').classList.remove('hidden');
   }
-  // Keyboard: ESC closes lightbox
+  // Keyboard: ESC closes overlays
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeGalleryLightbox();
+    if (e.key === 'Escape') {
+      closeGalleryLightbox();
+      closePost();
+    }
   });
 
   sb.auth.onAuthStateChange(async (_event, session) => {
@@ -1580,9 +1620,32 @@ async function loadPosts() {
     const div = document.createElement('div'); div.className='blog-post-card';
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
     const autorDisplay = 'Q∴H∴ ' + (post.autor_nombre||'Hermano');
-    div.innerHTML=`<div class="post-meta">${autorDisplay} · ${date}${!post.publicado?' · Borrador':''}</div><div class="post-title">${post.titulo}</div><div class="post-excerpt">${post.extracto||post.contenido.substring(0,180)+'…'}</div>`;
+    const excerpt = post.extracto || (post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
+    div.innerHTML = `
+      <div class="post-meta">${autorDisplay} · ${date}${!post.publicado ? ' · Borrador' : ''}</div>
+      <div class="post-title">${post.titulo}</div>
+      <div class="post-excerpt">${excerpt}</div>
+      <span class="post-read-more">Leer →</span>
+    `;
+    div.onclick = () => openPost(post);
     grid.appendChild(div);
   });
+}
+
+function openPost(post) {
+  const reader = document.getElementById('blog-reader');
+  const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('blog-reader-meta').textContent = 'Q∴H∴ ' + (post.autor_nombre||'Hermano') + ' · ' + date + (post.publicado ? '' : ' · Borrador');
+  document.getElementById('blog-reader-title').textContent = post.titulo;
+  document.getElementById('blog-reader-content').textContent = post.contenido;
+  reader.classList.add('open');
+  reader.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closePost() {
+  document.getElementById('blog-reader').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function showNewPostForm() {
