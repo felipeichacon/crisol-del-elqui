@@ -2985,7 +2985,7 @@ function _admRenderContent(carpetaId) {
   docsAqui.forEach(d=>{
     const url=d.youtube_url||d.url;
     const icon=d.youtube_url?'▶':(icons[d.tipo]||'📁');
-    const fechaStr=d.fecha_doc?new Date(d.fecha_doc+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'}):'—';
+    const fechaStr=d.fecha_doc?new Date(d.fecha_doc.substring(0,10)+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'}):'—';
     const catBadge=d.categoria?`<span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--border-bright);color:var(--gold);padding:2px 5px;">${d.categoria}</span>`:'—';
     const row=document.createElement('div'); row.className='detail-row'; row.onclick=()=>url&&window.open(url,'_blank'); row.style.cursor=url?'pointer':'default';
     row.innerHTML=`<div style="font-size:18px;">${icon}</div>
