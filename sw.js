@@ -1,5 +1,5 @@
 // Service Worker — Logia Crisol del Elqui N°189
-const CACHE = 'crisol-v2';   // ← cambiar versión invalida todo el caché anterior
+const CACHE = 'crisol-v3';   // ← cambiar versión invalida todo el caché anterior
 const SHELL = ['/', '/logia-crisol-elqui.html', '/logo-crisol.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
