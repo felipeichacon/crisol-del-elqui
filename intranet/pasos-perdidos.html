@@ -218,8 +218,13 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .section-divider { height: 1px; background: var(--border); margin: 24px 0; }
 
 /* ── MODULE: BIBLIOTECA ── */
-.docs-filters { display: flex; gap: 12px; flex-wrap: wrap; padding: 0 48px 24px; }
-.filter-btn { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); background: transparent; border: 1px solid var(--border); padding: 8px 16px; cursor: pointer; transition: all 0.3s; }
+.bib-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 0 48px 20px; }
+.bib-search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 320px; }
+.bib-search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-dim); }
+.bib-search { width: 100%; background: var(--dark-3); border: 1px solid var(--border); color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 16px; padding: 8px 12px 8px 34px; outline: none; box-sizing: border-box; transition: border-color 0.2s; }
+.bib-search:focus { border-color: var(--gold-dim); }
+.docs-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-btn { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-dim); background: transparent; border: 1px solid var(--border); padding: 8px 14px; cursor: pointer; transition: all 0.25s; white-space: nowrap; }
 .filter-btn.active, .filter-btn:hover { color: var(--gold); border-color: var(--border-bright); background: rgba(201,168,76,0.06); }
 .docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2px; padding: 0 48px 48px; }
 .doc-card { background: var(--dark-3); border: 1px solid var(--border); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; transition: border-color 0.2s; cursor: pointer; }
@@ -227,34 +232,30 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .doc-icon { font-size: 20px; flex-shrink: 0; }
 .doc-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); line-height: 1.4; }
 .doc-meta { font-size: 12px; color: var(--text-dim); }
-.doc-carpeta-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.doc-carpeta-nombre { font-family: 'Cinzel', serif; font-size: 13px; color: var(--cream); letter-spacing: 0.1em; }
-.doc-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 12px; margin-bottom: 8px; }
 /* ── Explorador de archivos ── */
-.explorer-wrap { display: flex; gap: 0; border: 1px solid var(--border); min-height: 520px; }
-.explorer-tree { width: 220px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--dark-2); overflow-y: auto; padding: 8px 0; }
-.explorer-content { flex: 1; overflow-y: auto; padding: 0; }
-.tree-item { display: flex; align-items: center; gap: 7px; padding: 7px 12px; cursor: pointer; font-family: 'Cinzel', serif; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.explorer-wrap { display: flex; gap: 0; border: 1px solid var(--border); min-height: 520px; margin: 0 48px 48px; }
+.explorer-tree { width: 230px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--dark-2); overflow-y: auto; padding: 8px 0; }
+.explorer-content { flex: 1; overflow-y: auto; padding: 0; min-width: 0; }
+.tree-item { display: flex; align-items: center; gap: 7px; padding: 8px 14px; cursor: pointer; font-family: 'Cinzel', serif; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tree-item:hover { background: rgba(201,168,76,0.07); color: var(--text); }
 .tree-item.active { background: rgba(201,168,76,0.13); color: var(--gold); }
 .tree-item .tree-arrow { font-size: 9px; transition: transform 0.2s; flex-shrink: 0; }
 .tree-item.open .tree-arrow { transform: rotate(90deg); }
-.tree-sub { padding-left: 18px; }
 /* Vista detalle */
-.detail-header { display: grid; grid-template-columns: 32px 1fr 120px 100px 90px 120px; gap: 0; padding: 8px 16px; border-bottom: 2px solid var(--border); background: var(--dark-4); }
+.detail-header { display: grid; grid-template-columns: 36px 1fr 140px 110px 90px; gap: 0; padding: 8px 16px; border-bottom: 2px solid var(--border); background: var(--dark-4); }
 .detail-header span { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); }
-.detail-row { display: grid; grid-template-columns: 32px 1fr 120px 100px 90px 120px; gap: 0; padding: 10px 16px; border-bottom: 1px solid rgba(201,168,76,0.06); cursor: pointer; transition: background 0.15s; align-items: start; }
+.detail-row { display: grid; grid-template-columns: 36px 1fr 140px 110px 90px; gap: 0; padding: 12px 16px; min-height: 52px; border-bottom: 1px solid rgba(201,168,76,0.06); cursor: pointer; transition: background 0.15s; align-items: center; }
 .detail-row:hover { background: rgba(201,168,76,0.05); }
 .detail-row.folder { cursor: pointer; }
 .detail-row .col-name { font-family: 'Cinzel', serif; font-size: 12px; color: var(--cream); line-height: 1.4; padding-right: 12px; }
-.detail-row .col-name .sub { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--text-dim); font-style: italic; margin-top: 3px; display: block; font-family: initial; text-transform: none; letter-spacing: 0; }
+.detail-row .col-name .sub { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: var(--text-dim); font-style: italic; margin-top: 3px; display: block; text-transform: none; letter-spacing: 0; font-family: initial; }
 .detail-row .col-meta { font-size: 12px; color: var(--text-dim); padding-right: 8px; }
-.detail-row .col-cat { }
-.breadcrumb { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--dark-3); }
-.breadcrumb-item { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim); cursor: pointer; }
+.breadcrumb { padding: 11px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--dark-3); }
+.breadcrumb-item { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim); cursor: pointer; transition: color 0.2s; }
 .breadcrumb-item:hover { color: var(--gold); }
 .breadcrumb-item.current { color: var(--text); cursor: default; }
 .breadcrumb-sep { color: var(--text-dim); font-size: 10px; }
+.bib-empty { padding: 48px 32px; color: var(--text-dim); font-style: italic; text-align: center; font-size: 15px; }
 
 /* ── MODULE: MENSAJERÍA ── */
 .wa-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 56px); gap: 0; overflow: hidden; }
@@ -451,6 +452,20 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
   #new-post-form { padding: 0 16px 32px !important; }
   /* Blog reader body padding */
   .blog-reader-body { padding: 28px 20px 100px; }
+
+  /* ── Biblioteca: mobile ── */
+  .bib-toolbar { padding: 0 16px 16px; gap: 10px; }
+  .bib-search-wrap { max-width: 100%; }
+  .explorer-wrap { flex-direction: column; margin: 0 0 64px; min-height: auto; }
+  /* Tree becomes a compact horizontal folder strip */
+  .explorer-tree { width: 100%; height: auto; max-height: 44px; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; padding: 0; display: flex; flex-direction: row; align-items: stretch; white-space: nowrap; }
+  .tree-item { display: inline-flex; padding: 10px 14px; font-size: 10px; flex-shrink: 0; }
+  /* Detail: hide extra columns, 2-column layout */
+  .detail-header { display: none; }
+  .detail-row { grid-template-columns: 38px 1fr; padding: 14px 16px; min-height: 60px; align-items: center; }
+  .detail-row > div:nth-child(n+3) { display: none; }
+  .detail-row .col-name { font-size: 14px; }
+  .detail-row .col-name .sub { font-size: 14px; }
 
   /* ── WA: single-panel slide system ── */
   .wa-layout {
@@ -735,12 +750,18 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <h2>Biblioteca</h2>
         <div class="gold-line"></div>
       </div>
-      <div class="docs-filters">
-        <button class="filter-btn active" onclick="filterDocs('todos',this)">Todos</button>
-        <button class="filter-btn" onclick="filterDocs('pdf',this)">PDF</button>
-        <button class="filter-btn" onclick="filterDocs('docx',this)">Word</button>
-        <button class="filter-btn" onclick="filterDocs('jpg',this)">Imágenes</button>
-        <button class="filter-btn" onclick="filterDocs('youtube',this)">Videos</button>
+      <div class="bib-toolbar">
+        <div class="bib-search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" class="bib-search" id="bib-search" placeholder="Buscar documento…" oninput="bibSearch(this.value)">
+        </div>
+        <div class="docs-filters">
+          <button class="filter-btn active" onclick="filterDocs('todos',this)">Todos</button>
+          <button class="filter-btn" onclick="filterDocs('pdf',this)">PDF</button>
+          <button class="filter-btn" onclick="filterDocs('docx',this)">Word</button>
+          <button class="filter-btn" onclick="filterDocs('jpg',this)">Imágenes</button>
+          <button class="filter-btn" onclick="filterDocs('youtube',this)">Videos</button>
+        </div>
       </div>
       <div class="explorer-wrap" id="docs-explorer">
         <div class="explorer-tree" id="explorer-tree"></div>
@@ -1994,6 +2015,12 @@ let _explorerDocs     = [];
 let _explorerCarpetas = [];
 let _explorerCurrent  = null; // null = raíz
 let _explorerFilter   = 'todos';
+let _explorerSearch   = '';
+
+function bibSearch(q) {
+  _explorerSearch = q.trim().toLowerCase();
+  renderExplorerContent(_explorerCurrent);
+}
 
 async function loadDocuments() {
   const rol = currentProfile.role;
@@ -2031,6 +2058,9 @@ function filterDocs(tipo, btn) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   _explorerFilter = tipo;
+  _explorerSearch = '';
+  const si = document.getElementById('bib-search');
+  if (si) si.value = '';
   renderExplorerContent(_explorerCurrent);
 }
 
@@ -2091,6 +2121,9 @@ function isAncestorOf(ancestorId, currentId) {
 
 function navigateTo(carpetaId) {
   _explorerCurrent = carpetaId;
+  _explorerSearch = '';
+  const si = document.getElementById('bib-search');
+  if (si) si.value = '';
   renderExplorerTree();
   renderExplorerContent(carpetaId);
 }
@@ -2116,8 +2149,16 @@ function renderExplorerContent(carpetaId) {
   // Subcarpetas en esta ubicación
   const subcarpetas = _explorerCarpetas.filter(c => (carpetaId === null ? !c.parent_id : c.parent_id === carpetaId));
 
-  // Documentos en esta carpeta, con filtro de tipo
+  // Documentos en esta carpeta, con filtro de tipo y búsqueda
   const docsAqui = _explorerDocs.filter(d => {
+    // Si hay búsqueda activa, buscar en todo (ignorar carpeta)
+    if (_explorerSearch) {
+      const haystack = ((d.nombre||'') + ' ' + (d.descripcion||'') + ' ' + (d.autor_nombre||'')).toLowerCase();
+      if (!haystack.includes(_explorerSearch)) return false;
+      if (_explorerFilter === 'todos') return true;
+      if (_explorerFilter === 'youtube') return d.tipo === 'youtube' || !!d.youtube_url;
+      return d.tipo === _explorerFilter;
+    }
     const enCarpeta = carpetaId === null ? !d.carpeta_id : d.carpeta_id === carpetaId;
     if (!enCarpeta) return false;
     if (_explorerFilter === 'todos') return true;
@@ -2135,8 +2176,9 @@ function renderExplorerContent(carpetaId) {
 
   const totalItems = subcarpetas.length + docsAqui.length;
 
+  const searchingGlobal = !!_explorerSearch;
   content.innerHTML = `
-    <div class="breadcrumb">${breadcrumbHtml}
+    <div class="breadcrumb">${searchingGlobal ? `<span class="breadcrumb-item current">Resultados para «${_explorerSearch}»</span>` : breadcrumbHtml}
       <span style="margin-left:auto;font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);">${totalItems} elemento${totalItems!==1?'s':''}</span>
     </div>
     <div class="detail-header">
@@ -2145,35 +2187,35 @@ function renderExplorerContent(carpetaId) {
       <span>Autor</span>
       <span>Categoría</span>
       <span>Fecha</span>
-      <span>Editorial</span>
     </div>
     <div id="explorer-rows"></div>`;
 
   const rows = document.getElementById('explorer-rows');
 
-  // Subcarpetas primero
-  subcarpetas.forEach(cap => {
-    const docsEnCap = _explorerDocs.filter(d => d.carpeta_id === cap.id).length;
-    const row = document.createElement('div');
-    row.className = 'detail-row folder';
-    row.onclick = () => navigateTo(cap.id);
-    row.innerHTML = `
-      <div style="font-size:18px;">📁</div>
-      <div>
-        <div class="col-name">${cap.nombre}</div>
-        <span class="col-name sub">${docsEnCap} documento${docsEnCap!==1?'s':''}</span>
-      </div>
-      <div class="col-meta">—</div>
-      <div class="col-meta">—</div>
-      <div class="col-meta">—</div>
-      <div class="col-meta">—</div>`;
-    rows.appendChild(row);
-  });
+  // Subcarpetas primero (ocultas en búsqueda global)
+  if (!searchingGlobal) {
+    subcarpetas.forEach(cap => {
+      const docsEnCap = _explorerDocs.filter(d => d.carpeta_id === cap.id).length;
+      const row = document.createElement('div');
+      row.className = 'detail-row folder';
+      row.onclick = () => navigateTo(cap.id);
+      row.innerHTML = `
+        <div style="font-size:20px;line-height:1;">📁</div>
+        <div>
+          <div class="col-name">${cap.nombre}</div>
+          <span class="col-name sub">${docsEnCap} documento${docsEnCap!==1?'s':''}</span>
+        </div>
+        <div class="col-meta">—</div>
+        <div class="col-meta">—</div>
+        <div class="col-meta">—</div>`;
+      rows.appendChild(row);
+    });
+  }
 
   // Documentos
   docsAqui.forEach(d => {
     const url = d.youtube_url || d.url;
-    const icon = d.youtube_url ? '▶' : (icons[d.tipo] || '📁');
+    const icon = d.youtube_url ? '▶' : (icons[d.tipo] || '📄');
     const fechaStr = d.fecha_doc
       ? new Date(d.fecha_doc+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'})
       : '—';
@@ -2185,20 +2227,21 @@ function renderExplorerContent(carpetaId) {
     row.onclick = () => url && window.open(url,'_blank');
     row.style.cursor = url ? 'pointer' : 'default';
     row.innerHTML = `
-      <div style="font-size:18px;">${icon}</div>
+      <div style="font-size:20px;line-height:1;">${icon}</div>
       <div>
         <div class="col-name">${d.nombre}</div>
-        ${d.descripcion ? `<span class="col-name sub">${d.descripcion.substring(0,80)}${d.descripcion.length>80?'…':''}</span>` : ''}
+        ${d.descripcion ? `<span class="col-name sub">${d.descripcion.substring(0,100)}${d.descripcion.length>100?'…':''}</span>` : ''}
       </div>
       <div class="col-meta">${d.autor_nombre ? 'Q∴H∴ '+d.autor_nombre : '—'}</div>
       <div>${catBadge}</div>
-      <div class="col-meta">${fechaStr}</div>
-      <div class="col-meta">${d.editorial||'—'}</div>`;
+      <div class="col-meta">${fechaStr}</div>`;
     rows.appendChild(row);
   });
 
   if (!subcarpetas.length && !docsAqui.length) {
-    rows.innerHTML = '<div style="padding:32px;color:var(--text-dim);font-style:italic;text-align:center;">Esta carpeta está vacía.</div>';
+    rows.innerHTML = _explorerSearch
+      ? `<div class="bib-empty">No se encontraron documentos para «${_explorerSearch}».</div>`
+      : '<div class="bib-empty">Esta carpeta está vacía.</div>';
   }
 }
 
