@@ -2853,12 +2853,20 @@ async function saveBibDoc() {
     return;
   }
 
+  // Bloquear UI durante la subida
+  const btnSave   = document.getElementById('bib-btn-save');
+  const btnCancel = btnSave?.nextElementSibling;
+  const _setBibBusy = (busy, label='') => {
+    if (btnSave) { btnSave.disabled = busy; btnSave.textContent = busy ? label : (bibDocEditId ? 'Guardar cambios' : 'Guardar documento'); }
+    if (btnCancel) btnCancel.disabled = busy;
+  };
+
   let publicUrl = null;
   let tipDoc    = null;
 
   if (bibFileNew) {
     const sizeMB = (bibFileNew.size/1024/1024).toFixed(1);
-    toast(`Subiendo archivo… ${sizeMB} MB — puede tardar unos segundos`);
+    _setBibBusy(true, `⏳ Subiendo ${sizeMB} MB…`);
     const ext     = bibFileNew.name.split('.').pop().toLowerCase();
     tipDoc = ext==='pdf' ? 'pdf'
            : ['doc','docx'].includes(ext)                                       ? 'docx'
@@ -2868,21 +2876,20 @@ async function saveBibDoc() {
            : ['mp3','wav','ogg','m4a','aac','flac'].includes(ext)               ? 'audio'
            : ['mp4','mov','avi','mkv','webm'].includes(ext)                     ? 'video'
            : 'otro';
-    const safeName= sanitizeFilename(bibFileNew.name);
+    const safeName    = sanitizeFilename(bibFileNew.name);
     const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
-    const path    = storeFolder + '/' + Date.now() + '-' + safeName;
+    const path        = storeFolder + '/' + Date.now() + '-' + safeName;
     const { data: upData, error: upErr } = await sb.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
-    if (upErr) {
+    if (upErr || !upData) {
       console.error('Upload error:', upErr);
-      toast('❌ Error al subir el archivo: ' + (upErr.message || JSON.stringify(upErr)), 'error');
-      return;
-    }
-    if (!upData) {
-      toast('❌ El archivo no se subió correctamente. Intenta de nuevo.', 'error');
+      _setBibBusy(false);
+      toast('❌ Error al subir: ' + (upErr?.message || 'Respuesta inesperada del servidor'), 'error');
       return;
     }
     ({ data: { publicUrl } } = sb.storage.from('Documents').getPublicUrl(path));
   }
+
+  _setBibBusy(true, '⏳ Guardando…');
 
   const payload = {
     nombre, descripcion: desc||null,
@@ -2904,9 +2911,11 @@ async function saveBibDoc() {
     payload.autor_id = currentProfile.id;
     ({ error } = await sb.from('documents').insert(payload));
   }
-  if (error) { toast('Error al guardar: '+error.message,'error'); return; }
 
-  toast(bibDocEditId ? 'Documento actualizado' : 'Documento guardado','success');
+  _setBibBusy(false);
+  if (error) { toast('❌ Error al guardar: ' + error.message, 'error'); return; }
+
+  toast(bibDocEditId ? '✓ Documento actualizado' : '✓ Documento guardado', 'success');
   cancelBibDocForm();
   loadDocuments();
 }
