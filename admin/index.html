@@ -4083,7 +4083,8 @@ function openContentModal(type) {
 let _radioEpisodios = [];
 
 async function loadEpisodios() {
-  const { data } = await sb.from('episodios').select('*').order('numero');
+  const { data, error } = await sb.from('episodios').select('*').order('temporada').order('numero');
+  if (error) { toast('Error cargando episodios: ' + error.message, 'error'); return; }
   _radioEpisodios = data || [];
   const grid = document.getElementById('radio-grid'); grid.innerHTML='';
   if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay episodios aún.</div>'; return; }
@@ -4092,14 +4093,21 @@ async function loadEpisodios() {
     const imgHtml = ep.imagen_url
       ? `<img src="${ep.imagen_url}" style="width:100%;height:120px;object-fit:cover;margin-bottom:14px;border-radius:2px;">`
       : '';
+    const estadoBadge = ep.publicado
+      ? `<span style="background:rgba(100,200,100,0.15);color:#7dc97d;border:1px solid rgba(100,200,100,0.3);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;letter-spacing:0.1em;">✓ Publicado</span>`
+      : `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);border:1px solid var(--border);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;letter-spacing:0.1em;">Borrador</span>`;
+    const visBadge = ep.visibilidad==='privado'
+      ? `<span style="font-size:11px;color:var(--text-dim);">🔒 Privado</span>`
+      : `<span style="font-size:11px;color:var(--text-dim);">🌐 Público</span>`;
     div.innerHTML=`${imgHtml}
-      <div class=\"content-card-tag\">${ep.programa||'Radio Ágora'} · T${ep.temporada||1} · Ep.${String(ep.numero).padStart(2,'0')} · ${ep.publicado?'Publicado':'Borrador'} · ${ep.visibilidad==='privado'?'🔒 Privado':'🌐 Público'}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">${estadoBadge}${visBadge}</div>
+      <div class=\"content-card-tag\">${ep.programa||'Radio Ágora'} · T${ep.temporada||1} · Ep.${String(ep.numero).padStart(2,'0')}</div>
       <div class=\"content-card-title\">${ep.titulo}</div>
       <div class=\"content-card-meta\">${ep.duracion||'—'} · ${ep.categoria||'—'}</div>
-      <div class=\"content-card-actions\" style=\"margin-top:12px;\">
-        <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"editEpisodio('${ep.id}')\">Editar</button>
-        <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"toggleEpisodio('${ep.id}',${ep.publicado})\">${ep.publicado?'Despublicar':'Publicar'}</button>
-        <button class=\"btn-danger\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"deleteEpisodio('${ep.id}')\">Eliminar</button>
+      <div class=\"content-card-actions\" style=\"margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;\">
+        <button class=\"btn-primary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"editEpisodio('${ep.id}')\">✏ Editar</button>
+        <button class=\"btn-secondary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"toggleEpisodio('${ep.id}',${!!ep.publicado})\">${ep.publicado?'Despublicar':'Publicar'}</button>
+        <button class=\"btn-danger\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"deleteEpisodio('${ep.id}')\">Eliminar</button>
       </div>`;
     grid.appendChild(div);
   });
@@ -4179,9 +4187,14 @@ function openRadioForm(ep = null) {
   document.getElementById('radio-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function editEpisodio(id) {
-  const ep = _radioEpisodios.find(e => e.id === id);
+async function editEpisodio(id) {
+  let ep = _radioEpisodios.find(e => e.id === id);
+  if (!ep) {
+    const { data } = await sb.from('episodios').select('*').eq('id', id).single();
+    ep = data;
+  }
   if (ep) openRadioForm(ep);
+  else toast('No se encontró el episodio', 'error');
 }
 
 function cancelRadioForm() {
@@ -4227,32 +4240,38 @@ async function saveEpisodio(publish) {
   const num    = parseInt(document.getElementById('radio-num').value);
   if (!titulo || !num) { toast('Número y título son obligatorios','error'); return; }
 
+  const btnPublish = document.getElementById('radio-btn-publish');
+  const btnDraft   = document.getElementById('radio-btn-draft');
+  const _setBusy = (busy, label='') => {
+    if (btnPublish) { btnPublish.disabled = busy; if (publish && label) btnPublish.textContent = label; }
+    if (btnDraft)   { btnDraft.disabled   = busy; if (!publish && label) btnDraft.textContent = label; }
+  };
+
   let audioUrl = document.getElementById('radio-url').value.trim() || null;
   // En modo edición, si no se subió nuevo archivo, audioUrl ya viene del campo (URL existente)
   let imgUrl = radioImgFile ? null : radioExistingImgUrl;
 
   // Subir nueva portada si fue seleccionada
   if (radioImgFile) {
-    toast('Subiendo portada…');
+    _setBusy(true, '⏳ Subiendo portada…');
     const ext  = radioImgFile.name.split('.').pop().toLowerCase();
     const path = 'portadas/ep-' + num + '-' + Date.now() + '.' + ext;
     const { error: imgErr } = await sb.storage.from('Audio').upload(path, radioImgFile, { upsert: true });
-    if (imgErr) { toast('Error al subir portada: ' + imgErr.message, 'error'); return; }
+    if (imgErr) { _setBusy(false); toast('Error al subir portada: ' + imgErr.message, 'error'); return; }
     const { data: { publicUrl: imgPublicUrl } } = sb.storage.from('Audio').getPublicUrl(path);
     imgUrl = imgPublicUrl;
-    toast('Portada subida');
   }
 
   // Subir nuevo archivo de audio si fue seleccionado
   if (radioAudioFile) {
-    toast('Subiendo audio… esto puede tardar unos momentos');
+    const sizeMB = (radioAudioFile.size / 1024 / 1024).toFixed(1);
+    _setBusy(true, `⏳ Subiendo audio (${sizeMB} MB)…`);
     const ext  = radioAudioFile.name.split('.').pop().toLowerCase();
     const path = 'episodios/ep-' + num + '-' + Date.now() + '.' + ext;
     const { error: upErr } = await sb.storage.from('Audio').upload(path, radioAudioFile, { upsert: true });
-    if (upErr) { toast('Error al subir audio: ' + upErr.message, 'error'); return; }
+    if (upErr) { _setBusy(false); toast('Error al subir audio: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Audio').getPublicUrl(path);
     audioUrl = publicUrl;
-    toast('Audio subido correctamente');
   }
 
   const payload = {
@@ -4278,7 +4297,8 @@ async function saveEpisodio(publish) {
     ({ error } = await sb.from('episodios').insert(payload));
   }
 
-  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+  _setBusy(true, '⏳ Guardando…');
+  if (error) { _setBusy(false); toast('Error al guardar: ' + error.message, 'error'); return; }
 
   const wasEdit = !!radioEditId;
   cancelRadioForm();
@@ -4292,13 +4312,17 @@ async function saveEpisodio(publish) {
 }
 
 async function toggleEpisodio(id, pub) {
-  await sb.from('episodios').update({publicado:!pub}).eq('id',id);
-  toast(pub?'Despublicado':'Publicado','success'); loadEpisodios();
+  const { error } = await sb.from('episodios').update({ publicado: !pub }).eq('id', id);
+  if (error) { toast('Error al actualizar: ' + error.message, 'error'); return; }
+  toast(pub ? 'Episodio despublicado' : 'Episodio publicado', 'success');
+  loadEpisodios();
 }
 async function deleteEpisodio(id) {
-  if(!confirm('¿Eliminar este episodio?')) return;
-  await sb.from('episodios').delete().eq('id',id);
-  toast('Episodio eliminado'); loadEpisodios();
+  if (!confirm('¿Eliminar este episodio? Esta acción no se puede deshacer.')) return;
+  const { error } = await sb.from('episodios').delete().eq('id', id);
+  if (error) { toast('Error al eliminar: ' + error.message, 'error'); return; }
+  toast('Episodio eliminado', 'success');
+  loadEpisodios();
 }
 
 
