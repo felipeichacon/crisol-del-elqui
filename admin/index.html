@@ -2839,7 +2839,8 @@ async function saveBibDoc() {
     editorial: editorial||null,
     fecha_doc: fechaDoc,
     roles,
-    role: roles[0]
+    role: roles[0],
+    publico: roles.includes('publico')
   };
   if (publicUrl) { payload.url = publicUrl; payload.tipo = tipDoc; }
 
@@ -2905,7 +2906,8 @@ async function saveBibVideo() {
     editorial: editorial||null,
     fecha_doc: fechaDoc,
     roles,
-    role: roles[0]
+    role: roles[0],
+    publico: roles.includes('publico')
   };
 
   let error;

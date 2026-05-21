@@ -1514,6 +1514,9 @@
     renderBiblioteca(data);
   }
 
+  const _bibTipoIcon = {pdf:'📄',docx:'📝',xlsx:'📊',pptx:'📊',jpg:'🖼️',audio:'🎵',video:'🎬',youtube:'▶'};
+  const _bibTipoLabel = {pdf:'PDF',docx:'Word',xlsx:'Excel',pptx:'PowerPoint',jpg:'Imagen',audio:'Audio',video:'Video',youtube:'Video'};
+
   function renderBiblioteca(items) {
     const grid = document.getElementById('bib-public-grid');
     if (!items.length) {
@@ -1523,14 +1526,18 @@
     grid.innerHTML = '';
     items.forEach(d => {
       const div = document.createElement('div');
-      div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:0;overflow:hidden;transition:border-color 0.3s;';
+      div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:0;overflow:hidden;transition:border-color 0.3s;display:flex;flex-direction:column;';
       div.onmouseover = () => div.style.borderColor = 'var(--border-bright)';
       div.onmouseout  = () => div.style.borderColor = 'var(--border)';
 
       const isYoutube = !!d.youtube_url;
       const youtubeId = isYoutube ? extractYoutubeId(d.youtube_url) : null;
+      const icon      = _bibTipoIcon[d.tipo] || '📁';
+      const tipoLabel = _bibTipoLabel[d.tipo] || d.tipo || 'Documento';
+      const fechaStr  = d.fecha_doc ? new Date(d.fecha_doc.substring(0,10)+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'}) : '';
+
       const thumbHtml = youtubeId
-        ? `<div style="position:relative;cursor:pointer;" onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,'\'')}')">
+        ? `<div style="position:relative;cursor:pointer;flex-shrink:0;" onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,"\\'")}')">
              <img src="https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg" style="width:100%;height:160px;object-fit:cover;display:block;">
              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">
                <div style="width:48px;height:48px;background:rgba(255,0,0,0.85);border-radius:50%;display:flex;align-items:center;justify-content:center;">
@@ -1538,16 +1545,25 @@
                </div>
              </div>
            </div>`
-        : `<div style="width:100%;height:160px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0.3;">${d.tipo==='pdf'?'📄':d.tipo==='docx'?'📝':'📁'}</div>`;
+        : `<div style="width:100%;height:120px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0;">${icon}</div>`;
+
+      const metaParts = [];
+      if (d.autor_nombre) metaParts.push(d.autor_nombre);
+      if (d.editorial)    metaParts.push(d.editorial);
+      if (fechaStr)       metaParts.push(fechaStr);
 
       div.innerHTML = `
         ${thumbHtml}
-        <div style="padding:20px 24px;">
-          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">${d.categoria||'General'}</div>
-          <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--cream);margin-bottom:8px;font-weight:400;line-height:1.4;">${d.nombre}</div>
-          ${d.descripcion ? `<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;">${d.descripcion}</div>` : ''}
-          ${!isYoutube && d.url ? `<a href="${d.url}" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);text-decoration:none;text-transform:uppercase;border-bottom:1px solid var(--border-bright);padding-bottom:2px;">Descargar →</a>` : ''}
-          ${isYoutube ? `<button onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,'\'')}') " style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border-bright);padding-bottom:2px;cursor:pointer;text-transform:uppercase;">Ver video →</button>` : ''}
+        <div style="padding:20px 24px;display:flex;flex-direction:column;flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;">${d.categoria||'General'}</span>
+            <span style="font-size:10px;color:var(--text-dim);background:var(--dark-4);padding:2px 6px;border:1px solid var(--border);">${tipoLabel}</span>
+          </div>
+          <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);margin-bottom:8px;font-weight:400;line-height:1.5;">${d.nombre}</div>
+          ${metaParts.length ? `<div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">${metaParts.join(' · ')}</div>` : ''}
+          ${d.descripcion ? `<div style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.6;flex:1;">${d.descripcion.substring(0,120)}${d.descripcion.length>120?'…':''}</div>` : '<div style="flex:1;"></div>'}
+          ${!isYoutube && d.url ? `<a href="${d.url}" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);text-decoration:none;text-transform:uppercase;border-bottom:1px solid var(--border-bright);padding-bottom:2px;align-self:flex-start;">Descargar →</a>` : ''}
+          ${isYoutube ? `<button onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,"\\'")}') " style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border-bright);padding-bottom:2px;cursor:pointer;text-transform:uppercase;align-self:flex-start;">Ver video →</button>` : ''}
         </div>`;
       grid.appendChild(div);
     });
@@ -1565,7 +1581,9 @@
     renderBiblioteca(_bibData.filter(d =>
       (d.nombre||'').toLowerCase().includes(q) ||
       (d.descripcion||'').toLowerCase().includes(q) ||
-      (d.categoria||'').toLowerCase().includes(q)
+      (d.categoria||'').toLowerCase().includes(q) ||
+      (d.autor_nombre||'').toLowerCase().includes(q) ||
+      (d.editorial||'').toLowerCase().includes(q)
     ));
   }
 
