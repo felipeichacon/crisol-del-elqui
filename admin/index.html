@@ -869,8 +869,17 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           <div style="margin-bottom:16px;">
             <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Archivo</div>
             <button type="button" class="btn-secondary" onclick="document.getElementById('bib-file-new').click()">Seleccionar archivo</button>
-            <input type="file" id="bib-file-new" style="display:none" accept=".pdf,.docx,.doc,.jpg,.png" onchange="previewBibFile(this)">
+            <input type="file" id="bib-file-new" style="display:none"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.odt,.ods,.odp,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg,.tiff,.bmp,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mp4,.mov,.avi,.mkv,.webm,.ai,.psd,.eps,.indd,.zip,.rar"
+              onchange="previewBibFile(this)">
             <span id="bib-file-name" style="font-size:13px;color:var(--text-dim);margin-left:12px;">Ningún archivo seleccionado</span>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.7;">
+              Documentos: PDF · Word · Excel · PowerPoint · TXT · ODT<br>
+              Imágenes: JPG · PNG · GIF · WEBP · SVG<br>
+              Audio: MP3 · WAV · OGG · M4A · AAC · FLAC<br>
+              Video: MP4 · MOV · AVI · MKV · WEBM<br>
+              Adobe: AI · PSD · EPS · INDD &nbsp;·&nbsp; Archivos: ZIP · RAR
+            </div>
           </div>
           <div style="display:flex;gap:12px;">
             <button id="bib-btn-save" class="btn-primary" onclick="saveBibDoc()">Guardar documento</button>
@@ -2789,7 +2798,14 @@ async function saveBibDoc() {
   if (bibFileNew) {
     toast('Subiendo archivo…');
     const ext     = bibFileNew.name.split('.').pop().toLowerCase();
-    tipDoc        = ext==='pdf'?'pdf':['docx','doc'].includes(ext)?'docx':['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
+    tipDoc = ext==='pdf' ? 'pdf'
+           : ['doc','docx'].includes(ext)                                       ? 'docx'
+           : ['xls','xlsx'].includes(ext)                                       ? 'xlsx'
+           : ['ppt','pptx'].includes(ext)                                       ? 'pptx'
+           : ['jpg','jpeg','png','gif','webp','svg','tiff','bmp'].includes(ext)  ? 'jpg'
+           : ['mp3','wav','ogg','m4a','aac','flac'].includes(ext)               ? 'audio'
+           : ['mp4','mov','avi','mkv','webm'].includes(ext)                     ? 'video'
+           : 'otro';
     const safeName= sanitizeFilename(bibFileNew.name);
     const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
     const path    = storeFolder + '/' + Date.now() + '-' + safeName;
@@ -3078,7 +3094,7 @@ function _admBibSortDocs(docs) {
 function _admRenderContent(carpetaId) {
   const content = document.getElementById('adm-explorer-content');
   if (!content) return;
-  const icons = {pdf:'📄',docx:'📝',jpg:'🖼️',png:'🖼️',youtube:'▶',otro:'📁'};
+  const icons = {pdf:'📄',docx:'📝',xlsx:'📊',pptx:'📊',jpg:'🖼️',png:'🖼️',audio:'🎵',video:'🎬',youtube:'▶',otro:'📁'};
 
   const isSearchingGlobally = _admExplorerSearch ||
     _admExplorerAdv.autor || _admExplorerAdv.editorial || _admExplorerAdv.categoria ||
