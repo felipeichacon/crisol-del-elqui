@@ -853,7 +853,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
                 <option>Fondo General</option>
               </select></div>
             <div class="field"><label>Carpeta <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
-              <select id="bib-carpeta-sel" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+              <select id="bib-carpeta-sel" onchange="onBibCarpetaChange()" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
                 <option value="">Sin carpeta</option>
               </select></div>
             <div class="field"><label>Editorial <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
@@ -861,13 +861,20 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <div class="field" style="grid-column:1/-1;"><label>Descripción <span style="font-size:11px;color:var(--text-dim);font-style:italic;">(opcional)</span></label>
               <textarea id="bib-desc" rows="2" placeholder="Breve descripción del recurso…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
           </div>
-          <!-- Roles de acceso (múltiple) -->
-          <div style="margin-bottom:16px;">
-            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Visible para</div>
+          <!-- Visibilidad -->
+          <div style="margin-bottom:20px;">
+            <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Visibilidad</div>
+            <!-- Público -->
+            <label id="bib-rol-publico-label" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 16px;border:1px solid var(--border);margin-bottom:10px;transition:border-color 0.2s,background 0.2s;">
+              <input type="checkbox" name="bib-rol" value="publico" id="bib-rol-publico" style="accent-color:var(--gold);width:18px;height:18px;flex-shrink:0;" onchange="toggleBibPublicoStyle()">
+              <div>
+                <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--cream);letter-spacing:0.1em;">🌐 Público — visible en el landing</div>
+                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Cualquier visitante puede verlo sin iniciar sesión</div>
+              </div>
+            </label>
+            <!-- Intranet -->
+            <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.25em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">Acceso en intranet</div>
             <div style="display:flex;gap:16px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
-                <input type="checkbox" name="bib-rol" value="publico"   style="accent-color:var(--gold);width:16px;height:16px;"> Público (landing)
-              </label>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
                 <input type="checkbox" name="bib-rol" value="aprendiz" style="accent-color:var(--gold);width:16px;height:16px;"> Aprendices
               </label>
@@ -878,7 +885,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
                 <input type="checkbox" name="bib-rol" value="maestro"  style="accent-color:var(--gold);width:16px;height:16px;"> Maestros
               </label>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
-                <input type="checkbox" name="bib-rol" value="todos" checked style="accent-color:var(--gold);width:16px;height:16px;"> Todos
+                <input type="checkbox" name="bib-rol" value="todos" checked style="accent-color:var(--gold);width:16px;height:16px;"> Todos los grados
               </label>
             </div>
           </div>
@@ -2654,6 +2661,32 @@ let bibDocEditId   = null;
 let bibVideoEditId = null;
 let _bibVideos     = [];
 
+function toggleBibPublicoStyle() {
+  const cb    = document.getElementById('bib-rol-publico');
+  const label = document.getElementById('bib-rol-publico-label');
+  if (!cb || !label) return;
+  if (cb.checked) {
+    label.style.borderColor = 'var(--gold)';
+    label.style.background  = 'rgba(201,168,76,0.08)';
+  } else {
+    label.style.borderColor = 'var(--border)';
+    label.style.background  = 'transparent';
+  }
+}
+
+// Auto-marca "Público" si la carpeta seleccionada es pública
+function onBibCarpetaChange() {
+  const sel = document.getElementById('bib-carpeta-sel');
+  if (!sel) return;
+  const carpetaId = sel.value;
+  if (!carpetaId) return;
+  const carpeta = (bibCarpetas || []).find(c => c.id === carpetaId);
+  if (carpeta?.publico) {
+    const cb = document.getElementById('bib-rol-publico');
+    if (cb && !cb.checked) { cb.checked = true; toggleBibPublicoStyle(); }
+  }
+}
+
 function abrirBibForm(doc = null) {
   bibDocEditId = doc ? doc.id : null;
 
@@ -2666,6 +2699,7 @@ function abrirBibForm(doc = null) {
   document.getElementById('bib-file-name').textContent = 'Ningún archivo seleccionado';
   document.getElementById('bib-file-name').style.color = 'var(--text-dim)';
   document.querySelectorAll('input[name="bib-rol"]').forEach(cb => cb.checked = cb.value === 'todos');
+  toggleBibPublicoStyle();
   bibFileNew = null;
   loadCarpetasSel();
 
@@ -2681,6 +2715,7 @@ function abrirBibForm(doc = null) {
     // Roles
     const roles = doc.roles || (doc.role ? [doc.role] : []);
     document.querySelectorAll('input[name="bib-rol"]').forEach(cb => cb.checked = roles.includes(cb.value));
+    toggleBibPublicoStyle();
     // Carpeta: se asignará cuando loadCarpetasSel() complete
     if (doc.carpeta_id) {
       const trySetCarpeta = () => {
