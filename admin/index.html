@@ -172,6 +172,26 @@ tr:hover td { background: rgba(201,168,76,0.04); }
 .breadcrumb-item:hover { color: var(--gold); }
 .breadcrumb-item.current { color: var(--text); cursor: default; }
 .breadcrumb-sep { color: var(--text-dim); font-size: 10px; }
+/* ── Toolbar búsqueda / filtros admin biblioteca ── */
+.adm-bib-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 0 10px; border-bottom:1px solid var(--border); }
+.adm-bib-search-wrap { position:relative; flex:1; min-width:180px; }
+.adm-bib-search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; }
+.adm-bib-search { width:100%; background:var(--dark-3); border:1px solid var(--border); color:var(--text); font-size:12px; padding:8px 12px 8px 34px; outline:none; box-sizing:border-box; }
+.adm-bib-search:focus { border-color:var(--border-bright); }
+.adm-bib-sort-sel { background:var(--dark-3); border:1px solid var(--border); color:var(--text-dim); font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.1em; padding:8px 10px; outline:none; cursor:pointer; }
+.adm-bib-adv-toggle { font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--text-dim); background:transparent; border:1px solid var(--border); padding:8px 12px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+.adm-bib-adv-toggle:hover, .adm-bib-adv-toggle.active { color:var(--gold); border-color:var(--border-bright); background:rgba(201,168,76,0.06); }
+.adm-bib-adv-count { background:var(--gold); color:var(--dark); font-size:9px; padding:1px 6px; border-radius:10px; display:none; }
+.adm-bib-adv-panel { display:none; background:var(--dark-4); border-bottom:1px solid var(--border); padding:14px 0 16px; }
+.adm-bib-adv-row { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+.adm-bib-adv-field { display:flex; flex-direction:column; gap:5px; flex:1; min-width:120px; }
+.adm-bib-adv-field label { font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.22em; color:var(--gold-dim); text-transform:uppercase; }
+.adm-bib-adv-field input, .adm-bib-adv-field select { background:var(--dark-3); border:1px solid var(--border); color:var(--text); font-size:12px; padding:7px 10px; outline:none; width:100%; box-sizing:border-box; }
+.adm-bib-adv-field input:focus, .adm-bib-adv-field select:focus { border-color:var(--border-bright); }
+.adm-bib-year-wrap { display:flex; gap:6px; align-items:center; }
+.adm-bib-year-wrap input { width:76px !important; flex-shrink:0; }
+.adm-bib-clear-btn { font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-dim); background:transparent; border:1px solid var(--border); padding:8px 14px; cursor:pointer; align-self:flex-end; }
+.adm-bib-clear-btn:hover { color:var(--gold); border-color:var(--border-bright); }
 .adm-poll-option-bar { height: 30px; background: var(--dark-4); border: 1px solid var(--border); border-radius: 3px; position: relative; overflow: hidden; display: flex; align-items: center; padding: 0 10px; gap: 8px; margin-bottom: 6px; }
 .adm-poll-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(201,168,76,0.15); transition: width 0.4s; }
 .adm-poll-text { position: relative; font-size: 14px; color: var(--text); flex: 1; }
@@ -2894,6 +2914,10 @@ async function loadDocuments() {
 let _admExplorerDocs     = [];
 let _admExplorerCarpetas = [];
 let _admExplorerCurrent  = null;
+let _admExplorerSearch   = '';
+let _admExplorerSort     = 'nombre-asc';
+let _admExplorerAdv      = { autor:'', editorial:'', categoria:'', desde:'', hasta:'' };
+let _admExplorerAdvOpen  = false;
 
 function renderDocCards(docs) {
   _admExplorerDocs = docs;
@@ -2906,7 +2930,47 @@ function _admRenderExplorer() {
 
   // Reemplazar contenedor por explorador si no existe
   if (!container.querySelector('.explorer-wrap')) {
-    container.innerHTML = `<div class="explorer-wrap">
+    container.innerHTML = `
+    <div class="adm-bib-toolbar" id="adm-bib-toolbar">
+      <div class="adm-bib-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" class="adm-bib-search" id="adm-bib-search" placeholder="Buscar nombre, autor, editorial…" oninput="admBibSearch(this.value)">
+      </div>
+      <select class="adm-bib-sort-sel" id="adm-bib-sort" onchange="admBibSort(this.value)">
+        <option value="nombre-asc">Nombre A→Z</option>
+        <option value="nombre-desc">Nombre Z→A</option>
+        <option value="fecha-desc">Fecha más reciente</option>
+        <option value="fecha-asc">Fecha más antigua</option>
+        <option value="autor-asc">Autor A→Z</option>
+      </select>
+      <button class="adm-bib-adv-toggle" id="adm-bib-adv-toggle" onclick="admBibToggleAdv()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filtros <span class="adm-bib-adv-count" id="adm-bib-adv-count"></span>
+      </button>
+    </div>
+    <div class="adm-bib-adv-panel" id="adm-bib-adv-panel">
+      <div class="adm-bib-adv-row">
+        <div class="adm-bib-adv-field"><label>Autor</label><input type="text" id="adm-bib-adv-autor" placeholder="Nombre del autor…" oninput="admBibApplyAdv()"></div>
+        <div class="adm-bib-adv-field"><label>Editorial</label><input type="text" id="adm-bib-adv-editorial" placeholder="Ej: Gran Logia de Chile…" oninput="admBibApplyAdv()"></div>
+        <div class="adm-bib-adv-field"><label>Categoría</label>
+          <select id="adm-bib-adv-cat" onchange="admBibApplyAdv()">
+            <option value="">Todas</option>
+            <option>Planchas</option><option>Filosofía</option><option>Masonería</option>
+            <option>Literatura</option><option>Trazados de Cámara</option>
+            <option>Actas de Tenidas</option><option>Fondo General</option>
+          </select>
+        </div>
+        <div class="adm-bib-adv-field" style="max-width:200px;"><label>Año</label>
+          <div class="adm-bib-year-wrap">
+            <input type="number" id="adm-bib-adv-desde" placeholder="Desde" min="1800" max="2099" oninput="admBibApplyAdv()">
+            <span style="color:var(--text-dim);">—</span>
+            <input type="number" id="adm-bib-adv-hasta" placeholder="Hasta" min="1800" max="2099" oninput="admBibApplyAdv()">
+          </div>
+        </div>
+        <button class="adm-bib-clear-btn" onclick="admBibClearFilters()">Limpiar</button>
+      </div>
+    </div>
+    <div class="explorer-wrap">
       <div class="explorer-tree" id="adm-explorer-tree"></div>
       <div class="explorer-content" id="adm-explorer-content"></div>
     </div>`;
@@ -2952,19 +3016,90 @@ function _admNavigateTo(carpetaId) {
   _admRenderContent(carpetaId);
 }
 
+function admBibSearch(q) { _admExplorerSearch = q.trim().toLowerCase(); _admRenderContent(_admExplorerCurrent); }
+function admBibSort(val)  { _admExplorerSort = val; _admRenderContent(_admExplorerCurrent); }
+function admBibToggleAdv() {
+  _admExplorerAdvOpen = !_admExplorerAdvOpen;
+  const panel = document.getElementById('adm-bib-adv-panel');
+  const btn   = document.getElementById('adm-bib-adv-toggle');
+  if (panel) panel.style.display = _admExplorerAdvOpen ? 'block' : 'none';
+  if (btn)   btn.classList.toggle('active', _admExplorerAdvOpen);
+}
+function admBibApplyAdv() {
+  _admExplorerAdv = {
+    autor:     (document.getElementById('adm-bib-adv-autor')?.value    || '').trim().toLowerCase(),
+    editorial: (document.getElementById('adm-bib-adv-editorial')?.value || '').trim().toLowerCase(),
+    categoria: (document.getElementById('adm-bib-adv-cat')?.value       || ''),
+    desde:     (document.getElementById('adm-bib-adv-desde')?.value     || ''),
+    hasta:     (document.getElementById('adm-bib-adv-hasta')?.value     || ''),
+  };
+  const n = Object.values(_admExplorerAdv).filter(v => v !== '').length;
+  const badge = document.getElementById('adm-bib-adv-count');
+  if (badge) { badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+  _admRenderContent(_admExplorerCurrent);
+}
+function admBibClearFilters() {
+  _admExplorerSearch = '';
+  _admExplorerAdv    = { autor:'', editorial:'', categoria:'', desde:'', hasta:'' };
+  ['adm-bib-search','adm-bib-adv-autor','adm-bib-adv-editorial','adm-bib-adv-desde','adm-bib-adv-hasta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const catEl = document.getElementById('adm-bib-adv-cat'); if (catEl) catEl.value = '';
+  const badge = document.getElementById('adm-bib-adv-count'); if (badge) { badge.textContent='0'; badge.style.display='none'; }
+  _admRenderContent(_admExplorerCurrent);
+}
+function _admBibMatchesFilters(d) {
+  if (_admExplorerSearch) {
+    const hay = [d.nombre,d.descripcion,d.autor_nombre,d.editorial,d.categoria].filter(Boolean).join(' ').toLowerCase();
+    if (!hay.includes(_admExplorerSearch)) return false;
+  }
+  const a = _admExplorerAdv;
+  if (a.autor     && !(d.autor_nombre||'').toLowerCase().includes(a.autor))     return false;
+  if (a.editorial && !(d.editorial   ||'').toLowerCase().includes(a.editorial)) return false;
+  if (a.categoria && d.categoria !== a.categoria)                                return false;
+  if (a.desde || a.hasta) {
+    const anio = d.fecha_doc ? parseInt(d.fecha_doc.substring(0,4)) : null;
+    if (!anio) return false;
+    if (a.desde && anio < parseInt(a.desde)) return false;
+    if (a.hasta && anio > parseInt(a.hasta)) return false;
+  }
+  return true;
+}
+function _admBibSortDocs(docs) {
+  return [...docs].sort((a,b) => {
+    switch (_admExplorerSort) {
+      case 'nombre-desc': return (b.nombre||'').localeCompare(a.nombre||'','es');
+      case 'fecha-desc':  return (b.fecha_doc||'0000').localeCompare(a.fecha_doc||'0000');
+      case 'fecha-asc':   return (a.fecha_doc||'9999').localeCompare(b.fecha_doc||'9999');
+      case 'autor-asc':   return (a.autor_nombre||'').localeCompare(b.autor_nombre||'','es');
+      default:            return (a.nombre||'').localeCompare(b.nombre||'','es');
+    }
+  });
+}
+
 function _admRenderContent(carpetaId) {
   const content = document.getElementById('adm-explorer-content');
   if (!content) return;
   const icons = {pdf:'📄',docx:'📝',jpg:'🖼️',png:'🖼️',youtube:'▶',otro:'📁'};
-  const subcarpetas = _explorerCarpetas.filter(c=>carpetaId===null?!c.parent_id:c.parent_id===carpetaId);
-  const docsAqui = _admExplorerDocs.filter(d=>carpetaId===null?!d.carpeta_id:d.carpeta_id===carpetaId);
+
+  const isSearchingGlobally = _admExplorerSearch ||
+    _admExplorerAdv.autor || _admExplorerAdv.editorial || _admExplorerAdv.categoria ||
+    _admExplorerAdv.desde || _admExplorerAdv.hasta;
+
+  const subcarpetas = isSearchingGlobally ? [] : _explorerCarpetas.filter(c=>carpetaId===null?!c.parent_id:c.parent_id===carpetaId);
+  const docsBase    = isSearchingGlobally ? _admExplorerDocs : _admExplorerDocs.filter(d=>carpetaId===null?!d.carpeta_id:d.carpeta_id===carpetaId);
+  const docsAqui    = _admBibSortDocs(docsBase.filter(_admBibMatchesFilters));
 
   // Breadcrumb
   const path = [];
   let cx = _explorerCarpetas.find(x=>x.id===carpetaId);
   while (cx) { path.unshift(cx); cx=_explorerCarpetas.find(x=>x.id===cx.parent_id); }
-  let bc = `<span class="breadcrumb-item${carpetaId===null?' current':''}" onclick="_admNavigateTo(null)">Biblioteca</span>`;
-  path.forEach((cp,i)=>{bc+=`<span class="breadcrumb-sep">›</span><span class="breadcrumb-item${i===path.length-1?' current':''}" onclick="_admNavigateTo('${cp.id}')">${cp.nombre}</span>`;});
+
+  let bc;
+  if (isSearchingGlobally) {
+    bc = `<span class="breadcrumb-item" onclick="_admNavigateTo(null)">Biblioteca</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item current">Resultados</span>`;
+  } else {
+    bc = `<span class="breadcrumb-item${carpetaId===null?' current':''}" onclick="_admNavigateTo(null)">Biblioteca</span>`;
+    path.forEach((cp,i)=>{bc+=`<span class="breadcrumb-sep">›</span><span class="breadcrumb-item${i===path.length-1?' current':''}" onclick="_admNavigateTo('${cp.id}')">${cp.nombre}</span>`;});
+  }
 
   const total = subcarpetas.length + docsAqui.length;
   content.innerHTML = `
@@ -3001,7 +3136,7 @@ function _admRenderContent(carpetaId) {
     rows.appendChild(row);
   });
 
-  if (!total) rows.innerHTML='<div style="padding:24px;color:var(--text-dim);font-style:italic;text-align:center;">Carpeta vacía.</div>';
+  if (!total) rows.innerHTML=`<div style="padding:24px;color:var(--text-dim);font-style:italic;text-align:center;">${isSearchingGlobally?'Sin resultados para esa búsqueda.':'Carpeta vacía.'}</div>`;
 }
 
 // ── LOAD VIDEOS ──
