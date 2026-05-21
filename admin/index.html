@@ -617,7 +617,24 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         </div>
       </div>
 
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="openNoticiaForm()">+ Nueva noticia</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+        <button class="btn-primary" onclick="openNoticiaForm()">+ Nueva noticia</button>
+        <div class="adm-bib-search-wrap" style="flex:1;min-width:200px;max-width:400px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" class="adm-bib-search" id="noticia-search" placeholder="Buscar por título, contenido, autor…" oninput="admNoticiaSearch(this.value)">
+        </div>
+        <select class="adm-bib-sort-sel" id="noticia-tag-filter" onchange="admNoticiaSearch(document.getElementById('noticia-search').value)">
+          <option value="">Todas las categorías</option>
+          <option>Tenida</option><option>Comunidad</option><option>Conferencia</option>
+          <option>Cultura</option><option>Social</option><option>Aniversario</option>
+          <option>Corporación</option><option>Destacado</option>
+        </select>
+        <select class="adm-bib-sort-sel" id="noticia-estado-filter" onchange="admNoticiaSearch(document.getElementById('noticia-search').value)">
+          <option value="">Publicadas y borradores</option>
+          <option value="1">Solo publicadas</option>
+          <option value="0">Solo borradores</option>
+        </select>
+      </div>
       <div class="content-grid" id="noticias-grid"></div>
     </div>
 
@@ -3920,19 +3937,12 @@ async function saveNoticia(publish) {
   loadNoticias();
 }
 
-async function loadNoticias() {
-  let data = null;
-  const { data: d1, error: e1 } = await sb.from('noticias').select('*').order('fecha_pub', {ascending:false});
-  if (!e1) { data = d1; } else {
-    const { data: d2 } = await sb.from('posts').select('*').order('created_at', {ascending:false});
-    data = d2;
-  }
-  _allNoticias = data || [];
-
+function _renderNoticiasGrid(data) {
   const grid = document.getElementById('noticias-grid');
+  if (!grid) return;
   grid.innerHTML = '';
   if (!data?.length) {
-    grid.innerHTML = '<div style=\"color:var(--text-dim);font-style:italic;\">No hay noticias aún.</div>';
+    grid.innerHTML = '<div style=\"color:var(--text-dim);font-style:italic;\">No hay noticias para mostrar.</div>';
     return;
   }
   data.forEach(n => {
@@ -3954,6 +3964,38 @@ async function loadNoticias() {
       </div>`;
     grid.appendChild(div);
   });
+}
+
+function admNoticiaSearch(q) {
+  const term   = (q||'').trim().toLowerCase();
+  const tag    = document.getElementById('noticia-tag-filter')?.value    || '';
+  const estado = document.getElementById('noticia-estado-filter')?.value || '';
+  const filtered = _allNoticias.filter(n => {
+    if (tag    && n.tag !== tag) return false;
+    if (estado === '1' && !n.publicado)  return false;
+    if (estado === '0' &&  n.publicado)  return false;
+    if (term) {
+      const hay = [n.titulo, n.contenido, n.extracto, n.autor_nombre, n.tag].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(term)) return false;
+    }
+    return true;
+  });
+  _renderNoticiasGrid(filtered);
+}
+
+async function loadNoticias() {
+  let data = null;
+  const { data: d1, error: e1 } = await sb.from('noticias').select('*').order('fecha_pub', {ascending:false});
+  if (!e1) { data = d1; } else {
+    const { data: d2 } = await sb.from('posts').select('*').order('created_at', {ascending:false});
+    data = d2;
+  }
+  _allNoticias = data || [];
+  // Aplicar filtros activos si los hay
+  const term = (document.getElementById('noticia-search')?.value || '').trim();
+  const tag  = document.getElementById('noticia-tag-filter')?.value    || '';
+  const est  = document.getElementById('noticia-estado-filter')?.value || '';
+  if (term || tag || est) { admNoticiaSearch(term); } else { _renderNoticiasGrid(_allNoticias); }
 }
 
 async function toggleNoticia(id, pub) {
