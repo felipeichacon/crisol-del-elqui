@@ -4182,6 +4182,9 @@ function openRadioForm(ep = null) {
     document.getElementById('radio-btn-publish').textContent = 'Publicar episodio';
     document.getElementById('radio-btn-draft').textContent   = 'Guardar borrador';
   }
+  // Siempre re-habilitar botones al abrir (por si quedaron disabled de una operación anterior)
+  document.getElementById('radio-btn-publish').disabled = false;
+  document.getElementById('radio-btn-draft').disabled   = false;
 
   document.getElementById('radio-form').style.display = 'block';
   document.getElementById('radio-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4289,6 +4292,7 @@ async function saveEpisodio(publish) {
     visibilidad:          document.querySelector('input[name="radio-visibilidad"]:checked')?.value || 'publico'
   };
 
+  _setBusy(true, '⏳ Guardando…');
   let error;
   if (radioEditId) {
     ({ error } = await sb.from('episodios').update(payload).eq('id', radioEditId));
@@ -4296,9 +4300,9 @@ async function saveEpisodio(publish) {
     payload.autor_id = currentProfile.id;
     ({ error } = await sb.from('episodios').insert(payload));
   }
+  _setBusy(false);
 
-  _setBusy(true, '⏳ Guardando…');
-  if (error) { _setBusy(false); toast('Error al guardar: ' + error.message, 'error'); return; }
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
 
   const wasEdit = !!radioEditId;
   cancelRadioForm();
