@@ -185,21 +185,43 @@
 
   /* BIBLIOTECA */
   .biblioteca { background: var(--dark); }
-  .bib-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; margin-top: 60px; }
-  .bib-category { background: var(--dark-3); border: 1px solid var(--border); padding: 40px 28px; text-align: center; transition: border-color 0.3s, background 0.3s; cursor: pointer; }
-  .bib-category:hover { border-color: var(--border-bright); background: var(--dark-4); }
-  .bib-icon { font-size: 32px; margin-bottom: 16px; display: block; }
-  .bib-cat-name { font-family: 'Cinzel', serif; font-size: 14px; color: var(--cream); margin-bottom: 8px; font-weight: 600; }
-  .bib-cat-count { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
-  .bib-search { display: flex; margin-top: 48px; max-width: 600px; }
+  .bib-search { display: flex; max-width: 600px; margin-bottom: 0; }
   .bib-search input { flex: 1; background: var(--dark-3); border: 1px solid var(--border); border-right: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 17px; padding: 14px 20px; outline: none; transition: border-color 0.3s; }
   .bib-search input::placeholder { color: var(--text-dim); }
   .bib-search input:focus { border-color: var(--gold-dim); }
   .bib-search button { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; background: var(--gold); color: var(--dark); border: none; padding: 14px 24px; cursor: pointer; transition: background 0.3s; white-space: nowrap; }
   .bib-search button:hover { background: var(--gold-light); }
-  .bib-folder-tab { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); background: var(--dark-3); border: 1px solid var(--border); padding: 9px 18px; cursor: pointer; transition: all 0.2s; }
-  .bib-folder-tab:hover { color: var(--gold); border-color: var(--border-bright); background: var(--dark-4); }
-  .bib-folder-tab.active { color: var(--dark); background: var(--gold); border-color: var(--gold); }
+  /* Explorador */
+  .pub-bib-wrap { display: flex; border: 1px solid var(--border); min-height: 480px; margin-top: 28px; margin-bottom: 40px; }
+  .pub-bib-tree { width: 220px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--dark-3); overflow-y: auto; padding: 6px 0; }
+  .pub-bib-content { flex: 1; overflow-y: auto; min-width: 0; }
+  .pub-tree-item { display: flex; align-items: center; gap: 7px; padding: 9px 14px; cursor: pointer; font-family: 'Cinzel', serif; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pub-tree-item:hover { background: rgba(201,168,76,0.07); color: var(--text); }
+  .pub-tree-item.active { background: rgba(201,168,76,0.13); color: var(--gold); }
+  .pub-tree-item .t-arrow { font-size: 9px; transition: transform 0.2s; flex-shrink: 0; }
+  .pub-tree-item.open .t-arrow { transform: rotate(90deg); }
+  .pub-detail-header { display: grid; grid-template-columns: 36px 1fr 130px 90px 110px; padding: 8px 16px; border-bottom: 2px solid var(--border); background: var(--dark-4); }
+  .pub-detail-header span { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dim); }
+  .pub-detail-row { display: grid; grid-template-columns: 36px 1fr 130px 90px 110px; padding: 11px 16px; border-bottom: 1px solid rgba(201,168,76,0.06); align-items: center; transition: background 0.15s; min-height: 50px; }
+  .pub-detail-row:hover { background: rgba(201,168,76,0.05); }
+  .pub-detail-row.folder { cursor: pointer; }
+  .pub-detail-row .col-name { font-family: 'Cinzel', serif; font-size: 12px; color: var(--cream); line-height: 1.4; padding-right: 10px; }
+  .pub-detail-row .col-sub { font-size: 12px; color: var(--text-dim); display: block; font-family: serif; font-style: italic; letter-spacing: 0; text-transform: none; margin-top: 3px; }
+  .pub-detail-row .col-meta { font-size: 12px; color: var(--text-dim); }
+  .pub-breadcrumb { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--dark-3); }
+  .pub-bc-item { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-dim); cursor: pointer; }
+  .pub-bc-item:hover { color: var(--gold); }
+  .pub-bc-item.current { color: var(--text); cursor: default; }
+  .pub-bc-sep { color: var(--text-dim); font-size: 10px; }
+  .pub-bib-action { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); background: transparent; border: 1px solid var(--border-bright); padding: 5px 10px; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.2s; white-space: nowrap; }
+  .pub-bib-action:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+  @media (max-width: 680px) {
+    .pub-bib-wrap { flex-direction: column; min-height: auto; }
+    .pub-bib-tree { width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 130px; overflow-y: hidden; overflow-x: auto; display: flex; flex-direction: row; align-items: stretch; padding: 0; }
+    .pub-tree-item { white-space: nowrap; flex-shrink: 0; }
+    .pub-detail-header, .pub-detail-row { grid-template-columns: 28px 1fr 90px; }
+    .pub-detail-header span:nth-child(n+4), .pub-detail-row > *:nth-child(n+4) { display: none; }
+  }
   .bib-banner { background: var(--dark-4); border: 1px solid var(--border); padding: 32px 40px; margin-top: 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .bib-banner-text { font-family: 'Cinzel', serif; font-size: 15px; color: var(--cream); }
   .bib-banner-sub { font-size: 14px; color: var(--text-dim); margin-top: 6px; }
@@ -661,12 +683,14 @@
       <button onclick="filterBiblioteca(document.getElementById('bib-search-input').value)">Buscar</button>
     </div>
 
-    <!-- Pestañas de carpetas públicas -->
-    <div id="bib-folder-tabs" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:32px;"></div>
-
-    <!-- Grid de resultados -->
-    <div id="bib-public-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px;margin-bottom:40px;">
-      <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">Cargando biblioteca…</div>
+    <!-- Explorador de carpetas estilo Windows -->
+    <div class="pub-bib-wrap">
+      <div class="pub-bib-tree" id="pub-bib-tree">
+        <div class="pub-tree-item"><span>📚</span><span>Cargando…</span></div>
+      </div>
+      <div class="pub-bib-content" id="pub-bib-content">
+        <div style="padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">Cargando biblioteca…</div>
+      </div>
     </div>
 
     <!-- Banner contacto biblioteca -->
@@ -1501,123 +1525,184 @@
   }
 
 
-  // ── BIBLIOTECA PÚBLICA ──
-  let _bibData         = [];
-  let _bibCarpetas     = [];
-  let _bibActiveCarpeta = null;  // null = Todas
+  // ── BIBLIOTECA PÚBLICA — EXPLORADOR ──
+  let _pubBibCarpetas = [];
+  let _pubBibDocs     = [];
+  let _pubBibCurrent  = null;  // null = raíz, string = carpeta_id
 
   async function loadBibliotecaPublica() {
-    const grid = document.getElementById('bib-public-grid');
-
-    // Cargar carpetas públicas y documentos públicos en paralelo
     const [{ data: carpetas }, { data: docs }] = await Promise.all([
       _sb.from('doc_carpetas').select('*').eq('publico', true).order('nombre'),
       _sb.from('documents').select('*').eq('publico', true).order('nombre')
     ]);
-
-    _bibCarpetas = carpetas || [];
-    _bibData     = docs     || [];
-
-    _renderBibFolderTabs();
-
-    if (!_bibData.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">No hay documentos públicos disponibles aún.</div>';
-      return;
-    }
-    _bibApplyFilters();
+    _pubBibCarpetas = carpetas || [];
+    _pubBibDocs     = docs     || [];
+    _pubBibRender();
   }
 
-  function _renderBibFolderTabs() {
-    const wrap = document.getElementById('bib-folder-tabs');
-    if (!wrap) return;
-    if (!_bibCarpetas.length) { wrap.style.display = 'none'; return; }
-    wrap.style.display = 'flex';
-    wrap.innerHTML = '';
-    const mkBtn = (label, id) => {
-      const btn = document.createElement('button');
-      btn.textContent = label;
-      btn.dataset.carpeta = id ?? '';
-      btn.className = 'bib-folder-tab' + (_bibActiveCarpeta === id ? ' active' : '');
-      btn.onclick = () => { _bibActiveCarpeta = id; _bibApplyFilters(); _renderBibFolderTabs(); };
-      wrap.appendChild(btn);
-    };
-    mkBtn('Todas', null);
-    _bibCarpetas.forEach(c => mkBtn(c.nombre, c.id));
+  function _pubBibRender() {
+    _pubBibRenderTree();
+    _pubBibRenderContent(_pubBibCurrent);
   }
 
-  function _bibApplyFilters() {
-    let items = _bibData;
-    if (_bibActiveCarpeta !== null) {
-      items = items.filter(d => d.carpeta_id === _bibActiveCarpeta);
-    }
-    const q = (document.getElementById('bib-search-input')?.value || '').trim().toLowerCase();
-    if (q) {
-      items = items.filter(d =>
-        (d.nombre||'').toLowerCase().includes(q) ||
-        (d.descripcion||'').toLowerCase().includes(q) ||
-        (d.categoria||'').toLowerCase().includes(q) ||
-        (d.autor_nombre||'').toLowerCase().includes(q) ||
-        (d.editorial||'').toLowerCase().includes(q)
-      );
-    }
-    renderBiblioteca(items);
+  // ── ÁRBOL LATERAL ──
+  function _pubBibRenderTree() {
+    const tree = document.getElementById('pub-bib-tree');
+    if (!tree) return;
+    tree.innerHTML = '';
+    const root = document.createElement('div');
+    root.className = 'pub-tree-item' + (_pubBibCurrent === null ? ' active' : '');
+    root.innerHTML = `<span>📚</span><span>Biblioteca</span>`;
+    root.onclick = () => _pubBibNavigateTo(null);
+    tree.appendChild(root);
+    _pubBibCarpetas.filter(c => !c.parent_id).forEach(c => _pubBibRenderTreeNode(tree, c, 1));
   }
 
-  function filterBiblioteca(query) { _bibApplyFilters(); }
-
-  const _bibTipoIcon = {pdf:'📄',docx:'📝',xlsx:'📊',pptx:'📊',jpg:'🖼️',audio:'🎵',video:'🎬',youtube:'▶'};
-  const _bibTipoLabel = {pdf:'PDF',docx:'Word',xlsx:'Excel',pptx:'PowerPoint',jpg:'Imagen',audio:'Audio',video:'Video',youtube:'Video'};
-
-  function renderBiblioteca(items) {
-    const grid = document.getElementById('bib-public-grid');
-    if (!items.length) {
-      grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">No se encontraron resultados.</div>';
-      return;
+  function _pubBibRenderTreeNode(container, c, depth) {
+    const hasChildren = _pubBibCarpetas.some(ch => ch.parent_id === c.id);
+    const isActive    = _pubBibCurrent === c.id;
+    const isOpen      = isActive || _pubBibIsAncestor(c.id, _pubBibCurrent);
+    const item = document.createElement('div');
+    item.className = 'pub-tree-item' + (isActive ? ' active' : '') + (isOpen && hasChildren ? ' open' : '');
+    item.style.paddingLeft = (14 + depth * 14) + 'px';
+    item.innerHTML = `${hasChildren ? `<span class="t-arrow">▶</span>` : `<span style="width:9px;display:inline-block;flex-shrink:0;"></span>`}<span>📁</span><span style="overflow:hidden;text-overflow:ellipsis;">${c.nombre}</span>`;
+    item.onclick = () => _pubBibNavigateTo(c.id);
+    container.appendChild(item);
+    if (isOpen && hasChildren) {
+      _pubBibCarpetas.filter(ch => ch.parent_id === c.id).forEach(ch => _pubBibRenderTreeNode(container, ch, depth + 1));
     }
-    grid.innerHTML = '';
-    items.forEach(d => {
-      const div = document.createElement('div');
-      div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:0;overflow:hidden;transition:border-color 0.3s;display:flex;flex-direction:column;';
-      div.onmouseover = () => div.style.borderColor = 'var(--border-bright)';
-      div.onmouseout  = () => div.style.borderColor = 'var(--border)';
+  }
 
-      const isYoutube = !!d.youtube_url;
-      const youtubeId = isYoutube ? extractYoutubeId(d.youtube_url) : null;
-      const icon      = _bibTipoIcon[d.tipo] || '📁';
-      const tipoLabel = _bibTipoLabel[d.tipo] || d.tipo || 'Documento';
-      const fechaStr  = d.fecha_doc ? new Date(d.fecha_doc.substring(0,10)+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'}) : '';
+  function _pubBibIsAncestor(ancestorId, nodeId) {
+    if (!nodeId) return false;
+    const node = _pubBibCarpetas.find(c => c.id === nodeId);
+    if (!node) return false;
+    if (node.parent_id === ancestorId) return true;
+    return _pubBibIsAncestor(ancestorId, node.parent_id);
+  }
 
-      const thumbHtml = youtubeId
-        ? `<div style="position:relative;cursor:pointer;flex-shrink:0;" onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,"\\'")}')">
-             <img src="https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg" style="width:100%;height:160px;object-fit:cover;display:block;">
-             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">
-               <div style="width:48px;height:48px;background:rgba(255,0,0,0.85);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-                 <span style="color:#fff;font-size:18px;margin-left:4px;">▶</span>
-               </div>
-             </div>
-           </div>`
-        : `<div style="width:100%;height:120px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:48px;flex-shrink:0;">${icon}</div>`;
+  function _pubBibNavigateTo(carpetaId) {
+    document.getElementById('bib-search-input') && (document.getElementById('bib-search-input').value = '');
+    _pubBibCurrent = carpetaId;
+    _pubBibRender();
+  }
 
-      const metaParts = [];
-      if (d.autor_nombre) metaParts.push(d.autor_nombre);
-      if (d.editorial)    metaParts.push(d.editorial);
-      if (fechaStr)       metaParts.push(fechaStr);
+  // ── PANEL DE CONTENIDO ──
+  function _pubBibRenderContent(carpetaId) {
+    const content = document.getElementById('pub-bib-content');
+    if (!content) return;
 
-      div.innerHTML = `
-        ${thumbHtml}
-        <div style="padding:20px 24px;display:flex;flex-direction:column;flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;">${d.categoria||'General'}</span>
-            <span style="font-size:10px;color:var(--text-dim);background:var(--dark-4);padding:2px 6px;border:1px solid var(--border);">${tipoLabel}</span>
-          </div>
-          <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);margin-bottom:8px;font-weight:400;line-height:1.5;">${d.nombre}</div>
-          ${metaParts.length ? `<div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">${metaParts.join(' · ')}</div>` : ''}
-          ${d.descripcion ? `<div style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.6;flex:1;">${d.descripcion.substring(0,120)}${d.descripcion.length>120?'…':''}</div>` : '<div style="flex:1;"></div>'}
-          ${!isYoutube && d.url ? `<a href="${d.url}" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);text-decoration:none;text-transform:uppercase;border-bottom:1px solid var(--border-bright);padding-bottom:2px;align-self:flex-start;">Descargar →</a>` : ''}
-          ${isYoutube ? `<button onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,"\\'")}') " style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border-bright);padding-bottom:2px;cursor:pointer;text-transform:uppercase;align-self:flex-start;">Ver video →</button>` : ''}
+    // Breadcrumb
+    const crumbs = [{ id: null, label: 'Biblioteca' }];
+    if (carpetaId) {
+      const path = [];
+      let cur = _pubBibCarpetas.find(c => c.id === carpetaId);
+      while (cur) { path.unshift(cur); cur = cur.parent_id ? _pubBibCarpetas.find(c => c.id === cur.parent_id) : null; }
+      path.forEach(c => crumbs.push({ id: c.id, label: c.nombre }));
+    }
+    const breadHtml = crumbs.map((b, i) =>
+      i === crumbs.length - 1
+        ? `<span class="pub-bc-item current">${b.label}</span>`
+        : `<span class="pub-bc-item" onclick="_pubBibNavigateTo(${b.id === null ? 'null' : `'${b.id}'`})">${b.label}</span><span class="pub-bc-sep">›</span>`
+    ).join('');
+
+    // Sub-carpetas y documentos directos
+    const subCarpetas = _pubBibCarpetas.filter(c => (c.parent_id || null) === (carpetaId || null));
+    const docs        = _pubBibDocs.filter(d => (d.carpeta_id || null) === (carpetaId || null));
+
+    const _picon = t => ({pdf:'📄',docx:'📝',xlsx:'📊',pptx:'📊',jpg:'🖼️',audio:'🎵',video:'🎬',youtube:'▶'}[t] || '📄');
+
+    let rowsHtml = '';
+
+    subCarpetas.forEach(c => {
+      const n = _pubBibDocs.filter(d => _pubBibDocInFolder(d, c.id)).length;
+      rowsHtml += `
+        <div class="pub-detail-row folder" onclick="_pubBibNavigateTo('${c.id}')">
+          <span style="font-size:20px;">📁</span>
+          <div class="col-name">${c.nombre}${c.descripcion ? `<span class="col-sub">${c.descripcion}</span>` : ''}</div>
+          <span class="col-meta">${n ? n + ' elemento' + (n !== 1 ? 's' : '') : '—'}</span>
+          <span class="col-meta"></span>
+          <span class="col-meta"></span>
         </div>`;
-      grid.appendChild(div);
     });
+
+    docs.forEach(d => {
+      const isYT    = !!d.youtube_url;
+      const icon    = _picon(d.tipo);
+      const fecha   = d.fecha_doc ? new Date(d.fecha_doc.substring(0,10)+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'}) : '';
+      const action  = isYT
+        ? `<button class="pub-bib-action" onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">▶ Ver</button>`
+        : (d.url ? `<a class="pub-bib-action" href="${d.url}" target="_blank">↓ Abrir</a>` : '');
+      rowsHtml += `
+        <div class="pub-detail-row">
+          <span style="font-size:18px;">${icon}</span>
+          <div class="col-name">${d.nombre}${d.descripcion ? `<span class="col-sub">${d.descripcion.substring(0,90)}${d.descripcion.length>90?'…':''}</span>` : ''}</div>
+          <span class="col-meta">${[d.autor_nombre,d.editorial].filter(Boolean).join(' · ') || '—'}</span>
+          <span class="col-meta">${d.categoria || '—'}</span>
+          <span class="col-meta">${action || fecha || '—'}</span>
+        </div>`;
+    });
+
+    if (!subCarpetas.length && !docs.length) {
+      rowsHtml = `<div style="padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">Esta carpeta está vacía.</div>`;
+    }
+
+    content.innerHTML = `
+      <div class="pub-breadcrumb">${breadHtml}</div>
+      <div class="pub-detail-header">
+        <span></span><span>Nombre</span><span>Autor / Editorial</span><span>Categoría</span><span>Acción / Fecha</span>
+      </div>
+      ${rowsHtml}`;
+  }
+
+  // Cuenta si un doc pertenece a una carpeta o sus subcarpetas
+  function _pubBibDocInFolder(doc, folderId) {
+    if ((doc.carpeta_id || null) === folderId) return true;
+    return _pubBibCarpetas.filter(c => c.parent_id === folderId).some(sf => _pubBibDocInFolder(doc, sf.id));
+  }
+
+  // Búsqueda global
+  function filterBiblioteca(q) {
+    const content = document.getElementById('pub-bib-content');
+    if (!q || !q.trim()) { _pubBibRenderContent(_pubBibCurrent); return; }
+    const term = q.trim().toLowerCase();
+    const hits = _pubBibDocs.filter(d =>
+      (d.nombre||'').toLowerCase().includes(term) ||
+      (d.descripcion||'').toLowerCase().includes(term) ||
+      (d.categoria||'').toLowerCase().includes(term) ||
+      (d.autor_nombre||'').toLowerCase().includes(term) ||
+      (d.editorial||'').toLowerCase().includes(term)
+    );
+    const _picon = t => ({pdf:'📄',docx:'📝',xlsx:'📊',pptx:'📊',jpg:'🖼️',audio:'🎵',video:'🎬',youtube:'▶'}[t] || '📄');
+    let rowsHtml = hits.map(d => {
+      const isYT   = !!d.youtube_url;
+      const icon   = _picon(d.tipo);
+      const fecha  = d.fecha_doc ? new Date(d.fecha_doc.substring(0,10)+'T12:00').toLocaleDateString('es-CL',{year:'numeric',month:'short'}) : '';
+      const action = isYT
+        ? `<button class="pub-bib-action" onclick="openVideoModal('${d.youtube_url}','${(d.nombre||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">▶ Ver</button>`
+        : (d.url ? `<a class="pub-bib-action" href="${d.url}" target="_blank">↓ Abrir</a>` : '');
+      const carpeta = d.carpeta_id ? _pubBibCarpetas.find(c => c.id === d.carpeta_id) : null;
+      return `
+        <div class="pub-detail-row">
+          <span style="font-size:18px;">${icon}</span>
+          <div class="col-name">${d.nombre}${carpeta ? `<span class="col-sub">📁 ${carpeta.nombre}</span>` : ''}</div>
+          <span class="col-meta">${[d.autor_nombre,d.editorial].filter(Boolean).join(' · ') || '—'}</span>
+          <span class="col-meta">${d.categoria || '—'}</span>
+          <span class="col-meta">${action || fecha || '—'}</span>
+        </div>`;
+    }).join('');
+    if (!hits.length) rowsHtml = `<div style="padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">Sin resultados para "${q}".</div>`;
+    if (!content) return;
+    content.innerHTML = `
+      <div class="pub-breadcrumb">
+        <span class="pub-bc-item" onclick="_pubBibNavigateTo(null)">Biblioteca</span>
+        <span class="pub-bc-sep">›</span>
+        <span class="pub-bc-item current">Búsqueda: "${q}"</span>
+      </div>
+      <div class="pub-detail-header">
+        <span></span><span>Nombre</span><span>Autor / Editorial</span><span>Categoría</span><span>Acción / Fecha</span>
+      </div>
+      ${rowsHtml}`;
   }
 
   function extractYoutubeId(url) {
