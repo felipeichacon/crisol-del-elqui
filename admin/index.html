@@ -570,7 +570,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
 
       <!-- Formulario nueva noticia -->
       <div id="noticia-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:32px;max-width:760px;">
-        <div style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nueva noticia</div>
+        <div id="noticia-form-title" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nueva noticia</div>
 
         <!-- Imagen -->
         <div style="margin-bottom:24px;">
@@ -613,11 +613,11 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <div style="display:flex;gap:12px;">
           <button class="btn-primary" onclick="saveNoticia(true)">Publicar noticia</button>
           <button class="btn-secondary" onclick="saveNoticia(false)">Guardar borrador</button>
-          <button class="btn-secondary" onclick="document.getElementById('noticia-form').style.display='none'">Cancelar</button>
+          <button class="btn-secondary" onclick="cancelNoticiaForm()">Cancelar</button>
         </div>
       </div>
 
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="document.getElementById('noticia-form').style.display='block';document.getElementById('noticia-form').scrollIntoView({behavior:'smooth'})">+ Nueva noticia</button>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="openNoticiaForm()">+ Nueva noticia</button>
       <div class="content-grid" id="noticias-grid"></div>
     </div>
 
@@ -3813,7 +3813,10 @@ async function sendBroadcast() {
 // ── MODAL ──
 function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 // ── NOTICIAS ──
-let noticiaImgFile = null;
+let noticiaImgFile        = null;
+let noticiaEditId         = null;   // null = nueva, uuid = editando
+let noticiaExistingImgUrl = null;
+let _allNoticias          = [];
 
 function previewNoticiaImg(input) {
   const file = input.files[0]; if(!file) return;
@@ -3826,70 +3829,105 @@ function previewNoticiaImg(input) {
   reader.readAsDataURL(file);
 }
 
+function openNoticiaForm(n = null) {
+  noticiaEditId         = n ? n.id   : null;
+  noticiaExistingImgUrl = n ? (n.imagen_url || null) : null;
+  noticiaImgFile        = null;
+
+  document.getElementById('noticia-form-title').textContent = n ? 'Editar noticia' : 'Nueva noticia';
+  document.getElementById('noticia-titulo').value    = n?.titulo    || '';
+  document.getElementById('noticia-contenido').value = n?.contenido || '';
+  document.getElementById('noticia-tag').value       = n?.tag       || 'Tenida';
+  document.getElementById('noticia-fecha').value     = n?.fecha_pub ? n.fecha_pub.substring(0,10) : '';
+
+  const prev = document.getElementById('noticia-img-preview');
+  if (n?.imagen_url) {
+    prev.innerHTML = `<img src=\"${n.imagen_url}\" style=\"width:100%;height:100%;object-fit:cover;\">`;
+  } else {
+    prev.innerHTML = `<span style=\"font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;\">Subir imagen</span>`;
+  }
+
+  document.getElementById('noticia-form').style.display = 'block';
+  document.getElementById('noticia-form').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelNoticiaForm() {
+  noticiaEditId         = null;
+  noticiaExistingImgUrl = null;
+  noticiaImgFile        = null;
+  document.getElementById('noticia-img-preview').innerHTML = `<span style=\"font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;\">Subir imagen</span>`;
+  document.getElementById('noticia-titulo').value    = '';
+  document.getElementById('noticia-contenido').value = '';
+  document.getElementById('noticia-form').style.display = 'none';
+}
+
+function editarNoticia(id) {
+  const n = _allNoticias.find(x => x.id === id);
+  if (n) openNoticiaForm(n);
+}
+
 async function saveNoticia(publish) {
-  const titulo   = document.getElementById('noticia-titulo').value.trim();
-  const contenido= document.getElementById('noticia-contenido').value.trim();
-  const tag      = document.getElementById('noticia-tag').value;
-  const fecha    = document.getElementById('noticia-fecha').value || new Date().toISOString().split('T')[0];
+  const titulo    = document.getElementById('noticia-titulo').value.trim();
+  const contenido = document.getElementById('noticia-contenido').value.trim();
+  const tag       = document.getElementById('noticia-tag').value;
+  const fecha     = document.getElementById('noticia-fecha').value || new Date().toISOString().split('T')[0];
   if (!titulo || !contenido) { toast('Título y contenido son obligatorios', 'error'); return; }
   toast('Guardando noticia…');
 
-  let imgUrl = '';
+  let imgUrl = noticiaImgFile ? null : noticiaExistingImgUrl;
   if (noticiaImgFile) {
-    const path = Date.now() + '-' + noticiaImgFile.name.replace(/\\\\s/g,'_');
+    const path = Date.now() + '-' + noticiaImgFile.name.replace(/\s/g,'_');
     const { error: upErr } = await sb.storage.from('Noticias').upload(path, noticiaImgFile, {upsert:true});
-    if (upErr) {
-      toast('Error al subir imagen: ' + upErr.message, 'error');
-      return;
-    }
+    if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
   }
 
-  const { error } = await sb.from('noticias').insert({
+  const payload = {
     titulo,
     contenido,
     extracto:   contenido.substring(0, 220),
     tag,
     fecha_pub:  fecha,
     imagen_url: imgUrl || null,
-    autor_id:   currentProfile.id,
-    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
     publicado:  publish
-  });
+  };
 
-  if (error) {
-    // Si la tabla no existe, usar posts como fallback
-    await sb.from('posts').insert({
-      role:        'todos',
-      titulo,
-      contenido,
-      extracto:    contenido.substring(0, 220),
-      autor_id:    currentProfile.id,
-      autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
-      publicado:   publish
-    });
+  let error;
+  if (noticiaEditId) {
+    ({ error } = await sb.from('noticias').update(payload).eq('id', noticiaEditId));
+  } else {
+    payload.autor_id     = currentProfile.id;
+    payload.autor_nombre = currentProfile.nombre + ' ' + (currentProfile.apellido||'');
+    ({ error } = await sb.from('noticias').insert(payload));
+    if (error) {
+      // fallback a posts si la tabla no existe
+      await sb.from('posts').insert({
+        role: 'todos', titulo, contenido,
+        extracto:    contenido.substring(0, 220),
+        autor_id:    currentProfile.id,
+        autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+        publicado:   publish
+      });
+      error = null;
+    }
   }
 
-  noticiaImgFile = null;
-  document.getElementById('noticia-img-preview').innerHTML = `<span style=\"font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;\">Subir imagen</span>`;
-  document.getElementById('noticia-titulo').value = '';
-  document.getElementById('noticia-contenido').value = '';
-  document.getElementById('noticia-form').style.display = 'none';
-  toast(publish ? 'Noticia publicada' : 'Borrador guardado', 'success');
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  const wasEdit = !!noticiaEditId;
+  cancelNoticiaForm();
+  toast(wasEdit ? 'Noticia actualizada' : (publish ? 'Noticia publicada' : 'Borrador guardado'), 'success');
   loadNoticias();
 }
 
 async function loadNoticias() {
-  // Intentar tabla noticias primero, fallback a posts
   let data = null;
   const { data: d1, error: e1 } = await sb.from('noticias').select('*').order('fecha_pub', {ascending:false});
-  if (!e1) {
-    data = d1;
-  } else {
+  if (!e1) { data = d1; } else {
     const { data: d2 } = await sb.from('posts').select('*').order('created_at', {ascending:false});
     data = d2;
   }
+  _allNoticias = data || [];
 
   const grid = document.getElementById('noticias-grid');
   grid.innerHTML = '';
@@ -3900,7 +3938,7 @@ async function loadNoticias() {
   data.forEach(n => {
     const div = document.createElement('div'); div.className='content-card';
     const fecha = n.fecha_pub || n.created_at;
-    const dateStr = fecha ? new Date(fecha).toLocaleDateString('es-CL') : '—';
+    const dateStr = fecha ? new Date(fecha.substring(0,10)+'T12:00').toLocaleDateString('es-CL') : '—';
     const imgHtml = n.imagen_url
       ? `<img src=\"${n.imagen_url}\" style=\"width:100%;height:140px;object-fit:cover;margin-bottom:14px;\">`
       : '';
@@ -3910,6 +3948,7 @@ async function loadNoticias() {
       <div class=\"content-card-title\">${n.titulo}</div>
       <div class=\"content-card-meta\">${n.autor_nombre||'—'} · ${dateStr}</div>
       <div class=\"content-card-actions\" style=\"margin-top:12px;\">
+        <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"editarNoticia('${n.id}')\">Editar</button>
         <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"toggleNoticia('${n.id}',${n.publicado})\">${n.publicado?'Despublicar':'Publicar'}</button>
         <button class=\"btn-danger\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"deleteNoticia('${n.id}')\">Eliminar</button>
       </div>`;
