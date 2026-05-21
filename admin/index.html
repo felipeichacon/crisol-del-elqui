@@ -1008,6 +1008,8 @@ tr:hover td { background: rgba(201,168,76,0.04); }
             <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Visible para</div>
             <div style="display:flex;gap:16px;flex-wrap:wrap;">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
+                <input type="checkbox" name="bib-carpeta-rol" value="publico"   style="accent-color:var(--gold);width:16px;height:16px;"> Público (landing)</label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
                 <input type="checkbox" name="bib-carpeta-rol" value="aprendiz"  style="accent-color:var(--gold);width:16px;height:16px;"> Aprendices</label>
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);">
                 <input type="checkbox" name="bib-carpeta-rol" value="companero" style="accent-color:var(--gold);width:16px;height:16px;"> Compañeros</label>
@@ -3257,10 +3259,11 @@ async function guardarCarpeta() {
   const editId= document.getElementById('bib-carpeta-edit-id').value;
 
   const parentId = document.getElementById('bib-carpeta-parent')?.value || null;
+  const publico  = roles.includes('publico');
   if (editId) {
-    await sb.from('doc_carpetas').update({nombre,descripcion:desc,roles,parent_id:parentId}).eq('id',editId);
+    await sb.from('doc_carpetas').update({nombre,descripcion:desc,roles,publico,parent_id:parentId}).eq('id',editId);
   } else {
-    await sb.from('doc_carpetas').insert({nombre,descripcion:desc,roles,parent_id:parentId});
+    await sb.from('doc_carpetas').insert({nombre,descripcion:desc,roles,publico,parent_id:parentId});
   }
   document.getElementById('bib-carpeta-form').style.display='none';
   document.getElementById('bib-carpeta-nombre').value='';

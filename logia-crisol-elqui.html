@@ -197,6 +197,9 @@
   .bib-search input:focus { border-color: var(--gold-dim); }
   .bib-search button { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; background: var(--gold); color: var(--dark); border: none; padding: 14px 24px; cursor: pointer; transition: background 0.3s; white-space: nowrap; }
   .bib-search button:hover { background: var(--gold-light); }
+  .bib-folder-tab { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); background: var(--dark-3); border: 1px solid var(--border); padding: 9px 18px; cursor: pointer; transition: all 0.2s; }
+  .bib-folder-tab:hover { color: var(--gold); border-color: var(--border-bright); background: var(--dark-4); }
+  .bib-folder-tab.active { color: var(--dark); background: var(--gold); border-color: var(--gold); }
   .bib-banner { background: var(--dark-4); border: 1px solid var(--border); padding: 32px 40px; margin-top: 40px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .bib-banner-text { font-family: 'Cinzel', serif; font-size: 15px; color: var(--cream); }
   .bib-banner-sub { font-size: 14px; color: var(--text-dim); margin-top: 6px; }
@@ -653,10 +656,13 @@
     <p style="font-size:17px;color:var(--text-dim);max-width:640px;line-height:1.9;margin-bottom:32px;">Colección de libre acceso en filosofía, historia, ciencia y humanidades.</p>
 
     <!-- Buscador funcional -->
-    <div class="bib-search" style="margin-bottom:40px;">
+    <div class="bib-search" style="margin-bottom:24px;">
       <input type="text" id="bib-search-input" placeholder="Buscar por título, autor o tema…" oninput="filterBiblioteca(this.value)">
       <button onclick="filterBiblioteca(document.getElementById('bib-search-input').value)">Buscar</button>
     </div>
+
+    <!-- Pestañas de carpetas públicas -->
+    <div id="bib-folder-tabs" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:32px;"></div>
 
     <!-- Grid de resultados -->
     <div id="bib-public-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px;margin-bottom:40px;">
@@ -1496,23 +1502,68 @@
 
 
   // ── BIBLIOTECA PÚBLICA ──
-  let _bibData = [];
+  let _bibData         = [];
+  let _bibCarpetas     = [];
+  let _bibActiveCarpeta = null;  // null = Todas
 
   async function loadBibliotecaPublica() {
     const grid = document.getElementById('bib-public-grid');
-    const { data } = await _sb
-      .from('documents')
-      .select('*')
-      .eq('publico', true)
-      .order('created_at', { ascending: false });
 
-    if (!data?.length) {
+    // Cargar carpetas públicas y documentos públicos en paralelo
+    const [{ data: carpetas }, { data: docs }] = await Promise.all([
+      _sb.from('doc_carpetas').select('*').eq('publico', true).order('nombre'),
+      _sb.from('documents').select('*').eq('publico', true).order('nombre')
+    ]);
+
+    _bibCarpetas = carpetas || [];
+    _bibData     = docs     || [];
+
+    _renderBibFolderTabs();
+
+    if (!_bibData.length) {
       grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">No hay documentos públicos disponibles aún.</div>';
       return;
     }
-    _bibData = data;
-    renderBiblioteca(data);
+    _bibApplyFilters();
   }
+
+  function _renderBibFolderTabs() {
+    const wrap = document.getElementById('bib-folder-tabs');
+    if (!wrap) return;
+    if (!_bibCarpetas.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'flex';
+    wrap.innerHTML = '';
+    const mkBtn = (label, id) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.dataset.carpeta = id ?? '';
+      btn.className = 'bib-folder-tab' + (_bibActiveCarpeta === id ? ' active' : '');
+      btn.onclick = () => { _bibActiveCarpeta = id; _bibApplyFilters(); _renderBibFolderTabs(); };
+      wrap.appendChild(btn);
+    };
+    mkBtn('Todas', null);
+    _bibCarpetas.forEach(c => mkBtn(c.nombre, c.id));
+  }
+
+  function _bibApplyFilters() {
+    let items = _bibData;
+    if (_bibActiveCarpeta !== null) {
+      items = items.filter(d => d.carpeta_id === _bibActiveCarpeta);
+    }
+    const q = (document.getElementById('bib-search-input')?.value || '').trim().toLowerCase();
+    if (q) {
+      items = items.filter(d =>
+        (d.nombre||'').toLowerCase().includes(q) ||
+        (d.descripcion||'').toLowerCase().includes(q) ||
+        (d.categoria||'').toLowerCase().includes(q) ||
+        (d.autor_nombre||'').toLowerCase().includes(q) ||
+        (d.editorial||'').toLowerCase().includes(q)
+      );
+    }
+    renderBiblioteca(items);
+  }
+
+  function filterBiblioteca(query) { _bibApplyFilters(); }
 
   const _bibTipoIcon = {pdf:'📄',docx:'📝',xlsx:'📊',pptx:'📊',jpg:'🖼️',audio:'🎵',video:'🎬',youtube:'▶'};
   const _bibTipoLabel = {pdf:'PDF',docx:'Word',xlsx:'Excel',pptx:'PowerPoint',jpg:'Imagen',audio:'Audio',video:'Video',youtube:'Video'};
@@ -1575,17 +1626,6 @@
     return m ? m[1] : null;
   }
 
-  function filterBiblioteca(query) {
-    if (!query.trim()) { renderBiblioteca(_bibData); return; }
-    const q = query.toLowerCase();
-    renderBiblioteca(_bibData.filter(d =>
-      (d.nombre||'').toLowerCase().includes(q) ||
-      (d.descripcion||'').toLowerCase().includes(q) ||
-      (d.categoria||'').toLowerCase().includes(q) ||
-      (d.autor_nombre||'').toLowerCase().includes(q) ||
-      (d.editorial||'').toLowerCase().includes(q)
-    ));
-  }
 
   function openVideoModal(url, titulo) {
     const youtubeId = extractYoutubeId(url);
