@@ -2846,11 +2846,19 @@ async function saveBibDoc() {
   if (!roles.length) { toast('Selecciona al menos un rol','error'); return; }
   if (!bibDocEditId && !bibFileNew) { toast('Selecciona un archivo','error'); return; }
 
+  // Validar tamaño (límite del bucket: 200 MB)
+  const MAX_BYTES = 200 * 1024 * 1024;
+  if (bibFileNew && bibFileNew.size > MAX_BYTES) {
+    toast(`Archivo demasiado grande (${(bibFileNew.size/1024/1024).toFixed(1)} MB). Máximo 200 MB.`, 'error');
+    return;
+  }
+
   let publicUrl = null;
   let tipDoc    = null;
 
   if (bibFileNew) {
-    toast('Subiendo archivo…');
+    const sizeMB = (bibFileNew.size/1024/1024).toFixed(1);
+    toast(`Subiendo archivo… ${sizeMB} MB — puede tardar unos segundos`);
     const ext     = bibFileNew.name.split('.').pop().toLowerCase();
     tipDoc = ext==='pdf' ? 'pdf'
            : ['doc','docx'].includes(ext)                                       ? 'docx'
@@ -2863,8 +2871,16 @@ async function saveBibDoc() {
     const safeName= sanitizeFilename(bibFileNew.name);
     const storeFolder = roles.includes('publico') ? 'publico' : roles[0];
     const path    = storeFolder + '/' + Date.now() + '-' + safeName;
-    const { error: upErr } = await sb.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
-    if (upErr) { toast('Error al subir: '+upErr.message,'error'); return; }
+    const { data: upData, error: upErr } = await sb.storage.from('Documents').upload(path, bibFileNew, {upsert:true});
+    if (upErr) {
+      console.error('Upload error:', upErr);
+      toast('❌ Error al subir el archivo: ' + (upErr.message || JSON.stringify(upErr)), 'error');
+      return;
+    }
+    if (!upData) {
+      toast('❌ El archivo no se subió correctamente. Intenta de nuevo.', 'error');
+      return;
+    }
     ({ data: { publicUrl } } = sb.storage.from('Documents').getPublicUrl(path));
   }
 
