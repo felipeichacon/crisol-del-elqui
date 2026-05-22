@@ -780,12 +780,12 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="module-sub">Noticias del sitio de la Corporación</div>
       <div class="gold-line"></div>
       <div id="corp-noticia-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:32px;max-width:760px;">
-        <div style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nueva noticia de la Corporación</div>
+        <div id="corp-noticia-form-title" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nueva noticia de la Corporación</div>
         <div style="margin-bottom:20px;">
           <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Fotografía</div>
           <div style="display:flex;align-items:flex-start;gap:20px;">
             <div id="corp-noticia-img-preview" style="width:180px;height:110px;background:var(--dark-5);border:2px dashed var(--border-bright);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;" onclick="document.getElementById('corp-noticia-img-file').click()"><span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span></div>
-            <div><button class="btn-secondary" onclick="document.getElementById('corp-noticia-img-file').click()">Seleccionar imagen</button><input type="file" id="corp-noticia-img-file" accept="image/*" style="display:none" onchange="previewCorpNoticiaImg(this)"></div>
+            <div><button class="btn-secondary" onclick="document.getElementById('corp-noticia-img-file').click()">Seleccionar imagen</button><input type="file" id="corp-noticia-img-file" accept="image/*" style="display:none" onchange="previewCorpNoticiaImg(this)"><div id="corp-noticia-img-name" style="font-size:13px;color:var(--text-dim);font-style:italic;margin-top:8px;">Ninguna imagen seleccionada</div></div>
           </div>
         </div>
         <div class="form-grid" style="margin-bottom:16px;">
@@ -799,12 +799,12 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <div class="field" style="margin-bottom:16px;"><label>Título</label><input type="text" id="corp-noticia-titulo" placeholder="Título de la noticia" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
         <div class="field" style="margin-bottom:24px;"><label>Contenido</label><textarea id="corp-noticia-contenido" rows="5" placeholder="Contenido…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
         <div style="display:flex;gap:12px;">
-          <button class="btn-primary" onclick="saveCorpNoticia(true)">Publicar</button>
-          <button class="btn-secondary" onclick="saveCorpNoticia(false)">Borrador</button>
-          <button class="btn-secondary" onclick="document.getElementById('corp-noticia-form').style.display='none'">Cancelar</button>
+          <button id="corp-noticia-btn-pub" class="btn-primary" onclick="saveCorpNoticia(true)">Publicar</button>
+          <button id="corp-noticia-btn-draft" class="btn-secondary" onclick="saveCorpNoticia(false)">Borrador</button>
+          <button class="btn-secondary" onclick="cancelCorpNoticiaForm()">Cancelar</button>
         </div>
       </div>
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="document.getElementById('corp-noticia-form').style.display='block'">+ Nueva noticia</button>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="openCorpNoticiaForm()">+ Nueva noticia</button>
       <div class="content-grid" id="corp-noticias-grid"></div>
     </div>
 
@@ -4473,10 +4473,66 @@ async function deleteEgregoraArticulo(id) {
 }
 
 // ── CORPORACIÓN — NOTICIAS ──
-let corpNoticiaImgFile = null;
+let corpNoticiaImgFile    = null;
+let corpNoticiaEditId     = null;
+let corpNoticiaExistingImg = null;
+let _allCorpNoticias      = [];
+
+function openCorpNoticiaForm(n = null) {
+  corpNoticiaEditId      = n ? n.id : null;
+  corpNoticiaExistingImg = n ? (n.imagen_url || null) : null;
+  corpNoticiaImgFile     = null;
+
+  // Reset campos
+  document.getElementById('corp-noticia-titulo').value    = n?.titulo    || '';
+  document.getElementById('corp-noticia-contenido').value = n?.contenido || '';
+  document.getElementById('corp-noticia-fecha').value     = n?.fecha_pub || new Date().toISOString().substring(0,10);
+  const tagSel = document.getElementById('corp-noticia-tag');
+  if (n?.tag) { const opt = Array.from(tagSel.options).find(o => o.value===n.tag||o.text===n.tag); if(opt) tagSel.value=opt.value; }
+  else tagSel.selectedIndex = 0;
+
+  // Imagen
+  document.getElementById('corp-noticia-img-file').value = '';
+  const imgName = document.getElementById('corp-noticia-img-name');
+  if (n?.imagen_url) {
+    document.getElementById('corp-noticia-img-preview').innerHTML =
+      `<img src="${n.imagen_url}" style="width:100%;height:100%;object-fit:cover;">`;
+    if (imgName) imgName.textContent = 'Imagen actual (selecciona otra para reemplazar)';
+  } else {
+    document.getElementById('corp-noticia-img-preview').innerHTML =
+      '<span style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>';
+    if (imgName) imgName.textContent = 'Ninguna imagen seleccionada';
+  }
+
+  // Título y botones
+  document.getElementById('corp-noticia-form-title').textContent = n ? 'Editar noticia' : 'Nueva noticia de la Corporación';
+  document.getElementById('corp-noticia-btn-pub').textContent   = n ? 'Guardar y publicar' : 'Publicar';
+  document.getElementById('corp-noticia-btn-draft').textContent = 'Guardar borrador';
+  document.getElementById('corp-noticia-btn-pub').disabled      = false;
+  document.getElementById('corp-noticia-btn-draft').disabled    = false;
+
+  document.getElementById('corp-noticia-form').style.display = 'block';
+  document.getElementById('corp-noticia-form').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function cancelCorpNoticiaForm() {
+  corpNoticiaEditId      = null;
+  corpNoticiaExistingImg = null;
+  corpNoticiaImgFile     = null;
+  document.getElementById('corp-noticia-form').style.display = 'none';
+}
+
+function editCorpNoticia(id) {
+  const n = _allCorpNoticias.find(x => x.id === id);
+  if (n) openCorpNoticiaForm(n);
+  else toast('No se encontró la noticia', 'error');
+}
+
 function previewCorpNoticiaImg(input) {
   const file = input.files[0]; if(!file) return;
   corpNoticiaImgFile = file;
+  const imgName = document.getElementById('corp-noticia-img-name');
+  if (imgName) imgName.textContent = file.name;
   const reader = new FileReader();
   reader.onload = e => {
     const prev = document.getElementById('corp-noticia-img-preview');
@@ -4489,55 +4545,88 @@ async function saveCorpNoticia(publish) {
   const titulo    = document.getElementById('corp-noticia-titulo').value.trim();
   const contenido = document.getElementById('corp-noticia-contenido').value.trim();
   if (!titulo||!contenido) { toast('Título y contenido son obligatorios','error'); return; }
-  toast('Guardando…');
-  let imgUrl = null;
+
+  const btnPub   = document.getElementById('corp-noticia-btn-pub');
+  const btnDraft = document.getElementById('corp-noticia-btn-draft');
+  const _setBusy = (busy, lbl='') => {
+    if (btnPub)   { btnPub.disabled   = busy; if (publish  && lbl) btnPub.textContent   = lbl; }
+    if (btnDraft) { btnDraft.disabled = busy; if (!publish && lbl) btnDraft.textContent = lbl; }
+  };
+
+  let imgUrl = corpNoticiaImgFile ? null : corpNoticiaExistingImg;
   if (corpNoticiaImgFile) {
-    const path = 'corp/' + Date.now() + '-' + corpNoticiaImgFile.name.replace(/\\\\s/g,'_');
+    _setBusy(true, '⏳ Subiendo imagen…');
+    const path = 'corp/' + Date.now() + '-' + corpNoticiaImgFile.name.replace(/\s/g,'_');
     const { error: upErr } = await sb.storage.from('Noticias').upload(path, corpNoticiaImgFile, {upsert:true});
-    if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
+    if (upErr) { _setBusy(false); toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
   }
-  const { error } = await sb.from('corp_noticias').insert({
+
+  _setBusy(true, '⏳ Guardando…');
+  const payload = {
     titulo, contenido, extracto: contenido.substring(0,220),
     tag:       document.getElementById('corp-noticia-tag').value,
     fecha_pub: document.getElementById('corp-noticia-fecha').value || new Date().toISOString().split('T')[0],
     imagen_url: imgUrl,
-    autor_id:   currentProfile.id,
-    autor_nombre: currentProfile.nombre+' '+(currentProfile.apellido||''),
     publicado:  publish
-  });
+  };
+  let error;
+  if (corpNoticiaEditId) {
+    ({ error } = await sb.from('corp_noticias').update(payload).eq('id', corpNoticiaEditId));
+  } else {
+    payload.autor_id     = currentProfile.id;
+    payload.autor_nombre = currentProfile.nombre+' '+(currentProfile.apellido||'');
+    ({ error } = await sb.from('corp_noticias').insert(payload));
+  }
+  _setBusy(false);
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
-  corpNoticiaImgFile = null;
-  document.getElementById('corp-noticia-form').style.display='none';
-  document.getElementById('corp-noticia-titulo').value='';
-  document.getElementById('corp-noticia-contenido').value='';
-  document.getElementById('corp-noticia-img-preview').innerHTML = '<span style=\"font-family:Cinzel,serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;\">Subir imagen</span>';
-  toast(publish?'Publicado':'Borrador guardado','success');
+
+  const wasEdit = !!corpNoticiaEditId;
+  cancelCorpNoticiaForm();
+  toast(wasEdit ? 'Noticia actualizada' : (publish ? 'Noticia publicada' : 'Borrador guardado'), 'success');
   loadCorpNoticiasAdmin();
 }
 
 async function loadCorpNoticiasAdmin() {
-  const { data } = await sb.from('corp_noticias').select('*').order('fecha_pub',{ascending:false});
+  const { data, error } = await sb.from('corp_noticias').select('*').order('fecha_pub',{ascending:false});
+  if (error) { toast('Error cargando noticias: ' + error.message, 'error'); return; }
+  _allCorpNoticias = data || [];
   const grid = document.getElementById('corp-noticias-grid'); grid.innerHTML='';
-  if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay noticias aún.</div>'; return; }
-  data.forEach(n => {
+  if (!_allCorpNoticias.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay noticias aún.</div>'; return; }
+  _allCorpNoticias.forEach(n => {
     const div = document.createElement('div'); div.className='content-card';
     const imgHtml = n.imagen_url ? `<img src=\"${n.imagen_url}\" style=\"width:100%;height:120px;object-fit:cover;margin-bottom:12px;\">` : '';
+    const estadoBadge = n.publicado
+      ? `<span style="background:rgba(100,200,100,0.15);color:#7dc97d;border:1px solid rgba(100,200,100,0.3);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;">✓ Publicado</span>`
+      : `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);border:1px solid var(--border);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;">Borrador</span>`;
     div.innerHTML=`${imgHtml}
-      <div class=\"content-card-tag\">${n.tag||'Corporación'} · ${n.publicado?'Publicado':'Borrador'}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">${estadoBadge}</div>
+      <div class=\"content-card-tag\">${n.tag||'Corporación'}</div>
       <div class=\"content-card-title\">${n.titulo}</div>
       <div class=\"content-card-meta\">${n.fecha_pub ? new Date(n.fecha_pub+'T12:00:00').toLocaleDateString('es-CL') : '—'}</div>
-      <div class=\"content-card-actions\" style=\"margin-top:12px;\">
-        <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"toggleCorpNoticia('${n.id}',${n.publicado})\">${n.publicado?'Despublicar':'Publicar'}</button>
-        <button class=\"btn-danger\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"deleteCorpNoticia('${n.id}')\">Eliminar</button>
+      <div class=\"content-card-actions\" style=\"margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;\">
+        <button class=\"btn-primary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"editCorpNoticia('${n.id}')\">✏ Editar</button>
+        <button class=\"btn-secondary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"toggleCorpNoticia('${n.id}',${!!n.publicado})\">${n.publicado?'Despublicar':'Publicar'}</button>
+        <button class=\"btn-danger\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"deleteCorpNoticia('${n.id}')\">Eliminar</button>
       </div>`;
     grid.appendChild(div);
   });
 }
 
-async function toggleCorpNoticia(id,pub) { await sb.from('corp_noticias').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicada':'Publicada','success'); loadCorpNoticiasAdmin(); }
-async function deleteCorpNoticia(id) { if(!confirm('¿Eliminar?')) return; await sb.from('corp_noticias').delete().eq('id',id); toast('Eliminada'); loadCorpNoticiasAdmin(); }
+async function toggleCorpNoticia(id, pub) {
+  const { error } = await sb.from('corp_noticias').update({publicado:!pub}).eq('id',id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast(pub?'Noticia despublicada':'Noticia publicada','success');
+  loadCorpNoticiasAdmin();
+}
+async function deleteCorpNoticia(id) {
+  if (!confirm('¿Eliminar esta noticia?')) return;
+  const { error } = await sb.from('corp_noticias').delete().eq('id',id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast('Noticia eliminada','success');
+  loadCorpNoticiasAdmin();
+}
 
 // ── CORPORACIÓN — BLOG ──
 async function loadCorpBlogAdmin() {
