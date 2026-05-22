@@ -813,7 +813,25 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="module-title">Blog · Corporación Elqui</div>
       <div class="module-sub">Artículos del blog de la Corporación</div>
       <div class="gold-line"></div>
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="openCorpPostModal()">+ Nueva entrada</button>
+      <div id="corp-post-form" style="display:none;background:var(--dark-3);border:1px solid var(--border);padding:36px;margin-bottom:32px;max-width:760px;">
+        <div id="corp-post-form-title" style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--border);">Nueva entrada del Blog</div>
+        <div class="form-grid" style="margin-bottom:16px;">
+          <div class="field"><label>Categoría</label>
+            <select id="cp-cat" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;">
+              <option>Educación</option><option>Cultura</option><option>Sociedad</option><option>Noticias</option>
+            </select>
+          </div>
+          <div class="field"><label>Fecha</label><input type="date" id="cp-fecha" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+        </div>
+        <div class="field" style="margin-bottom:16px;"><label>Título</label><input type="text" id="cp-titulo" placeholder="Título de la entrada" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
+        <div class="field" style="margin-bottom:24px;"><label>Contenido</label><textarea id="cp-contenido" rows="6" placeholder="Contenido…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
+        <div style="display:flex;gap:12px;">
+          <button id="cp-btn-pub" class="btn-primary" onclick="saveCorpPost(true)">Publicar</button>
+          <button id="cp-btn-draft" class="btn-secondary" onclick="saveCorpPost(false)">Borrador</button>
+          <button class="btn-secondary" onclick="cancelCorpPostForm()">Cancelar</button>
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="openCorpPostForm()">+ Nueva entrada</button>
       <div class="content-grid" id="corp-blog-admin-grid"></div>
     </div>
 
@@ -4629,59 +4647,110 @@ async function deleteCorpNoticia(id) {
 }
 
 // ── CORPORACIÓN — BLOG ──
-async function loadCorpBlogAdmin() {
-  const { data } = await sb.from('corp_posts').select('*').order('created_at',{ascending:false});
-  const grid = document.getElementById('corp-blog-admin-grid'); grid.innerHTML='';
-  if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay entradas aún.</div>'; return; }
-  data.forEach(p => {
-    const div = document.createElement('div'); div.className='content-card';
-    div.innerHTML=`
-      <div class=\"content-card-tag\">${p.categoria||'Cultura'} · ${p.publicado?'Publicado':'Borrador'}</div>
-      <div class=\"content-card-title\">${p.titulo}</div>
-      <div class=\"content-card-meta\">${p.autor_nombre||'—'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
-      <div class=\"content-card-actions\" style=\"margin-top:12px;\">
-        <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"toggleCorpPost('${p.id}',${p.publicado})\">${p.publicado?'Despublicar':'Publicar'}</button>
-        <button class=\"btn-danger\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"deleteCorpPost('${p.id}')\">Eliminar</button>
-      </div>`;
-    grid.appendChild(div);
-  });
+let _allCorpPosts  = [];
+let corpPostEditId = null;
+
+function openCorpPostForm(p = null) {
+  corpPostEditId = p ? p.id : null;
+  document.getElementById('cp-titulo').value    = p?.titulo    || '';
+  document.getElementById('cp-contenido').value = p?.contenido || '';
+  document.getElementById('cp-fecha').value     = p?.created_at ? p.created_at.substring(0,10) : new Date().toISOString().substring(0,10);
+  const cat = document.getElementById('cp-cat');
+  if (p?.categoria) { const opt = Array.from(cat.options).find(o => o.value===p.categoria||o.text===p.categoria); if(opt) cat.value=opt.value; }
+  else cat.selectedIndex = 0;
+  document.getElementById('corp-post-form-title').textContent = p ? 'Editar entrada del Blog' : 'Nueva entrada del Blog';
+  document.getElementById('cp-btn-pub').textContent   = p ? 'Guardar y publicar' : 'Publicar';
+  document.getElementById('cp-btn-draft').textContent = 'Guardar borrador';
+  document.getElementById('cp-btn-pub').disabled      = false;
+  document.getElementById('cp-btn-draft').disabled    = false;
+  document.getElementById('corp-post-form').style.display = 'block';
+  document.getElementById('corp-post-form').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function openCorpPostModal() {
-  document.getElementById('modal-title').textContent = 'Nueva entrada — Corporación Elqui';
-  document.getElementById('modal-sub').textContent = '';
-  document.getElementById('modal-body').innerHTML=`
-    <div class=\"field\"><label>Categoría</label>
-      <select id=\"cp-cat\" style=\"width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;\">
-        <option>Educación</option><option>Cultura</option><option>Sociedad</option><option>Noticias</option>
-      </select>
-    </div>
-    <div class=\"field\"><label>Título</label><input id=\"cp-titulo\" placeholder=\"Título de la entrada\" style=\"width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;\"></div>
-    <div class=\"field\"><label>Contenido</label><textarea id=\"cp-contenido\" rows=\"6\" placeholder=\"Contenido…\" style=\"width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;\"></textarea></div>`;
-  document.getElementById('modal-footer').innerHTML=`
-    <button class=\"btn-primary\" onclick=\"saveCorpPost(true)\">Publicar</button>
-    <button class=\"btn-secondary\" onclick=\"saveCorpPost(false)\">Borrador</button>
-    <button class=\"btn-secondary\" onclick=\"closeModal()\">Cancelar</button>`;
-  document.getElementById('modal-overlay').classList.remove('hidden');
+function cancelCorpPostForm() {
+  corpPostEditId = null;
+  document.getElementById('corp-post-form').style.display = 'none';
+}
+
+function editCorpPost(id) {
+  const p = _allCorpPosts.find(x => x.id === id);
+  if (p) openCorpPostForm(p);
+  else toast('No se encontró la entrada', 'error');
 }
 
 async function saveCorpPost(publish) {
   const titulo    = document.getElementById('cp-titulo').value.trim();
   const contenido = document.getElementById('cp-contenido').value.trim();
   if (!titulo||!contenido) { toast('Completa título y contenido','error'); return; }
-  await sb.from('corp_posts').insert({
+
+  const btnPub   = document.getElementById('cp-btn-pub');
+  const btnDraft = document.getElementById('cp-btn-draft');
+  const _setBusy = (busy, lbl='') => {
+    if (btnPub)   { btnPub.disabled   = busy; if (publish  && lbl) btnPub.textContent   = lbl; }
+    if (btnDraft) { btnDraft.disabled = busy; if (!publish && lbl) btnDraft.textContent = lbl; }
+  };
+
+  _setBusy(true, '⏳ Guardando…');
+  const payload = {
     titulo, contenido, extracto: contenido.substring(0,200),
     categoria: document.getElementById('cp-cat').value,
-    autor_id: currentProfile.id,
-    autor_nombre: currentProfile.nombre+' '+(currentProfile.apellido||''),
     publicado: publish
-  });
-  toast(publish?'Publicado':'Borrador guardado','success');
-  closeModal(); loadCorpBlogAdmin();
+  };
+  let error;
+  if (corpPostEditId) {
+    ({ error } = await sb.from('corp_posts').update(payload).eq('id', corpPostEditId));
+  } else {
+    payload.autor_id     = currentProfile.id;
+    payload.autor_nombre = currentProfile.nombre+' '+(currentProfile.apellido||'');
+    ({ error } = await sb.from('corp_posts').insert(payload));
+  }
+  _setBusy(false);
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+
+  const wasEdit = !!corpPostEditId;
+  cancelCorpPostForm();
+  toast(wasEdit ? 'Entrada actualizada' : (publish ? 'Entrada publicada' : 'Borrador guardado'), 'success');
+  loadCorpBlogAdmin();
 }
 
-async function toggleCorpPost(id,pub) { await sb.from('corp_posts').update({publicado:!pub}).eq('id',id); toast(pub?'Despublicado':'Publicado','success'); loadCorpBlogAdmin(); }
-async function deleteCorpPost(id) { if(!confirm('¿Eliminar?')) return; await sb.from('corp_posts').delete().eq('id',id); toast('Eliminado'); loadCorpBlogAdmin(); }
+async function loadCorpBlogAdmin() {
+  const { data, error } = await sb.from('corp_posts').select('*').order('created_at',{ascending:false});
+  if (error) { toast('Error cargando blog: ' + error.message, 'error'); return; }
+  _allCorpPosts = data || [];
+  const grid = document.getElementById('corp-blog-admin-grid'); grid.innerHTML='';
+  if (!_allCorpPosts.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay entradas aún.</div>'; return; }
+  _allCorpPosts.forEach(p => {
+    const div = document.createElement('div'); div.className='content-card';
+    const estadoBadge = p.publicado
+      ? `<span style="background:rgba(100,200,100,0.15);color:#7dc97d;border:1px solid rgba(100,200,100,0.3);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;">✓ Publicado</span>`
+      : `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);border:1px solid var(--border);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;">Borrador</span>`;
+    div.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">${estadoBadge}</div>
+      <div class=\"content-card-tag\">${p.categoria||'Cultura'}</div>
+      <div class=\"content-card-title\">${p.titulo}</div>
+      <div class=\"content-card-meta\">${p.autor_nombre||'—'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
+      <div class=\"content-card-actions\" style=\"margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;\">
+        <button class=\"btn-primary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"editCorpPost('${p.id}')\">✏ Editar</button>
+        <button class=\"btn-secondary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"toggleCorpPost('${p.id}',${!!p.publicado})\">${p.publicado?'Despublicar':'Publicar'}</button>
+        <button class=\"btn-danger\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"deleteCorpPost('${p.id}')\">Eliminar</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+async function toggleCorpPost(id, pub) {
+  const { error } = await sb.from('corp_posts').update({publicado:!pub}).eq('id',id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast(pub?'Entrada despublicada':'Entrada publicada','success');
+  loadCorpBlogAdmin();
+}
+async function deleteCorpPost(id) {
+  if (!confirm('¿Eliminar esta entrada?')) return;
+  const { error } = await sb.from('corp_posts').delete().eq('id',id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast('Entrada eliminada','success');
+  loadCorpBlogAdmin();
+}
 
 
 
