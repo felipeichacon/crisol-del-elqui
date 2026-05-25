@@ -1321,9 +1321,27 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         </div>
 
         <div class="field">
-          <label>Contenido (se admite HTML)</label>
-          <textarea id="ec-contenido" rows="10" placeholder="Puedes escribir HTML directamente. Ej: &lt;h2&gt;Estimados hermanos&lt;/h2&gt;&lt;p&gt;...&lt;/p&gt;"></textarea>
+          <label>Contenido del correo</label>
+          <div id="ec-quill"></div>
         </div>
+
+        <!-- Imagen de pie de firma -->
+        <div style="margin-top:4px;margin-bottom:24px;">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px;">Imagen de pie de firma <span style="font-weight:400;opacity:0.6;">(opcional)</span></div>
+          <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+            <div id="ec-firma-preview" onclick="document.getElementById('ec-firma-file').click()"
+              style="width:220px;height:90px;background:var(--dark-4);border:2px dashed var(--border-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;cursor:pointer;">
+              <span id="ec-firma-placeholder" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;text-align:center;padding:8px;">Subir imagen<br>de firma</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn-secondary" style="font-size:10px;padding:8px 16px;" onclick="document.getElementById('ec-firma-file').click()">Seleccionar imagen</button>
+              <button class="btn-secondary" style="font-size:10px;padding:8px 16px;" onclick="ecClearFirmaImg()">Quitar imagen</button>
+              <input type="file" id="ec-firma-file" accept="image/*" style="display:none" onchange="ecPreviewFirmaImg(this)">
+              <div style="font-size:12px;color:var(--text-dim);line-height:1.6;">JPG, PNG · Recomendado: 600px ancho<br>Se inserta al final del correo.</div>
+            </div>
+          </div>
+        </div>
+
         <div style="margin-bottom:24px;">
           <button class="btn-secondary" style="font-size:10px;padding:8px 16px;" onclick="ecTogglePreview()">👁 Vista previa</button>
           <div id="ec-preview" style="display:none;margin-top:16px;background:#fff;color:#222;padding:24px;border:1px solid var(--border);min-height:80px;font-family:Georgia,serif;font-size:15px;line-height:1.7;"></div>
@@ -5432,6 +5450,8 @@ let _ecDestTab        = 'todos';
 let _ecRoles          = [];
 let _ecAttachments    = [];   // [{id,nombre,url,tipo}] seleccionados
 let _ecAllDocs        = [];   // todos los docs cargados de la biblioteca
+let _ecFirmaImgFile   = null; // archivo imagen de pie de firma
+let _ecFirmaImgUrl    = null; // URL pública (si ya se subió o se precargó)
 
 const EC_ROLES = [
   { value:'venerable',         label:'Venerable Maestro' },
@@ -5459,13 +5479,15 @@ async function loadEmailCampaigns() {
 }
 
 function openEmailCampaignForm() {
-  _ecSelectedIds = new Set();
-  _ecDestTab     = 'todos';
-  _ecRoles       = [];
-  _ecAttachments = [];
-  document.getElementById('ec-asunto').value        = '';
-  document.getElementById('ec-contenido').value     = '';
-  document.getElementById('ec-emails-extra').value  = '';
+  _ecSelectedIds  = new Set();
+  _ecDestTab      = 'todos';
+  _ecRoles        = [];
+  _ecAttachments  = [];
+  _ecFirmaImgFile = null;
+  _ecFirmaImgUrl  = null;
+  document.getElementById('ec-asunto').value       = '';
+  document.getElementById('ec-emails-extra').value = '';
+  ecClearFirmaImg();
   document.getElementById('ec-preview').style.display      = 'none';
   document.getElementById('ec-datetime-wrap').style.display = 'none';
   document.getElementById('ec-attach-picker').style.display = 'none';
@@ -5480,15 +5502,44 @@ function openEmailCampaignForm() {
   document.getElementById('ec-btn-save').textContent = '💾 Guardar campaña';
   document.getElementById('ec-form').style.display = 'block';
   document.getElementById('ec-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  initQuillEditor('ec-quill', { placeholder: 'Escribe el contenido del correo…' });
 }
 
 function cancelEmailCampaignForm() {
+  if (_quillInstances['ec-quill']) _quillInstances['ec-quill'].setContents([]);
+  _ecFirmaImgFile = null;
+  _ecFirmaImgUrl  = null;
   document.getElementById('ec-form').style.display = 'none';
+}
+
+function ecPreviewFirmaImg(input) {
+  const file = input.files[0]; if (!file) return;
+  _ecFirmaImgFile = file;
+  _ecFirmaImgUrl  = null; // será subida al guardar
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('ec-firma-preview');
+    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;padding:4px;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function ecClearFirmaImg() {
+  _ecFirmaImgFile = null;
+  _ecFirmaImgUrl  = null;
+  const prev = document.getElementById('ec-firma-preview');
+  if (prev) prev.innerHTML = `<span id="ec-firma-placeholder" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;text-align:center;padding:8px;">Subir imagen<br>de firma</span>`;
+  const fi = document.getElementById('ec-firma-file');
+  if (fi) fi.value = '';
 }
 
 function ecTogglePreview() {
   const preview = document.getElementById('ec-preview');
-  const html    = document.getElementById('ec-contenido').value;
+  let html = getQuillContent('ec-quill');
+  if (_ecFirmaImgFile || _ecFirmaImgUrl) {
+    const src = _ecFirmaImgUrl || (document.querySelector('#ec-firma-preview img')?.src || '');
+    if (src) html += `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #ddd;"><img src="${src}" style="max-width:100%;display:block;"></div>`;
+  }
   if (preview.style.display === 'none') {
     preview.innerHTML = html || '<em style="color:#888;">Sin contenido</em>';
     preview.style.display = 'block';
@@ -5563,10 +5614,25 @@ function ecToggleTiming(value) {
 }
 
 async function saveEmailCampaign() {
-  const asunto   = document.getElementById('ec-asunto').value.trim();
-  const contenido = document.getElementById('ec-contenido').value.trim();
+  const asunto  = document.getElementById('ec-asunto').value.trim();
+  let contenido = getQuillContent('ec-quill');
   if (!asunto)   { toast('El asunto es obligatorio', 'error'); return; }
   if (!contenido){ toast('El contenido es obligatorio', 'error'); return; }
+
+  // Subir imagen de firma si hay una nueva seleccionada
+  if (_ecFirmaImgFile) {
+    const ext  = _ecFirmaImgFile.name.split('.').pop().toLowerCase();
+    const path = `firma/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { data: upData, error: upErr } = await sb.storage.from('blog-images').upload(path, _ecFirmaImgFile, { contentType: _ecFirmaImgFile.type });
+    if (upErr) { toast('Error al subir imagen de firma: ' + upErr.message, 'error'); return; }
+    const { data: urlData } = sb.storage.from('blog-images').getPublicUrl(upData.path);
+    _ecFirmaImgUrl  = urlData.publicUrl;
+    _ecFirmaImgFile = null;
+  }
+  // Adjuntar imagen de firma al final del HTML
+  if (_ecFirmaImgUrl) {
+    contenido += `<div style="margin-top:28px;padding-top:18px;border-top:1px solid #ddcda0;text-align:center;"><img src="${_ecFirmaImgUrl}" style="max-width:100%;display:inline-block;"></div>`;
+  }
 
   const timing = document.querySelector('[name="ec-timing"]:checked')?.value || 'ahora';
   let programadoPara = null;
