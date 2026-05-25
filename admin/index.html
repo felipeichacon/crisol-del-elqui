@@ -2078,9 +2078,10 @@ function showModule(name) {
   if (name==='heroes')        loadHeroes();
   if (name==='calendario')    loadCalendario();
   if (name==='mensajeria')    { if(typeof loadConversationsAdmin!=='undefined') loadConversationsAdmin(); else loadConversations(); }
-  if (name==='grupos')       loadGruposAdmin();
-  if (name==='permisos')     loadPermisosAdmin();
-  if (name==='nuevo-usuario') { nuFamiliares=[]; resetNuForm(); }
+  if (name==='grupos')         loadGruposAdmin();
+  if (name==='correo-masivo')  loadEmailCampaigns();
+  if (name==='permisos')       loadPermisosAdmin();
+  if (name==='nuevo-usuario')  { nuFamiliares=[]; resetNuForm(); }
 }
 
 // ── DASHBOARD ──
@@ -5468,7 +5469,7 @@ const EC_ROLES = [
 ];
 
 async function loadEmailCampaigns() {
-  const { data: members } = await sb.from('profiles').select('id,nombre,apellido,email,rol').order('apellido');
+  const { data: members } = await sb.from('profiles').select('id,nombre,apellido,email,role').order('apellido');
   _ecMembers = (members || []).filter(m => m.email);
   const { data: docs } = await sb.from('documents').select('id,nombre,tipo,url').not('url','is',null).order('nombre');
   _ecAllDocs = docs || [];
@@ -5558,6 +5559,8 @@ function ecSwitchDestTab(tab) {
   );
   const panel = document.getElementById('ec-dest-' + tab);
   if (panel) panel.style.display = 'block';
+  // Al mostrar la pestaña individual, siempre re-renderizar por si los miembros cargaron después
+  if (tab === 'individual') ecRenderMemberList(document.getElementById('ec-member-search')?.value || '');
 }
 
 function ecRenderRolesGrid() {
