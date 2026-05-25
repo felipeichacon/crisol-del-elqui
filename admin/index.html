@@ -5787,7 +5787,12 @@ async function sendCampaignNow(id) {
     const result = data?.results?.[0];
     if (!result) { toast('✓ Correos enviados', 'success'); }
     else if (result.error) { toast('Error al enviar: ' + result.error, 'error'); }
-    else { toast(`✓ Enviado a ${result.sent ?? 0} de ${result.total ?? 0} destinatarios`, 'success'); }
+    else {
+      toast(`✓ Enviado a ${result.sent ?? 0} de ${result.total ?? 0} destinatarios`, 'success');
+      if (result.attachmentErrors?.length) {
+        toast('⚠ Adjunto no enviado: ' + result.attachmentErrors.join(', '), 'error');
+      }
+    }
   } catch(e) {
     toast('Error al enviar campaña: ' + String(e), 'error');
   }
