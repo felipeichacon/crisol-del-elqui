@@ -5446,6 +5446,8 @@ init();
 
 // ── CORREO MASIVO ──
 let _ecMembers        = [];
+let _ecAllCampaigns   = [];   // cache de campañas para edición
+let _ecEditId         = null; // null = nueva, string = editando existente
 let _ecSelectedIds    = new Set();
 let _ecDestTab        = 'todos';
 let _ecRoles          = [];
@@ -5476,10 +5478,12 @@ async function loadEmailCampaigns() {
 
   const { data: campaigns, error } = await sb.from('email_campaigns').select('*').order('created_at', { ascending: false });
   if (error) { toast('Error cargando campañas: ' + error.message, 'error'); return; }
-  ecRenderCampaignList(campaigns || []);
+  _ecAllCampaigns = campaigns || [];
+  ecRenderCampaignList(_ecAllCampaigns);
 }
 
-function openEmailCampaignForm() {
+function _ecResetForm() {
+  _ecEditId       = null;
   _ecSelectedIds  = new Set();
   _ecDestTab      = 'todos';
   _ecRoles        = [];
@@ -5489,7 +5493,7 @@ function openEmailCampaignForm() {
   document.getElementById('ec-asunto').value       = '';
   document.getElementById('ec-emails-extra').value = '';
   ecClearFirmaImg();
-  document.getElementById('ec-preview').style.display      = 'none';
+  document.getElementById('ec-preview').style.display       = 'none';
   document.getElementById('ec-datetime-wrap').style.display = 'none';
   document.getElementById('ec-attach-picker').style.display = 'none';
   if (document.getElementById('ec-attach-search')) document.getElementById('ec-attach-search').value = '';
@@ -5501,13 +5505,67 @@ function openEmailCampaignForm() {
   ecRenderMemberList('');
   document.getElementById('ec-btn-save').disabled = false;
   document.getElementById('ec-btn-save').textContent = '💾 Guardar campaña';
+}
+
+function openEmailCampaignForm() {
+  _ecResetForm();
+  document.getElementById('ec-form-title').textContent = 'Nueva campaña de correo';
   document.getElementById('ec-form').style.display = 'block';
   document.getElementById('ec-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
   initQuillEditor('ec-quill', { placeholder: 'Escribe el contenido del correo…' });
 }
 
+function openEditEmailCampaignForm(id) {
+  const c = _ecAllCampaigns.find(x => x.id === id);
+  if (!c) { toast('Campaña no encontrada', 'error'); return; }
+
+  _ecResetForm();
+  _ecEditId = c.id;
+
+  // Rellenar campos básicos
+  document.getElementById('ec-asunto').value = c.asunto || '';
+  document.getElementById('ec-emails-extra').value = (c.emails_extra || []).join('\n');
+
+  // Adjuntos
+  _ecAttachments = (c.adjuntos || []).map(a => ({ id: a.id || a.url, nombre: a.nombre, url: a.url, tipo: a.tipo }));
+  ecRenderSelectedAttachments();
+
+  // Destino
+  const tab = c.tipo_dest || 'todos';
+  _ecRoles = [...(c.roles_dest || [])];
+  _ecSelectedIds = new Set(c.destinatarios_ids || []);
+  ecSwitchDestTab(tab);
+  // Marcar checkboxes de grados después de renderizar el grid
+  ecRenderRolesGrid();
+  setTimeout(() => {
+    (_ecRoles).forEach(r => {
+      const cb = document.querySelector(`#ec-roles-grid input[value="${r}"]`);
+      if (cb) cb.checked = true;
+    });
+  }, 0);
+  // Marcar miembros individuales
+  ecRenderMemberList('');
+
+  // Timing — si no estaba enviado y tenía programación, restaurarla
+  if (!c.enviado && c.programado_para) {
+    const rProg = document.querySelector('[name="ec-timing"][value="programado"]');
+    if (rProg) { rProg.checked = true; document.getElementById('ec-datetime-wrap').style.display = 'block'; }
+    const dt = new Date(c.programado_para);
+    const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+    document.getElementById('ec-datetime').value = local;
+  }
+
+  document.getElementById('ec-form-title').textContent = 'Editar campaña de correo';
+  document.getElementById('ec-btn-save').textContent = '💾 Guardar cambios';
+  document.getElementById('ec-form').style.display = 'block';
+  document.getElementById('ec-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Cargar contenido en Quill (sin auto-envío al guardar)
+  initQuillEditor('ec-quill', { content: c.contenido_html || '', placeholder: 'Escribe el contenido del correo…' });
+}
+
 function cancelEmailCampaignForm() {
   if (_quillInstances['ec-quill']) _quillInstances['ec-quill'].setContents([]);
+  _ecEditId       = null;
   _ecFirmaImgFile = null;
   _ecFirmaImgUrl  = null;
   document.getElementById('ec-form').style.display = 'none';
@@ -5664,7 +5722,7 @@ async function saveEmailCampaign() {
   btn.disabled = true;
   btn.textContent = '⏳ Guardando…';
 
-  const { data: saved, error } = await sb.from('email_campaigns').insert({
+  const payload = {
     asunto,
     contenido_html: contenido,
     tipo_dest: finalTipo,
@@ -5673,21 +5731,38 @@ async function saveEmailCampaign() {
     emails_extra,
     adjuntos: _ecAttachments,
     programado_para: programadoPara,
-    enviado: false,
-    creado_por: currentProfile.id,
-  }).select().single();
+  };
+
+  let savedId = _ecEditId;
+  let error;
+
+  if (_ecEditId) {
+    // Editar campaña existente — también resetear estado de envío
+    payload.enviado    = false;
+    payload.enviado_en = null;
+    payload.error_msg  = null;
+    ({ error } = await sb.from('email_campaigns').update(payload).eq('id', _ecEditId));
+  } else {
+    // Nueva campaña
+    payload.enviado     = false;
+    payload.creado_por  = currentProfile.id;
+    const { data: saved, error: insErr } = await sb.from('email_campaigns').insert(payload).select().single();
+    error   = insErr;
+    savedId = saved?.id;
+  }
 
   btn.disabled = false;
-  btn.textContent = '💾 Guardar campaña';
+  btn.textContent = _ecEditId ? '💾 Guardar cambios' : '💾 Guardar campaña';
 
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
 
+  const wasEdit = !!_ecEditId;
   cancelEmailCampaignForm();
-  toast('Campaña guardada', 'success');
+  toast(wasEdit ? 'Campaña actualizada' : 'Campaña guardada', 'success');
   await loadEmailCampaigns();
 
-  if (timing === 'ahora') {
-    await sendCampaignNow(saved.id);
+  if (timing === 'ahora' && savedId) {
+    await sendCampaignNow(savedId);
   }
 }
 
@@ -5727,6 +5802,17 @@ async function deleteCampaign(id) {
   loadEmailCampaigns();
 }
 
+async function resendCampaign(id) {
+  if (!confirm('¿Reenviar esta campaña a todos los destinatarios configurados?')) return;
+  // Resetear estado de envío para que la función lo procese de nuevo
+  const { error } = await sb.from('email_campaigns').update({
+    enviado: false, enviado_en: null, error_msg: null
+  }).eq('id', id);
+  if (error) { toast('Error al preparar reenvío: ' + error.message, 'error'); return; }
+  await loadEmailCampaigns();
+  await sendCampaignNow(id);
+}
+
 function ecRenderCampaignList(campaigns) {
   const el = document.getElementById('ec-campaign-list');
   if (!el) return;
@@ -5744,9 +5830,10 @@ function ecRenderCampaignList(campaigns) {
       : c.programado_para
       ? `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.08em;padding:4px 10px;border:1px solid var(--border);">⏱ Programado</span>`
       : `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.08em;padding:4px 10px;border:1px solid var(--border);">Borrador</span>`;
-    const sendBtn = !c.enviado
+    const editBtn   = `<button class="btn-secondary" style="font-size:10px;padding:6px 12px;margin-right:6px;" onclick="openEditEmailCampaignForm('${c.id}')">✏ Editar</button>`;
+    const sendBtn   = !c.enviado
       ? `<button class="btn-secondary" style="font-size:10px;padding:6px 12px;margin-right:6px;" onclick="sendCampaignNow('${c.id}')">▶ Enviar ahora</button>`
-      : '';
+      : `<button class="btn-secondary" style="font-size:10px;padding:6px 12px;margin-right:6px;" onclick="resendCampaign('${c.id}')">↺ Reenviar</button>`;
     const adjLabel = (c.adjuntos||[]).length
       ? `<div style="margin-top:4px;font-size:12px;color:var(--gold-dim);">📎 ${(c.adjuntos||[]).length} adjunto(s)</div>` : '';
     return `<tr>
@@ -5758,7 +5845,7 @@ function ecRenderCampaignList(campaigns) {
       <td style="font-size:13px;color:var(--text-dim);">${destLabel}</td>
       <td style="font-size:13px;color:var(--text-dim);">${cuando}</td>
       <td>${badge}</td>
-      <td style="white-space:nowrap;">${sendBtn}<button class="btn-danger" style="font-size:10px;padding:6px 12px;" onclick="deleteCampaign('${c.id}')">🗑 Eliminar</button></td>
+      <td style="white-space:nowrap;">${editBtn}${sendBtn}<button class="btn-danger" style="font-size:10px;padding:6px 12px;" onclick="deleteCampaign('${c.id}')">🗑 Eliminar</button></td>
     </tr>`;
   }).join('');
   el.innerHTML = `<div class="table-wrap"><table>
