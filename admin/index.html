@@ -5694,14 +5694,27 @@ async function saveEmailCampaign() {
 async function sendCampaignNow(id) {
   toast('⏳ Enviando correos…', 'success');
   try {
-    const { data, error } = await sb.functions.invoke('send-campaign', { body: { campaign_id: id } });
-    if (error) throw error;
+    const _sess = (await sb.auth.getSession()).data.session;
+    const _resp = await fetch(`${SUPABASE_URL}/functions/v1/send-campaign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${_sess?.access_token ?? SUPABASE_ANON}`,
+        'apikey': SUPABASE_ANON
+      },
+      body: JSON.stringify({ campaign_id: id })
+    });
+    if (!_resp.ok) {
+      const txt = await _resp.text();
+      throw new Error(`HTTP ${_resp.status}: ${txt.slice(0, 200)}`);
+    }
+    const data = await _resp.json();
     const result = data?.results?.[0];
-    if (!result) { toast('Función ejecutada (sin resultados)', 'success'); }
+    if (!result) { toast('✓ Correos enviados', 'success'); }
     else if (result.error) { toast('Error al enviar: ' + result.error, 'error'); }
     else { toast(`✓ Enviado a ${result.sent ?? 0} de ${result.total ?? 0} destinatarios`, 'success'); }
   } catch(e) {
-    toast('Error invocando función: ' + String(e), 'error');
+    toast('Error al enviar campaña: ' + String(e), 'error');
   }
   await loadEmailCampaigns();
 }
