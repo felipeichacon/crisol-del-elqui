@@ -1535,6 +1535,7 @@ async function loadAdmNoticias() {
   const content = document.getElementById('adm-noticias-content');
   if (!content) return;
   content.innerHTML = admFormNoticia();
+  initQuillEditor('admn-quill', { placeholder: 'Contenido de la noticia…' });
   await admLoadNoticiasList(content);
 }
 
@@ -1545,7 +1546,7 @@ function admFormNoticia() {
       <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
         <input id="admn-titulo" type="text" placeholder="Título de la noticia" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
       <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
-        <textarea id="admn-contenido" rows="5" placeholder="Contenido de la noticia…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
+        <div id="admn-quill"></div></div>
       <div style="display:flex;gap:10px;">
         <button onclick="admPublicarNoticia(true)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
         <button onclick="admPublicarNoticia(false)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
@@ -1556,10 +1557,10 @@ function admFormNoticia() {
 
 async function admPublicarNoticia(publish) {
   const titulo    = document.getElementById('admn-titulo')?.value.trim();
-  const contenido = document.getElementById('admn-contenido')?.value.trim();
+  const contenido = getQuillContent('admn-quill');
   if (!titulo || !contenido) { toast('Completa título y contenido','error'); return; }
   const { error } = await sb.from('noticias').insert({
-    titulo, contenido, extracto: contenido.substring(0,220),
+    titulo, contenido, extracto: stripHtml(contenido).substring(0,220),
     tag: 'General',
     fecha_pub: new Date().toISOString().split('T')[0],
     autor_id: currentProfile.id,
@@ -1569,7 +1570,7 @@ async function admPublicarNoticia(publish) {
   if (error) { toast('Error: '+error.message,'error'); return; }
   toast(publish?'Noticia publicada':'Borrador guardado','success');
   document.getElementById('admn-titulo').value = '';
-  document.getElementById('admn-contenido').value = '';
+  if (_quillInstances['admn-quill']) _quillInstances['admn-quill'].setContents([]);
   const content = document.getElementById('adm-noticias-content');
   if (content) await admLoadNoticiasList(content);
 }

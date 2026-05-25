@@ -645,7 +645,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
 
         <div class="field" style="margin-bottom:24px;">
           <label>Contenido</label>
-          <textarea id="noticia-contenido" rows="6" placeholder="Escribe el contenido completo de la noticia…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea>
+          <div id="noticia-quill"></div>
         </div>
 
         <div style="display:flex;gap:12px;">
@@ -835,7 +835,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           <div class="field"><label>Fecha</label><input type="date" id="corp-noticia-fecha" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
         </div>
         <div class="field" style="margin-bottom:16px;"><label>Título</label><input type="text" id="corp-noticia-titulo" placeholder="Título de la noticia" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-        <div class="field" style="margin-bottom:24px;"><label>Contenido</label><textarea id="corp-noticia-contenido" rows="5" placeholder="Contenido…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
+        <div class="field" style="margin-bottom:24px;"><label>Contenido</label><div id="corp-noticia-quill"></div></div>
         <div style="display:flex;gap:12px;">
           <button id="corp-noticia-btn-pub" class="btn-primary" onclick="saveCorpNoticia(true)">Publicar</button>
           <button id="corp-noticia-btn-draft" class="btn-secondary" onclick="saveCorpNoticia(false)">Borrador</button>
@@ -4285,8 +4285,8 @@ function openNoticiaForm(n = null) {
   noticiaImgFile        = null;
 
   document.getElementById('noticia-form-title').textContent = n ? 'Editar noticia' : 'Nueva noticia';
-  document.getElementById('noticia-titulo').value    = n?.titulo    || '';
-  document.getElementById('noticia-contenido').value = n?.contenido || '';
+  document.getElementById('noticia-titulo').value = n?.titulo || '';
+  initQuillEditor('noticia-quill', { content: n?.contenido || '', placeholder: 'Escribe el contenido completo de la noticia…' });
   document.getElementById('noticia-tag').value       = n?.tag       || 'Tenida';
   document.getElementById('noticia-fecha').value     = n?.fecha_pub ? n.fecha_pub.substring(0,10) : '';
 
@@ -4306,8 +4306,8 @@ function cancelNoticiaForm() {
   noticiaExistingImgUrl = null;
   noticiaImgFile        = null;
   document.getElementById('noticia-img-preview').innerHTML = `<span style=\"font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;\">Subir imagen</span>`;
-  document.getElementById('noticia-titulo').value    = '';
-  document.getElementById('noticia-contenido').value = '';
+  document.getElementById('noticia-titulo').value = '';
+  if (_quillInstances['noticia-quill']) _quillInstances['noticia-quill'].setContents([]);
   document.getElementById('noticia-form').style.display = 'none';
 }
 
@@ -4318,7 +4318,7 @@ function editarNoticia(id) {
 
 async function saveNoticia(publish) {
   const titulo    = document.getElementById('noticia-titulo').value.trim();
-  const contenido = document.getElementById('noticia-contenido').value.trim();
+  const contenido = getQuillContent('noticia-quill');
   const tag       = document.getElementById('noticia-tag').value;
   const fecha     = document.getElementById('noticia-fecha').value || new Date().toISOString().split('T')[0];
   if (!titulo || !contenido) { toast('Título y contenido son obligatorios', 'error'); return; }
@@ -4336,7 +4336,7 @@ async function saveNoticia(publish) {
   const payload = {
     titulo,
     contenido,
-    extracto:   contenido.substring(0, 220),
+    extracto:   stripHtml(contenido).substring(0, 220),
     tag,
     fecha_pub:  fecha,
     imagen_url: imgUrl || null,
@@ -4798,8 +4798,8 @@ function openCorpNoticiaForm(n = null) {
   corpNoticiaImgFile     = null;
 
   // Reset campos
-  document.getElementById('corp-noticia-titulo').value    = n?.titulo    || '';
-  document.getElementById('corp-noticia-contenido').value = n?.contenido || '';
+  document.getElementById('corp-noticia-titulo').value = n?.titulo || '';
+  initQuillEditor('corp-noticia-quill', { content: n?.contenido || '', placeholder: 'Contenido…' });
   document.getElementById('corp-noticia-fecha').value     = n?.fecha_pub || new Date().toISOString().substring(0,10);
   const tagSel = document.getElementById('corp-noticia-tag');
   if (n?.tag) { const opt = Array.from(tagSel.options).find(o => o.value===n.tag||o.text===n.tag); if(opt) tagSel.value=opt.value; }
@@ -4833,6 +4833,7 @@ function cancelCorpNoticiaForm() {
   corpNoticiaEditId      = null;
   corpNoticiaExistingImg = null;
   corpNoticiaImgFile     = null;
+  if (_quillInstances['corp-noticia-quill']) _quillInstances['corp-noticia-quill'].setContents([]);
   document.getElementById('corp-noticia-form').style.display = 'none';
 }
 
@@ -4857,7 +4858,7 @@ function previewCorpNoticiaImg(input) {
 
 async function saveCorpNoticia(publish) {
   const titulo    = document.getElementById('corp-noticia-titulo').value.trim();
-  const contenido = document.getElementById('corp-noticia-contenido').value.trim();
+  const contenido = getQuillContent('corp-noticia-quill');
   if (!titulo||!contenido) { toast('Título y contenido son obligatorios','error'); return; }
 
   const btnPub   = document.getElementById('corp-noticia-btn-pub');
@@ -4879,7 +4880,7 @@ async function saveCorpNoticia(publish) {
 
   _setBusy(true, '⏳ Guardando…');
   const payload = {
-    titulo, contenido, extracto: contenido.substring(0,220),
+    titulo, contenido, extracto: stripHtml(contenido).substring(0,220),
     tag:       document.getElementById('corp-noticia-tag').value,
     fecha_pub: document.getElementById('corp-noticia-fecha').value || new Date().toISOString().split('T')[0],
     imagen_url: imgUrl,
