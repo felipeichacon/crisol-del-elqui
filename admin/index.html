@@ -2727,21 +2727,21 @@ function openPostModal(preRole) {
   document.getElementById('modal-title').textContent = 'Nueva entrada de blog';
   document.getElementById('modal-sub').textContent = 'Se publicará en la intranet según el rol seleccionado';
   document.getElementById('modal-body').innerHTML=`
-    <div class="field"><label>${preRole==='maestro'?'Audiencia (Blog del Orador)':'Rol destino'}</label>
+    ${preRole==='maestro' ? `
+    <div style="background:rgba(201,168,76,0.07);border:1px solid var(--border);padding:12px 16px;font-size:14px;color:var(--text-dim);margin-bottom:16px;">
+      ✦ Se publicará en el <strong style="color:var(--gold);">Blog del Orador</strong> — visible a todos los grados en la intranet
+    </div>
+    <input type="hidden" id="mp-role" value="maestro">
+    ` : `
+    <div class="field"><label>Destino</label>
       <select id="mp-role">
-        ${preRole==='maestro' ? `
-        <option value="todos">Todos los grados</option>
-        <option value="aprendiz">Solo Aprendices</option>
-        <option value="companero">Solo Compañeros</option>
-        <option value="maestro">Solo Maestros</option>
-        ` : `
         <option value="venerable"${preRole==='venerable'?' selected':''}>Venerable Maestro (Landing page)</option>
-        <option value="aprendiz"${preRole==='aprendiz'?' selected':''}>2° Vigilante (Aprendices)</option>
-        <option value="companero"${preRole==='companero'?' selected':''}>1° Vigilante (Compañeros)</option>
-        <option value="maestro"${preRole==='maestro'?' selected':''}>Orador (Maestros)</option>
-        `}
+        <option value="aprendiz"${preRole==='aprendiz'?' selected':''}>2° Vigilante — Aprendices</option>
+        <option value="companero"${preRole==='companero'?' selected':''}>1° Vigilante — Compañeros</option>
+        <option value="maestro"${preRole==='maestro'?' selected':''}>Orador — Maestros</option>
       </select>
     </div>
+    `}
     <div class="field"><label>Título</label><input id="mp-titulo" placeholder="Título de la entrada"></div>
     <div class="field"><label>Contenido</label><textarea id="mp-contenido" rows="6" placeholder="Contenido…"></textarea></div>`;
   document.getElementById('modal-footer').innerHTML=`
@@ -2754,16 +2754,19 @@ function openPostModal(preRole) {
 async function savePostModal(publish) {
   const titulo    = document.getElementById('mp-titulo').value.trim();
   const contenido = document.getElementById('mp-contenido').value.trim();
-  const role      = document.getElementById('mp-role').value;
+  // El orador siempre guarda como 'maestro'; otros blogs usan el select
+  const role = document.getElementById('mp-role')?.value || currentBlogRole || 'maestro';
   if (!titulo||!contenido) { toast('Completa título y contenido', 'error'); return; }
-  await sb.from('posts').insert({
+  const { error } = await sb.from('posts').insert({
     role, titulo, contenido, extracto: contenido.substring(0,200),
     autor_id: currentProfile.id,
     autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado: publish
   });
-  toast(publish?'Publicado':'Borrador guardado', 'success');
-  closeModal(); loadPosts('blog');
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+  toast(publish ? 'Publicado' : 'Borrador guardado', 'success');
+  closeModal();
+  await loadPosts('blog');
 }
 
 // ── DOCUMENTOS ──
