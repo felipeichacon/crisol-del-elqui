@@ -2728,8 +2728,14 @@ function openPostModal(preRole) {
   document.getElementById('modal-sub').textContent = 'Se publicará en la intranet según el rol seleccionado';
   document.getElementById('modal-body').innerHTML=`
     ${preRole==='maestro' ? `
-    <div style="background:rgba(201,168,76,0.07);border:1px solid var(--border);padding:12px 16px;font-size:14px;color:var(--text-dim);margin-bottom:16px;">
-      ✦ Se publicará en el <strong style="color:var(--gold);">Blog del Orador</strong> — visible a todos los grados en la intranet
+    <div class="field">
+      <label>Grado destinatario</label>
+      <select id="mp-audiencia">
+        <option value="todos">Todos los grados</option>
+        <option value="aprendiz">Solo Aprendices</option>
+        <option value="companero">Solo Compañeros</option>
+        <option value="maestro">Solo Maestros Masones</option>
+      </select>
     </div>
     <input type="hidden" id="mp-role" value="maestro">
     ` : `
@@ -2754,11 +2760,11 @@ function openPostModal(preRole) {
 async function savePostModal(publish) {
   const titulo    = document.getElementById('mp-titulo').value.trim();
   const contenido = document.getElementById('mp-contenido').value.trim();
-  // El orador siempre guarda como 'maestro'; otros blogs usan el select
-  const role = document.getElementById('mp-role')?.value || currentBlogRole || 'maestro';
+  const role      = document.getElementById('mp-role')?.value || currentBlogRole || 'maestro';
+  const audiencia = document.getElementById('mp-audiencia')?.value || 'todos';
   if (!titulo||!contenido) { toast('Completa título y contenido', 'error'); return; }
   const { error } = await sb.from('posts').insert({
-    role, titulo, contenido, extracto: contenido.substring(0,200),
+    role, audiencia, titulo, contenido, extracto: contenido.substring(0,200),
     autor_id: currentProfile.id,
     autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado: publish

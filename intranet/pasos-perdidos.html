@@ -1427,9 +1427,11 @@ function showApp() {
 
 async function initBlogBadge() {
   if (!currentProfile) return;
+  const userRole = currentProfile.role || 'aprendiz';
   const { data } = await sb.from('posts')
     .select('created_at')
-    .in('role', ['maestro', 'todos'])
+    .eq('role', 'maestro')
+    .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
     .eq('publicado', true)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -1581,15 +1583,27 @@ function buildAdmBlogModule(contentId, tituloLabel, rolBlog) {
     aprendiz:  'Blog del Segundo Vigilante'
   };
   const nombre = BLOG_NOMBRE[rolBlog] || tituloLabel;
+  const fieldStyle = 'width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:\'Cormorant Garamond\',serif;font-size:17px;padding:10px 14px;outline:none;';
+  const labelStyle = 'font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;';
+  const audienciaSelect = rolBlog === 'maestro' ? `
+    <div style="margin-bottom:14px;">
+      <label style="${labelStyle}">Grado destinatario</label>
+      <select id="${contentId}-audiencia" style="${fieldStyle}">
+        <option value="todos">Todos los grados</option>
+        <option value="aprendiz">Solo Aprendices</option>
+        <option value="companero">Solo Compañeros</option>
+        <option value="maestro">Solo Maestros Masones</option>
+      </select>
+    </div>` : '';
   content.innerHTML = `
     <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
       <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nueva entrada — ${nombre}</div>
-      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
-        <input id="${contentId}-titulo" type="text" placeholder="Título de la entrada"
-          style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;"></div>
-      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
+      ${audienciaSelect}
+      <div style="margin-bottom:14px;"><label style="${labelStyle}">Título</label>
+        <input id="${contentId}-titulo" type="text" placeholder="Título de la entrada" style="${fieldStyle}"></div>
+      <div style="margin-bottom:14px;"><label style="${labelStyle}">Contenido</label>
         <textarea id="${contentId}-contenido" rows="8" placeholder="Escribe aquí…"
-          style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:10px 14px;outline:none;resize:vertical;"></textarea></div>
+          style="${fieldStyle}resize:vertical;"></textarea></div>
       <div style="display:flex;gap:10px;">
         <button onclick="admPublicarBlogEspecifico('${contentId}','${rolBlog}',true)"
           style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
@@ -1605,8 +1619,9 @@ async function admPublicarBlogEspecifico(contentId, rolBlog, publish) {
   const titulo    = document.getElementById(contentId+'-titulo')?.value.trim();
   const contenido = document.getElementById(contentId+'-contenido')?.value.trim();
   if (!titulo || !contenido) { toast('Completa título y contenido','error'); return; }
+  const audiencia = document.getElementById(contentId+'-audiencia')?.value || 'todos';
   const { error } = await sb.from('posts').insert({
-    role: rolBlog, titulo, contenido, extracto: contenido.substring(0,200),
+    role: rolBlog, audiencia, titulo, contenido, extracto: contenido.substring(0,200),
     autor_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
     publicado: publish
@@ -1630,12 +1645,15 @@ async function admCargarListaBlog(contentId, rolBlog) {
     lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado entradas aún.</div>';
     return;
   }
+  const AUDIENCIA_LABEL = { todos:'Todos los grados', aprendiz:'Aprendices', companero:'Compañeros', maestro:'Maestros' };
   data.forEach(p => {
     const div = document.createElement('div');
     div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
+    const audBadge = rolBlog === 'maestro' && p.audiencia
+      ? ` · <span style="color:var(--gold-dim);">${AUDIENCIA_LABEL[p.audiencia]||p.audiencia}</span>` : '';
     div.innerHTML = `<div>
       <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${p.titulo}</div>
-      <div style="font-size:12px;color:var(--text-dim);">${p.publicado?'Publicado':'Borrador'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}</div>
+      <div style="font-size:12px;color:var(--text-dim);">${p.publicado?'Publicado':'Borrador'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}${audBadge}</div>
     </div>
     <button onclick="admEliminarEntradaBlog('${p.id}','${contentId}','${rolBlog}')"
       style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
@@ -1956,9 +1974,11 @@ async function loadPosts() {
 }
 
 async function loadBlogOrador() {
+  const userRole = currentProfile?.role || 'aprendiz';
   const { data } = await sb.from('posts')
     .select('*')
-    .in('role', ['maestro', 'todos'])
+    .eq('role', 'maestro')
+    .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
     .eq('publicado', true)
     .order('created_at', { ascending: false });
 
