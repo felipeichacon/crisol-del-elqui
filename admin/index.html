@@ -809,7 +809,7 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         </div>
       </div>
       <button class="btn-primary" style="margin-bottom:28px;" onclick="openRadioForm()">+ Nuevo episodio</button>
-      <div class="content-grid" id="radio-grid"></div>
+      <div id="radio-grid"></div>
     </div>
 
     <!-- CORPORACIÓN ELQUI — NOTICIAS -->
@@ -4470,34 +4470,110 @@ function openContentModal(type) {
 let _radioEpisodios = [];
 
 async function loadEpisodios() {
-  const { data, error } = await sb.from('episodios').select('*').order('temporada').order('numero');
+  const { data, error } = await sb.from('episodios').select('*').order('programa').order('temporada').order('numero');
   if (error) { toast('Error cargando episodios: ' + error.message, 'error'); return; }
   _radioEpisodios = data || [];
-  const grid = document.getElementById('radio-grid'); grid.innerHTML='';
-  if (!data?.length) { grid.innerHTML='<div style=\"color:var(--text-dim);font-style:italic;\">No hay episodios aún.</div>'; return; }
+  const grid = document.getElementById('radio-grid');
+  grid.innerHTML = '';
+
+  if (!data?.length) {
+    grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:8px 0;">No hay episodios aún.</div>';
+    return;
+  }
+
+  // Agrupar por programa → temporada
+  const programas = {};
   data.forEach(ep => {
-    const div = document.createElement('div'); div.className='content-card';
-    const imgHtml = ep.imagen_url
-      ? `<img src="${ep.imagen_url}" style="width:100%;height:120px;object-fit:cover;margin-bottom:14px;border-radius:2px;">`
-      : '';
-    const estadoBadge = ep.publicado
-      ? `<span style="background:rgba(100,200,100,0.15);color:#7dc97d;border:1px solid rgba(100,200,100,0.3);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;letter-spacing:0.1em;">✓ Publicado</span>`
-      : `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);border:1px solid var(--border);padding:2px 8px;font-size:10px;font-family:'Cinzel',serif;letter-spacing:0.1em;">Borrador</span>`;
-    const visBadge = ep.visibilidad==='privado'
-      ? `<span style="font-size:11px;color:var(--text-dim);">🔒 Privado</span>`
-      : `<span style="font-size:11px;color:var(--text-dim);">🌐 Público</span>`;
-    div.innerHTML=`${imgHtml}
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">${estadoBadge}${visBadge}</div>
-      <div class=\"content-card-tag\">${ep.programa||'Radio Ágora'} · T${ep.temporada||1} · Ep.${String(ep.numero).padStart(2,'0')}</div>
-      <div class=\"content-card-title\">${ep.titulo}</div>
-      <div class=\"content-card-meta\">${ep.duracion||'—'} · ${ep.categoria||'—'}</div>
-      <div class=\"content-card-actions\" style=\"margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;\">
-        <button class=\"btn-primary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"editEpisodio('${ep.id}')\">✏ Editar</button>
-        <button class=\"btn-secondary\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"toggleEpisodio('${ep.id}',${!!ep.publicado})\">${ep.publicado?'Despublicar':'Publicar'}</button>
-        <button class=\"btn-danger\" style=\"padding:6px 14px;font-size:9px;\" onclick=\"deleteEpisodio('${ep.id}')\">Eliminar</button>
-      </div>`;
-    grid.appendChild(div);
+    const prog = ep.programa || 'Radio Ágora';
+    const temp = ep.temporada || 1;
+    if (!programas[prog]) programas[prog] = { desc: ep.descripcion_programa || '', img: ep.imagen_url || null, temporadas: {} };
+    if (!programas[prog].temporadas[temp]) programas[prog].temporadas[temp] = [];
+    programas[prog].temporadas[temp].push(ep);
   });
+
+  const btnBase = "font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:5px 11px;cursor:pointer;border:none;background:transparent;";
+
+  Object.entries(programas).forEach(([progNombre, progData], pi) => {
+    const progId = 'adm-prog-' + pi;
+    const totalEps = Object.values(progData.temporadas).flat().length;
+
+    // ── Header del programa (colapsable) ──
+    const progHeader = document.createElement('div');
+    progHeader.style.cssText = 'background:var(--dark-3);border:1px solid var(--border-bright);padding:14px 22px;margin-bottom:2px;cursor:pointer;';
+    progHeader.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;" onclick="admToggleProg('${progId}')">
+        <div style="display:flex;align-items:center;gap:16px;">
+          ${progData.img ? `<img src="${progData.img}" style="width:48px;height:48px;object-fit:cover;border-radius:3px;flex-shrink:0;">` : ''}
+          <div>
+            <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:0.08em;">${progNombre}</div>
+            ${progData.desc ? `<div style="font-size:13px;color:var(--text-dim);margin-top:3px;font-style:italic;">${progData.desc}</div>` : ''}
+            <div style="font-size:11px;font-family:'Cinzel',serif;color:var(--text-dim);margin-top:4px;letter-spacing:0.1em;">${totalEps} episodio${totalEps!==1?'s':''}</div>
+          </div>
+        </div>
+        <span id="${progId}-arrow" style="color:var(--gold-dim);font-size:13px;transition:transform 0.25s;">▼</span>
+      </div>`;
+    grid.appendChild(progHeader);
+
+    // ── Contenedor colapsable del programa ──
+    const progContainer = document.createElement('div');
+    progContainer.id = progId;
+    progContainer.style.cssText = 'margin-bottom:20px;';
+
+    Object.entries(progData.temporadas).forEach(([temp, eps], ti) => {
+      const tempId = progId + '-t' + ti;
+
+      // Header de temporada (colapsable)
+      const tempHeader = document.createElement('div');
+      tempHeader.style.cssText = 'background:var(--dark-4);border:1px solid var(--border);border-top:none;padding:9px 22px 9px 32px;cursor:pointer;';
+      tempHeader.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;" onclick="admToggleProg('${tempId}')">
+          <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:var(--gold-dim);text-transform:uppercase;">Temporada ${temp} · ${eps.length} ep.</div>
+          <span id="${tempId}-arrow" style="color:var(--gold-dim);font-size:11px;transition:transform 0.25s;">▼</span>
+        </div>`;
+      progContainer.appendChild(tempHeader);
+
+      // Contenedor colapsable de la temporada
+      const tempContainer = document.createElement('div');
+      tempContainer.id = tempId;
+
+      eps.forEach(ep => {
+        const pubBadge = ep.publicado
+          ? `<span style="background:rgba(100,200,100,0.15);color:#7dc97d;border:1px solid rgba(100,200,100,0.3);padding:2px 8px;font-size:9px;font-family:'Cinzel',serif;white-space:nowrap;">✓ Pub</span>`
+          : `<span style="background:rgba(201,168,76,0.1);color:var(--gold-dim);border:1px solid var(--border);padding:2px 8px;font-size:9px;font-family:'Cinzel',serif;white-space:nowrap;">Borrador</span>`;
+        const visBadge = ep.visibilidad === 'privado'
+          ? `<span style="font-size:11px;color:var(--text-dim);" title="Privado">🔒</span>`
+          : `<span style="font-size:11px;color:var(--text-dim);" title="Público">🌐</span>`;
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);border-top:none;padding:11px 18px 11px 44px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;';
+        row.innerHTML = `
+          <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold-dim);width:22px;flex-shrink:0;">${String(ep.numero).padStart(2,'0')}</span>
+          <div style="flex:1;min-width:160px;">
+            <div style="font-size:15px;color:var(--cream);">${ep.titulo}</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${ep.duracion||'—'} · ${ep.categoria||'—'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">${pubBadge}${visBadge}</div>
+          <div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;">
+            <button style="${btnBase}color:var(--gold);border:1px solid var(--border-bright);" onclick="editEpisodio('${ep.id}')">✏ Editar</button>
+            <button style="${btnBase}color:var(--gold-dim);border:1px solid var(--border);" onclick="toggleEpisodio('${ep.id}',${!!ep.publicado})">${ep.publicado?'Despublicar':'Publicar'}</button>
+            <button style="${btnBase}color:#ff6b6b;border:1px solid rgba(220,60,60,0.4);" onclick="deleteEpisodio('${ep.id}')">Eliminar</button>
+          </div>`;
+        tempContainer.appendChild(row);
+      });
+
+      progContainer.appendChild(tempContainer);
+    });
+
+    grid.appendChild(progContainer);
+  });
+}
+
+function admToggleProg(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const arrow = document.getElementById(id + '-arrow');
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? '' : 'none';
+  if (arrow) arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
 }
 
 let radioAudioFile      = null;
