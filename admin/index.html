@@ -2698,6 +2698,7 @@ function renderPostsGrid(posts, gridId) {
       <div class="content-card-title">${p.titulo}</div>
       <div class="content-card-meta">${p.autor_nombre ? 'Q∴H∴ '+p.autor_nombre : '—'} · ${date}</div>
       <div class="content-card-actions">
+        <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="openEditPostModal('${p.id}')">Editar</button>
         <button class="btn-secondary" style="padding:6px 12px;font-size:9px;" onclick="togglePost('${p.id}',${p.publicado})">${p.publicado?'Despublicar':'Publicar'}</button>
         <button class="btn-danger" style="padding:6px 12px;font-size:9px;" onclick="deletePost('${p.id}')">Eliminar</button>
       </div>`;
@@ -2774,6 +2775,71 @@ async function savePostModal(publish) {
     autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
     publicado: publish
   });
+  if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
+  toast(publish ? 'Publicado' : 'Borrador guardado', 'success');
+  closeModal();
+  await loadPosts('blog');
+}
+
+function openEditPostModal(id) {
+  const p = allPosts.find(x => x.id === id);
+  if (!p) return;
+  const isMaestro = p.role === 'maestro';
+  document.getElementById('modal-title').textContent = 'Editar entrada de blog';
+  document.getElementById('modal-sub').textContent   = BLOG_TITLES[p.role] || p.role;
+  document.getElementById('modal-body').innerHTML = `
+    ${isMaestro ? `
+    <div class="field">
+      <label>Grado destinatario</label>
+      <select id="mp-audiencia">
+        <option value="todos">Todos los grados</option>
+        <option value="aprendiz">Solo Aprendices</option>
+        <option value="companero">Solo Compañeros</option>
+        <option value="maestro">Solo Maestros Masones</option>
+      </select>
+    </div>
+    <input type="hidden" id="mp-role" value="maestro">
+    ` : `
+    <div class="field"><label>Destino</label>
+      <select id="mp-role">
+        <option value="venerable">Venerable Maestro (Landing page)</option>
+        <option value="aprendiz">2° Vigilante — Aprendices</option>
+        <option value="companero">1° Vigilante — Compañeros</option>
+        <option value="maestro">Orador — Maestros</option>
+      </select>
+    </div>
+    `}
+    <div class="field"><label>Título</label><input id="mp-titulo" placeholder="Título de la entrada"></div>
+    <div class="field"><label>Contenido</label><textarea id="mp-contenido" rows="6" placeholder="Contenido…"></textarea></div>`;
+  // Asignar valores via JS para evitar problemas con comillas/HTML
+  document.getElementById('mp-titulo').value    = p.titulo   || '';
+  document.getElementById('mp-contenido').value = p.contenido|| '';
+  if (isMaestro) {
+    document.getElementById('mp-audiencia').value = p.audiencia || 'todos';
+  } else {
+    document.getElementById('mp-role').value = p.role || 'maestro';
+  }
+  document.getElementById('modal-footer').innerHTML = `
+    <button class="btn-primary"   onclick="saveEditPostModal('${id}',true)">Publicar</button>
+    <button class="btn-secondary" onclick="saveEditPostModal('${id}',false)">Guardar borrador</button>
+    <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+async function saveEditPostModal(id, publish) {
+  const titulo    = document.getElementById('mp-titulo').value.trim();
+  const contenido = document.getElementById('mp-contenido').value.trim();
+  if (!titulo || !contenido) { toast('Completa título y contenido', 'error'); return; }
+  const roleEl    = document.getElementById('mp-role');
+  const role      = currentBlogRole === 'maestro'
+    ? 'maestro'
+    : (roleEl ? roleEl.value : (currentBlogRole || 'maestro'));
+  const audiencia = document.getElementById('mp-audiencia')?.value || 'todos';
+  const { error } = await sb.from('posts').update({
+    role, audiencia, titulo, contenido,
+    extracto: contenido.substring(0, 200),
+    publicado: publish
+  }).eq('id', id);
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
   toast(publish ? 'Publicado' : 'Borrador guardado', 'success');
   closeModal();
