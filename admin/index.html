@@ -720,15 +720,15 @@ tr:hover td { background: rgba(201,168,76,0.04); }
           </div>
         </div>
         <div class="field" style="margin-bottom:16px;"><label>Título del artículo</label><input type="text" id="egr-titulo" placeholder="Título del artículo" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;"></div>
-        <div class="field" style="margin-bottom:24px;"><label>Contenido</label><textarea id="egr-contenido" rows="8" placeholder="Escribe el contenido del artículo…" style="width:100%;background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cormorant Garamond',serif;font-size:17px;padding:12px 16px;outline:none;resize:vertical;"></textarea></div>
+        <div class="field" style="margin-bottom:24px;"><label>Contenido</label><div id="egr-quill"></div></div>
         <div style="display:flex;gap:12px;">
           <button class="btn-primary" onclick="saveEgregoraArticulo(true)">Publicar artículo</button>
           <button class="btn-secondary" onclick="saveEgregoraArticulo(false)">Guardar borrador</button>
-          <button class="btn-secondary" onclick="document.getElementById('egregora-form').style.display='none'">Cancelar</button>
+          <button class="btn-secondary" onclick="cancelEgregoraForm()">Cancelar</button>
         </div>
       </div>
 
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="document.getElementById('egregora-form').style.display='block';document.getElementById('egregora-form').scrollIntoView({behavior:'smooth'})">+ Nuevo artículo</button>
+      <button class="btn-primary" style="margin-bottom:28px;" onclick="openEgregoraForm()">+ Nuevo artículo</button>
       <div class="content-grid" id="egregora-admin-grid"></div>
     </div>
 
@@ -4699,7 +4699,9 @@ async function deleteEpisodio(id) {
 
 
 // ── REVISTA EGRÉGORA ──
-let egrImgFile = null;
+let egrImgFile        = null;
+let egrEditId         = null;
+let egrExistingImgUrl = null;
 
 function previewEgrImg(input) {
   const file = input.files[0]; if(!file) return;
@@ -4712,45 +4714,84 @@ function previewEgrImg(input) {
   reader.readAsDataURL(file);
 }
 
+function openEgregoraForm(a = null) {
+  egrEditId         = a ? a.id : null;
+  egrExistingImgUrl = a ? (a.imagen_url || null) : null;
+  egrImgFile        = null;
+  const form = document.getElementById('egregora-form');
+  const formTitle = form.querySelector('div[style*="Nueva"]') || form.firstElementChild;
+  // Actualizar encabezado del formulario
+  const header = form.querySelector('[style*="letter-spacing:0.2em"]');
+  if (header) header.textContent = a ? 'Editar artículo' : 'Nuevo artículo';
+  document.getElementById('egr-titulo').value   = a?.titulo   || '';
+  document.getElementById('egr-edicion').value  = a?.edicion  || '';
+  const cat = document.getElementById('egr-categoria');
+  if (cat && a?.categoria) { const opt = Array.from(cat.options).find(o => o.value===a.categoria||o.text===a.categoria); if(opt) cat.value=opt.value; }
+  const prev = document.getElementById('egr-img-preview');
+  prev.innerHTML = a?.imagen_url
+    ? `<img src="${a.imagen_url}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>`;
+  form.style.display = 'block';
+  form.scrollIntoView({ behavior: 'smooth' });
+  initQuillEditor('egr-quill', { content: a?.contenido || '', placeholder: 'Escribe el contenido del artículo…' });
+}
+
+function cancelEgregoraForm() {
+  egrEditId         = null;
+  egrExistingImgUrl = null;
+  egrImgFile        = null;
+  document.getElementById('egr-titulo').value  = '';
+  document.getElementById('egr-edicion').value = '';
+  if (_quillInstances['egr-quill']) _quillInstances['egr-quill'].setContents([]);
+  document.getElementById('egr-img-preview').innerHTML = '<span style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Subir imagen</span>';
+  document.getElementById('egregora-form').style.display = 'none';
+}
+
 async function saveEgregoraArticulo(publish) {
   const titulo    = document.getElementById('egr-titulo').value.trim();
-  const contenido = document.getElementById('egr-contenido').value.trim();
+  const contenido = getQuillContent('egr-quill');
   if (!titulo || !contenido) { toast('Título y contenido son obligatorios', 'error'); return; }
   toast('Guardando artículo…');
 
-  let imgUrl = null;
+  let imgUrl = egrImgFile ? null : egrExistingImgUrl;
   if (egrImgFile) {
-    const path = Date.now() + '-' + egrImgFile.name.replace(/\\\\s/g,'_');
+    const path = Date.now() + '-' + egrImgFile.name.replace(/\s/g,'_');
     const { error: upErr } = await sb.storage.from('Egregora').upload(path, egrImgFile, {upsert:true});
     if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Egregora').getPublicUrl(path);
     imgUrl = publicUrl;
   }
 
-  const { error } = await sb.from('egregora_articulos').insert({
+  const payload = {
     titulo, contenido,
-    extracto:     contenido.substring(0, 240),
-    edicion:      document.getElementById('egr-edicion').value.trim() || null,
-    categoria:    document.getElementById('egr-categoria').value,
-    imagen_url:   imgUrl,
-    autor_id:     currentProfile.id,
-    autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
-    publicado:    publish
-  });
+    extracto:  stripHtml(contenido).substring(0, 240),
+    edicion:   document.getElementById('egr-edicion').value.trim() || null,
+    categoria: document.getElementById('egr-categoria').value,
+    imagen_url: imgUrl || null,
+    publicado: publish
+  };
+
+  let error;
+  if (egrEditId) {
+    ({ error } = await sb.from('egregora_articulos').update(payload).eq('id', egrEditId));
+  } else {
+    ({ error } = await sb.from('egregora_articulos').insert({
+      ...payload,
+      autor_id:     currentProfile.id,
+      autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||'')
+    }));
+  }
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
 
-  egrImgFile = null;
-  document.getElementById('egr-img-preview').innerHTML = '<span style=\"font-family:Cinzel,serif;font-size:9px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;\">Subir imagen</span>';
-  document.getElementById('egr-titulo').value = '';
-  document.getElementById('egr-contenido').value = '';
-  document.getElementById('egr-edicion').value = '';
-  document.getElementById('egregora-form').style.display = 'none';
+  cancelEgregoraForm();
   toast(publish ? 'Artículo publicado' : 'Borrador guardado', 'success');
   loadEgregoraAdmin();
 }
 
+let _allEgregoraArticulos = [];
 async function loadEgregoraAdmin() {
   const { data } = await sb.from('egregora_articulos').select('*').order('created_at', {ascending:false});
+  _allEgregoraArticulos = data || [];
   const grid = document.getElementById('egregora-admin-grid');
   grid.innerHTML = '';
   if (!data?.length) { grid.innerHTML = '<div style=\"color:var(--text-dim);font-style:italic;\">No hay artículos aún.</div>'; return; }
@@ -4768,6 +4809,7 @@ async function loadEgregoraAdmin() {
         <div class=\"content-card-title\">${a.titulo}</div>
         <div class=\"content-card-meta\">${a.autor_nombre||'—'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div>
         <div class=\"content-card-actions\" style=\"margin-top:12px;\">
+          <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"openEgregoraForm(_allEgregoraArticulos.find(x=>x.id==='${a.id}'))\">Editar</button>
           <button class=\"btn-secondary\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"toggleEgregoraArticulo('${a.id}',${a.publicado})\">${a.publicado?'Despublicar':'Publicar'}</button>
           <button class=\"btn-danger\" style=\"padding:6px 12px;font-size:9px;\" onclick=\"deleteEgregoraArticulo('${a.id}')\">Eliminar</button>
         </div>
