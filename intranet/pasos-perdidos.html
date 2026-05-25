@@ -1647,27 +1647,26 @@ async function admCargarListaBlog(contentId, rolBlog) {
     lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado entradas aún.</div>';
     return;
   }
-  const btnStyle = 'font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;background:transparent;padding:6px 10px;cursor:pointer;';
+  const btnStyle = 'font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;background:transparent;padding:10px 18px;cursor:pointer;';
   data.forEach(p => {
     const div = document.createElement('div');
     div.id = 'post-row-' + p.id;
-    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;';
+    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:22px 26px;';
     const audBadge = rolBlog === 'maestro' && p.audiencia
       ? ` · <span style="color:var(--gold-dim);">${AUDIENCIA_LABEL[p.audiencia]||p.audiencia}</span>` : '';
+    const fecha = new Date(p.created_at).toLocaleDateString('es-CL');
     div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${p.titulo}</div>
-          <div style="font-size:12px;color:var(--text-dim);">${p.publicado?'Publicado':'Borrador'} · ${new Date(p.created_at).toLocaleDateString('es-CL')}${audBadge}</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
-          <button onclick="admAbrirEdicionBlog('${p.id}','${contentId}','${rolBlog}')"
-            style="${btnStyle}color:var(--gold);border:1px solid var(--border-bright);">Editar</button>
-          <button onclick="admEliminarEntradaBlog('${p.id}','${contentId}','${rolBlog}')"
-            style="${btnStyle}color:#ff6b6b;border:1px solid rgba(220,60,60,0.4);">Eliminar</button>
-        </div>
+      <div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);margin-bottom:6px;">${p.titulo}</div>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">${p.publicado?'Publicado':'Borrador'} · ${fecha}${audBadge}</div>
       </div>
-      <div id="edit-form-${p.id}" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px;"></div>`;
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="admAbrirEdicionBlog('${p.id}','${contentId}','${rolBlog}')"
+          style="${btnStyle}color:var(--gold);border:1px solid var(--border-bright);">Editar</button>
+        <button onclick="admEliminarEntradaBlog('${p.id}','${contentId}','${rolBlog}')"
+          style="${btnStyle}color:#ff6b6b;border:1px solid rgba(220,60,60,0.4);">Eliminar</button>
+      </div>
+      <div id="edit-form-${p.id}" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px;"></div>`;
     lista.appendChild(div);
   });
 }
@@ -1680,31 +1679,35 @@ async function admAbrirEdicionBlog(id, contentId, rolBlog) {
   // Cargar datos del post
   const { data: p } = await sb.from('posts').select('*').eq('id', id).single();
   if (!p) { toast('No se pudo cargar la entrada', 'error'); return; }
-  const fieldStyle = 'width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:\'Cormorant Garamond\',serif;font-size:16px;padding:10px 14px;outline:none;margin-bottom:10px;';
-  const labelStyle = 'font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:5px;';
-  const btnBase    = 'font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;border:none;padding:10px 18px;cursor:pointer;';
+  const fStyle  = 'width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:\'Cormorant Garamond\',serif;font-size:17px;padding:10px 14px;outline:none;';
+  const lStyle  = 'font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;';
+  const bBase   = 'font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;border:none;padding:12px 22px;cursor:pointer;';
   editDiv.innerHTML = `
     ${rolBlog === 'maestro' ? `
-    <div style="margin-bottom:10px;">
-      <label style="${labelStyle}">Grado destinatario</label>
-      <select id="edit-aud-${id}" style="${fieldStyle}margin-bottom:0;">
+    <div style="margin-bottom:14px;">
+      <label style="${lStyle}">Grado destinatario</label>
+      <select id="edit-aud-${id}" style="${fStyle}">
         <option value="todos">Todos los grados</option>
         <option value="aprendiz">Solo Aprendices</option>
         <option value="companero">Solo Compañeros</option>
         <option value="maestro">Solo Maestros Masones</option>
       </select>
     </div>` : ''}
-    <label style="${labelStyle}">Título</label>
-    <input id="edit-tit-${id}" style="${fieldStyle}">
-    <label style="${labelStyle}">Contenido</label>
-    <textarea id="edit-con-${id}" rows="5" style="${fieldStyle}resize:vertical;"></textarea>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <div style="margin-bottom:14px;">
+      <label style="${lStyle}">Título</label>
+      <input id="edit-tit-${id}" style="${fStyle}">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="${lStyle}">Contenido</label>
+      <textarea id="edit-con-${id}" rows="6" style="${fStyle}resize:vertical;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button onclick="admGuardarEdicionBlog('${id}','${contentId}','${rolBlog}',true)"
-        style="${btnBase}color:var(--dark);background:var(--gold);">Publicar</button>
+        style="${bBase}color:var(--dark);background:var(--gold);">Publicar</button>
       <button onclick="admGuardarEdicionBlog('${id}','${contentId}','${rolBlog}',false)"
-        style="${btnBase}color:var(--gold);background:transparent;border:1px solid var(--border-bright);">Guardar borrador</button>
+        style="${bBase}color:var(--gold);background:transparent;border:1px solid var(--border-bright);">Guardar borrador</button>
       <button onclick="document.getElementById('edit-form-${id}').style.display='none'"
-        style="${btnBase}color:var(--text-dim);background:transparent;border:1px solid var(--border);">Cancelar</button>
+        style="${bBase}color:var(--text-dim);background:transparent;border:1px solid var(--border);">Cancelar</button>
     </div>`;
   // Asignar valores vía JS para evitar problemas con comillas en el contenido
   document.getElementById('edit-tit-' + id).value = p.titulo    || '';
