@@ -2760,7 +2760,12 @@ function openPostModal(preRole) {
 async function savePostModal(publish) {
   const titulo    = document.getElementById('mp-titulo').value.trim();
   const contenido = document.getElementById('mp-contenido').value.trim();
-  const role      = document.getElementById('mp-role')?.value || currentBlogRole || 'maestro';
+  // currentBlogRole es la fuente de verdad del blog activo.
+  // Para el blog del Orador siempre forzamos 'maestro' independiente del DOM.
+  const roleEl    = document.getElementById('mp-role');
+  const role      = currentBlogRole === 'maestro'
+    ? 'maestro'
+    : (roleEl ? roleEl.value : (currentBlogRole || 'maestro'));
   const audiencia = document.getElementById('mp-audiencia')?.value || 'todos';
   if (!titulo||!contenido) { toast('Completa título y contenido', 'error'); return; }
   const { error } = await sb.from('posts').insert({

@@ -2042,11 +2042,30 @@ function closePost() {
   document.body.style.overflow = '';
 }
 
+// Mapa inverso: cargo → rol de blog
+const CARGO_A_ROL_BLOG = {
+  'Orador':             'maestro',
+  'Primer Vigilante':   'companero',
+  'Segundo Vigilante':  'aprendiz',
+  'Venerable Maestro':  'venerable',
+};
+
 function showNewPostForm() {
   document.getElementById('new-post-form').classList.remove('hidden');
   // Mostrar selector de grado solo a admin
   const gradoWrap = document.getElementById('post-grado-wrap');
-  if (gradoWrap) gradoWrap.classList.toggle('hidden', currentProfile.role !== 'admin');
+  const isAdmin = currentProfile.role === 'admin';
+  if (gradoWrap) {
+    gradoWrap.classList.toggle('hidden', !isAdmin);
+    if (isAdmin) {
+      // Preseleccionar el rol del cargo del admin para evitar publicar en 'todos' por defecto
+      const gradoEl = document.getElementById('post-grado');
+      if (gradoEl && currentProfile.cargo) {
+        const rolPorCargo = CARGO_A_ROL_BLOG[currentProfile.cargo];
+        if (rolPorCargo) gradoEl.value = rolPorCargo;
+      }
+    }
+  }
   document.getElementById('post-titulo').focus();
 }
 
@@ -2055,8 +2074,11 @@ async function savePost(publish) {
   const contenido = document.getElementById('post-contenido').value.trim();
   if (!titulo || !contenido) { toast('Completa título y contenido', 'error'); return; }
   // Admin puede elegir grado; otros usan su propio rol
+  // Para admin con cargo específico, el select ya está pre-seleccionado al rol correcto
   const gradoEl = document.getElementById('post-grado');
-  const rolePost = (currentProfile.role === 'admin' && gradoEl) ? gradoEl.value : currentProfile.role;
+  const rolePost = (currentProfile.role === 'admin' && gradoEl)
+    ? gradoEl.value
+    : (CARGO_A_ROL_BLOG[currentProfile.cargo] || currentProfile.role);
   const { error } = await sb.from('posts').insert({
     role: rolePost, titulo, contenido,
     extracto: contenido.substring(0, 200),
