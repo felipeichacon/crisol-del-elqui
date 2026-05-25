@@ -1925,11 +1925,12 @@ const BLOG_CARGO_MAP = {
   admin:     'Orador'
 };
 
-// Mapa de visibilidad: cada grado ve los posts de estos roles
+// Mapa de visibilidad exclusiva: cada grado ve SOLO los posts de su propio rol + 'todos'
+// Publicar para aprendiz NO lo muestra a compañeros ni maestros (y viceversa)
 const ROLES_VISIBLES_BLOG = {
   aprendiz:  ['aprendiz', 'todos'],
-  companero: ['companero', 'aprendiz', 'todos'],
-  maestro:   ['maestro', 'companero', 'aprendiz', 'todos'],
+  companero: ['companero', 'todos'],
+  maestro:   ['maestro', 'todos'],
   admin:     ['maestro', 'companero', 'aprendiz', 'todos'],
 };
 
@@ -1941,7 +1942,7 @@ async function loadPosts() {
   const btnPost = document.getElementById('btn-nueva-entrada');
   if (btnPost) btnPost.style.display = puedeEscribir ? '' : 'none';
 
-  // Cargar posts según visibilidad del grado
+  // Cargar posts según visibilidad exclusiva del grado
   const rolesParaVer = ROLES_VISIBLES_BLOG[rol] || ['todos'];
   const { data } = await sb.from('posts')
     .select('*')
@@ -1950,7 +1951,14 @@ async function loadPosts() {
 
   const grid = document.getElementById('blog-posts-grid');
   grid.innerHTML = '';
-  const posts = (data||[]).filter(p => p.publicado || p.autor_id === currentProfile.id);
+  const posts = (data||[]).filter(p => {
+    if (!p.publicado && p.autor_id !== currentProfile.id) return false;
+    // Para posts del Orador (role='maestro') respetar el campo audiencia
+    if (p.role === 'maestro') {
+      return !p.audiencia || p.audiencia === 'todos' || p.audiencia === rol;
+    }
+    return true;
+  });
   if (!posts.length) {
     grid.innerHTML = '<div style="padding:32px 48px;color:var(--text-dim);font-style:italic;">No hay publicaciones aún.</div>'; return;
   }
