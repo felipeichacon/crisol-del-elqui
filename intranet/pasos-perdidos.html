@@ -1413,20 +1413,33 @@ function toast(msg, type='') {
   setTimeout(()=>el.remove(), 4000);
 }
 
+// ── SPA HISTORY BUFFER ──
+// Empuja entradas centinela al historial para que el botón "atrás"
+// nunca pueda salir de la SPA hacia la landing page.
+// Cada vez que el usuario llega al fondo del historial interno,
+// se repone el buffer automáticamente.
+function _pushSpaBuffer(module) {
+  const BUFFER = 4;
+  for (let i = 0; i < BUFFER; i++) {
+    history.pushState({ module: module, sentinel: true }, '', '');
+  }
+}
+
 // ── INIT ──
 async function init() {
   // Historial interno de la SPA: cada módulo visitado entra en history del browser
   window.addEventListener('popstate', (event) => {
     if (!_appInitialized) return; // ignorar si aún no se inició la app
     if (event.state?.module) {
-      // Navegar al módulo del estado sin generar un nuevo pushState
+      // Navegar al módulo del estado
       _inPopstate = true;
       showModule(event.state.module);
       _inPopstate = false;
+      // Si era un sentinel (fondo del historial interno), rellenar buffer de nuevo
+      if (event.state.sentinel) _pushSpaBuffer(event.state.module);
     } else {
-      // Sin estado propio: el usuario llegó al fondo del historial interno
-      // → re-insertar la portada para que no pueda salir de la SPA
-      history.pushState({ module: currentModule || 'hero' }, '', '');
+      // Sin estado propio (landing page u otro): bloquear salida y rellenar buffer
+      _pushSpaBuffer(currentModule || 'hero');
     }
   });
 
@@ -1532,7 +1545,9 @@ function showApp() {
   const _crb = document.getElementById('chat-role-badge'); if(_crb) _crb.textContent = ROLE_LABELS[role] || role;
 
   // Establecer Portada como base del historial interno (replaceState, no pushState)
+  // Luego empujar buffer centinela para que "atrás" nunca salga de la SPA
   history.replaceState({ module: 'hero' }, '', '');
+  _pushSpaBuffer('hero'); // barrera: nunca salir hacia la landing page
   showModule('hero');
   loadGallery();
   loadProfiles();
