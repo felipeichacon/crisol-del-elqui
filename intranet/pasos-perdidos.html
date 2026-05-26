@@ -2379,17 +2379,26 @@ async function loadAdmMensajeria() {
 }
 
 function admMsgModulo(nombre, desc, modKey) {
+  const esSuperAdmin = currentProfile?.role === 'admin';
+  const accion = esSuperAdmin
+    ? `<a href="/admin" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);padding:12px 22px;text-decoration:none;display:inline-block;">
+        Abrir en el panel de administración →
+      </a>`
+    : `<div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:var(--gold-dim);padding:10px 0;">
+        Acceso delegado — contacta al superadministrador para gestión avanzada.
+      </div>`;
+  const nota = esSuperAdmin
+    ? `<div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
+        Inicia sesión con tu misma cuenta en <strong style="color:var(--gold);">crisoldelelqui.cl/admin</strong> para acceder al módulo de ${nombre.toLowerCase()}.
+      </div>`
+    : '';
   return `<div style="max-width:560px;">
     <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:20px;">
       <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:10px;">${nombre}</div>
       <div style="font-size:15px;color:var(--text-dim);line-height:1.8;margin-bottom:20px;">${desc}</div>
-      <a href="/admin" target="_blank" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);padding:12px 22px;text-decoration:none;display:inline-block;">
-        Abrir en el panel de administración →
-      </a>
+      ${accion}
     </div>
-    <div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
-      Inicia sesión con tu misma cuenta en <strong style="color:var(--gold);">crisoldelelqui.cl/admin</strong> para acceder al módulo de ${nombre.toLowerCase()}.
-    </div>
+    ${nota}
   </div>`;
 }
 

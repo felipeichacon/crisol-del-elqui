@@ -2210,11 +2210,12 @@ async function loadProfile() {
   if (error) { toast('Error al conectar con la base de datos: ' + error.message, 'error'); return; }
   if (!data) { toast('Perfil no encontrado. Contacta al administrador.', 'error'); return; }
   if (data.role !== 'admin') {
-    document.getElementById('screen-login').classList.remove('hidden');
-    document.getElementById('screen-app').classList.add('hidden');
-    toast('Acceso denegado. Solo administradores.', 'error');
+    // No cerrar sesión globalmente — solo bloquear acceso a este panel
     currentUser = null;
-    await sb.auth.signOut(); return;
+    currentProfile = null;
+    showLogin();
+    toast('Acceso denegado. Este panel es solo para administradores.', 'error');
+    return;
   }
   currentProfile = data;
   document.getElementById('topbar-name').textContent = qh(data.nombre, data.apellido);
