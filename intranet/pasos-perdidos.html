@@ -1490,6 +1490,13 @@ function showApp() {
   const _nb = document.getElementById('nav-blog-label'); if(_nb) _nb.textContent = BLOG_LABELS[role] || 'Blog';
   const _bth = document.getElementById('blog-title-heading'); if(_bth) _bth.textContent = BLOG_LABELS[role] || 'Blog';
   const _crb = document.getElementById('chat-role-badge'); if(_crb) _crb.textContent = ROLE_LABELS[role] || role;
+
+  // Ocultar "Blog" genérico para oficiales que tienen su propio módulo dedicado
+  const CARGOS_CON_BLOG_PROPIO = ['Orador', 'Primer Vigilante', 'Segundo Vigilante'];
+  const tieneBlogPropio = CARGOS_CON_BLOG_PROPIO.includes(currentProfile.cargo);
+  const navBlogGenerico = document.querySelector('.nav-item[onclick="showModule(\'blog\')"]');
+  if (navBlogGenerico) navBlogGenerico.style.display = tieneBlogPropio ? 'none' : '';
+
   showModule('hero');
   loadGallery();
   loadProfiles();
