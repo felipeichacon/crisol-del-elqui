@@ -1627,18 +1627,19 @@ function initAllBadges() {
 
 // ── MÓDULOS DE ADMINISTRACIÓN EN LA INTRANET ──
 const ADM_MODULOS_CONFIG = {
-  'noticias':        { id:'adm-noticias',       icon:'◫', label:'Noticias',                  fn:'loadAdmNoticias'      },
+  'noticias':        { id:'adm-noticias',       icon:'◫', label:'Publicar Noticias',         fn:'loadAdmNoticias'      },
+  'blog-orador':     { id:'adm-blog-orador',    icon:'✦', label:'Blog del Orador',           fn:'loadAdmBlogOradorAdm' },
   'blog-venerable':  { id:'adm-blog-venerable', icon:'✦', label:'Blog Venerable Maestro',    fn:'loadAdmBlogVenerable' },
   'blog-primer-vig': { id:'adm-blog-primer',    icon:'✦', label:'Blog Primer Vigilante',     fn:'loadAdmBlogPrimer'    },
   'blog-segundo-vig':{ id:'adm-blog-segundo',   icon:'✦', label:'Blog Segundo Vigilante',    fn:'loadAdmBlogSegundo'   },
   'egregora':        { id:'adm-egregora',       icon:'◈', label:'Rev. Egrégora',             fn:'loadAdmEgregora'      },
-  'radio-agora':     { id:'adm-radio-agora',    icon:'◉', label:'Radio Ágora',               fn:'loadAdmRadio'         },
-  'biblioteca':      { id:'adm-biblioteca',     icon:'◫', label:'Biblioteca',                fn:'loadAdmBiblioteca'    },
-  'galeria':         { id:'adm-galeria',        icon:'⊞', label:'Galería',                   fn:'loadAdmGaleria'       },
-  'calendario':      { id:'adm-calendario',     icon:'◷', label:'Calendario',                fn:'loadAdmCalendario'    },
+  'radio-agora':     { id:'adm-radio-agora',    icon:'◉', label:'Gestionar Radio Ágora',     fn:'loadAdmRadio'         },
+  'biblioteca':      { id:'adm-biblioteca',     icon:'◫', label:'Gestionar Biblioteca',      fn:'loadAdmBiblioteca'    },
+  'galeria':         { id:'adm-galeria',        icon:'⊞', label:'Gestionar Galería',         fn:'loadAdmGaleria'       },
+  'calendario':      { id:'adm-calendario',     icon:'◷', label:'Gestionar Calendario',      fn:'loadAdmCalendario'    },
   'corp-noticias':   { id:'adm-corp-noticias',  icon:'◫', label:'Corp. Noticias',            fn:'loadAdmCorpNoticias'  },
   'corp-blog':       { id:'adm-corp-blog',      icon:'✦', label:'Corp. Blog',                fn:'loadAdmCorpBlog'      },
-  'mensajeria':      { id:'adm-mensajeria',     icon:'✉', label:'Mensajería',                fn:'loadAdmMensajeria'    },
+  'mensajeria':      { id:'adm-mensajeria',     icon:'✉', label:'Admin Mensajería',          fn:'loadAdmMensajeria'    },
 };
 
 function inyectarModulosAdmin() {
@@ -1649,9 +1650,21 @@ function inyectarModulosAdmin() {
 
   section.style.display = '';
   items.innerHTML = '';
+
+  // Si el usuario tiene blog-orador en permisos y NO es el Orador por cargo,
+  // ocultamos el ítem público de lectura (el admin verá el módulo admin en su lugar)
+  const tieneBlogOrador = permisos.includes('blog-orador');
+  const esOradorPorCargo = currentProfile.cargo === 'Orador';
+  const navPub = document.getElementById('nav-blog-orador-pub');
+  if (navPub) navPub.classList.toggle('hidden', tieneBlogOrador && !esOradorPorCargo);
+
   permisos.forEach(mod => {
     const cfg = ADM_MODULOS_CONFIG[mod];
     if (!cfg) return;
+    // Si es el Orador por cargo, saltamos blog-orador del panel admin
+    // (ya tiene acceso directo al blog desde el ítem estático del nav)
+    if (mod === 'blog-orador' && esOradorPorCargo) return;
+
     const div = document.createElement('div');
     div.className = 'nav-item';
     div.id = 'nav-' + cfg.id;
@@ -2060,9 +2073,9 @@ async function loadBlogSegundoPub() {
 }
 
 // ── BLOG DEL ORADOR — módulo completo (form inline + lista todos los posts) ──
-async function loadAdmBlogOrador() {
-  // Usa el contenedor del módulo blog-orador-pub (que es el único ítem en el nav)
-  const content = document.getElementById('blog-orador-grid');
+async function loadAdmBlogOrador(overrideContainer) {
+  // Usa el contenedor del módulo blog-orador-pub, o un contenedor alternativo (módulo admin inyectado)
+  const content = overrideContainer || document.getElementById('blog-orador-grid');
   if (!content) return;
   content.style.cssText = 'padding:0 48px 48px;display:block;';
 
@@ -2115,6 +2128,16 @@ async function loadAdmBlogOrador() {
 
   initQuillEditor('orador-nueva-quill', { placeholder: 'Escribe aquí…' });
   await oradorCargarLista();
+}
+
+// Versión para el módulo admin inyectado (adm-blog-orador): reutiliza loadAdmBlogOrador
+// pero volcando el contenido en el contenedor del módulo adm en lugar del blog-orador-grid
+function loadAdmBlogOradorAdm() {
+  const contentEl = document.getElementById('adm-blog-orador-content');
+  if (!contentEl) return;
+  // Reutilizar la misma UI del loadAdmBlogOrador volcándola en este contenedor
+  contentEl.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:32px 0;">Cargando…</div>';
+  loadAdmBlogOrador(contentEl);
 }
 
 function oradorNuevaSelectGrado(grado) {
@@ -2368,7 +2391,7 @@ function admMsgModulo(nombre, desc, modKey) {
 }
 
 // ── MODULES ──
-const MODULES = ['hero','gallery','blog','blog-orador-pub','blog-primer-pub','blog-segundo-pub','radio-agora-pub','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
+const MODULES = ['hero','gallery','blog','blog-orador-pub','blog-primer-pub','blog-segundo-pub','radio-agora-pub','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-orador','adm-blog-venerable','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   closeSidebar(); // cerrar drawer móvil al navegar
   // Registrar en historial del browser (salvo durante popstate o primera carga)
@@ -2388,6 +2411,7 @@ function showModule(name) {
   if (name === 'calendar')   { loadCalendar(); }
   // Módulos de administración dentro de la intranet
   if (name === 'adm-noticias')       loadAdmNoticias();
+  if (name === 'adm-blog-orador')    loadAdmBlogOradorAdm();
   if (name === 'adm-blog-venerable') loadAdmBlogVenerable();
   if (name === 'adm-blog-primer')    loadAdmBlogPrimer();
   if (name === 'adm-blog-segundo')   loadAdmBlogSegundo();
