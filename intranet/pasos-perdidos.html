@@ -1560,7 +1560,8 @@ function showApp() {
 
 async function initBlogBadge() {
   if (!currentProfile) return;
-  const userRole = currentProfile.role || 'aprendiz';
+  const rawRole = currentProfile.role || 'aprendiz';
+  const userRole = rawRole === 'admin' ? 'maestro' : rawRole;
   const { data } = await sb.from('posts')
     .select('created_at')
     .eq('role', 'maestro')
@@ -2020,7 +2021,8 @@ async function loadBlogPrimerPub() {
   const grid = document.getElementById('blog-primer-grid');
   if (!grid) return;
   grid.style.cssText = '';
-  const userRole = currentProfile?.role || 'aprendiz';
+  const rawRole = currentProfile?.role || 'aprendiz';
+  const userRole = rawRole === 'admin' ? 'maestro' : rawRole;
   const { data } = await sb.from('posts').select('*')
     .eq('role', 'companero').eq('publicado', true)
     .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
@@ -2048,7 +2050,8 @@ async function loadBlogSegundoPub() {
   const grid = document.getElementById('blog-segundo-grid');
   if (!grid) return;
   grid.style.cssText = '';
-  const userRole = currentProfile?.role || 'aprendiz';
+  const rawRole = currentProfile?.role || 'aprendiz';
+  const userRole = rawRole === 'admin' ? 'maestro' : rawRole;
   const { data } = await sb.from('posts').select('*')
     .eq('role', 'aprendiz').eq('publicado', true)
     .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
@@ -2451,7 +2454,8 @@ function showModule(name) {
 
 // ── HERO ──
 async function loadHero() {
-  const { data } = await sb.from('hero_images').select('*').eq('role', currentProfile.role).single();
+  const heroRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
+  const { data } = await sb.from('hero_images').select('*').eq('role', heroRole).single();
   if (data) {
     if (data.url) document.getElementById('hero-img').src = data.url;
     document.getElementById('hero-title').textContent = data.titulo || 'Pasos Perdidos';
@@ -2599,7 +2603,7 @@ async function loadPosts() {
     if (!p.publicado && p.autor_id !== currentProfile.id) return false;
     // Para posts del Orador (role='maestro') respetar el campo audiencia
     if (p.role === 'maestro') {
-      return !p.audiencia || p.audiencia === 'todos' || p.audiencia === rol;
+      return !p.audiencia || p.audiencia === 'todos' || p.audiencia === rol || rol === 'admin';
     }
     return true;
   });
@@ -2626,7 +2630,8 @@ async function loadPosts() {
 }
 
 async function loadBlogOrador() {
-  const userRole = currentProfile?.role || 'aprendiz';
+  const rawRole = currentProfile?.role || 'aprendiz';
+  const userRole = rawRole === 'admin' ? 'maestro' : rawRole;
   const { data } = await sb.from('posts')
     .select('*')
     .eq('role', 'maestro')
