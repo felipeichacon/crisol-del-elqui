@@ -1370,8 +1370,9 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-let currentUser   = null;
-let currentProfile= null;
+let currentUser      = null;
+let currentProfile   = null;
+let _appInitialized  = false; // evita doble init por onAuthStateChange + init()
 let currentModule = 'hero';
 let chatChannel   = null;
 let msgChannel    = null;
@@ -1413,15 +1414,23 @@ function toast(msg, type='') {
 
 // ── INIT ──
 async function init() {
+  // Interceptar botón Atrás del navegador: mantener dentro de la SPA
+  window.history.pushState(null, '', window.location.href);
+  window.addEventListener('popstate', () => {
+    window.history.pushState(null, '', window.location.href);
+  });
+
   const { data: { session } } = await sb.auth.getSession();
   document.getElementById('loading').style.display = 'none';
   if (session) {
-    currentUser = session.user;
+    currentUser     = session.user;
+    _appInitialized = true;
     await loadProfile();
     showApp();
   } else {
     document.getElementById('screen-login').classList.remove('hidden');
   }
+
   // Keyboard: ESC closes overlays
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
@@ -1431,14 +1440,24 @@ async function init() {
   });
 
   sb.auth.onAuthStateChange(async (_event, session) => {
-    if (session && !currentUser) {
-      currentUser = session.user;
-      await loadProfile();
-      showApp();
-    } else if (!session) {
-      currentUser = null; currentProfile = null;
+    if (session) {
+      // Login exitoso: inicializar solo una vez por sesión
+      if (!_appInitialized) {
+        currentUser     = session.user;
+        _appInitialized = true;
+        await loadProfile();
+        showApp();
+      }
+    } else {
+      // Logout o sesión expirada: resetear todo
+      currentUser     = null;
+      currentProfile  = null;
+      _appInitialized = false;
       document.getElementById('screen-app').classList.add('hidden');
       document.getElementById('screen-login').classList.remove('hidden');
+      // Restablecer botón de login por si quedó deshabilitado
+      const btn = document.getElementById('btn-login-submit');
+      if (btn) { btn.disabled = false; btn.textContent = 'Ingresar al Templo'; }
     }
   });
 }
@@ -1451,9 +1470,10 @@ async function doLogin() {
   const btn = document.getElementById('btn-login-submit');
   btn.disabled = true; btn.textContent = 'Ingresando…';
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  // Siempre re-habilitar el botón (onAuthStateChange se encarga de mostrar la app)
+  btn.disabled = false; btn.textContent = 'Ingresar al Templo';
   if (error) {
     toast('Credenciales incorrectas. Verifica e intenta nuevamente.', 'error');
-    btn.disabled = false; btn.textContent = 'Ingresar al Templo';
   }
 }
 
@@ -1467,7 +1487,13 @@ async function doForgotPassword() {
 async function doLogout() {
   if (chatChannel) sb.removeChannel(chatChannel);
   if (msgChannel)  sb.removeChannel(msgChannel);
+  // Limpiar campos del formulario de login
+  const eml = document.getElementById('login-email');
+  const pwd = document.getElementById('login-pass');
+  if (eml) eml.value = '';
+  if (pwd) pwd.value = '';
   await sb.auth.signOut();
+  // onAuthStateChange se encarga de mostrar screen-login y resetear _appInitialized
 }
 
 // ── LOAD PROFILE ──
