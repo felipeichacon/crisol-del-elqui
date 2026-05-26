@@ -2231,7 +2231,8 @@ function showModule(name) {
   if (name === 'blog')       { loadPosts(); }
   if (name === 'blog-orador-pub') {
     markBlogSeen();
-    if (currentProfile?._permisos?.includes('blog-orador')) {
+    const esOrador = currentProfile?.cargo === 'Orador' || currentProfile?._permisos?.includes('blog-orador');
+    if (esOrador) {
       loadAdmBlogOrador(); // el orador ve el módulo admin directamente
     } else {
       loadBlogOrador();    // los demás ven la vista de lectura
