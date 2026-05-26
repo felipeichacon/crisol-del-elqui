@@ -2103,17 +2103,16 @@ async function oradorToggle(id, publicado) {
 
 async function oradorEliminar(id) {
   if (!confirm('¿Eliminar esta entrada?')) return;
-  // Remoción optimista del DOM inmediatamente
   const row = document.getElementById('orador-row-' + id);
-  if (row) row.remove();
+  if (row) row.remove(); // remoción optimista inmediata
   const { error } = await sb.from('posts').delete().eq('id', id);
   if (error) {
     toast('Error al eliminar: ' + error.message, 'error');
-    await oradorCargarLista(); // recargar para restaurar el estado real
+    await oradorCargarLista(); // restaurar estado real si falló
     return;
   }
   toast('Entrada eliminada');
-  await oradorCargarLista(); // sincronizar lista desde la BD
+  // No recargamos la lista: el DOM ya está correcto tras la remoción optimista
 }
 
 
