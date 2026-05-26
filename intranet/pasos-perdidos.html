@@ -167,8 +167,20 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .gallery-lightbox-close { position: absolute; top: 14px; right: 18px; font-size: 36px; color: rgba(255,255,255,0.85); cursor: pointer; line-height: 1; background: none; border: none; padding: 4px 8px; }
 
 /* ── MODULE: RADIO ÁGORA — Buzzsprout style ── */
-.radio-layout { display: grid; grid-template-columns: 1fr 380px; gap: 0; padding: 0 48px 48px; max-width: 1140px; align-items: start; }
-.radio-episode-list { display: flex; flex-direction: column; gap: 0; padding-right: 32px; }
+.radio-layout { display: grid; grid-template-columns: 1fr 380px; gap: 48px; padding: 0 48px 48px; max-width: 1140px; align-items: start; }
+.radio-podcast-desc { font-size: 18px; color: var(--text-dim); line-height: 1.9; font-style: italic; margin-bottom: 36px; }
+/* Episode list — landing-page style */
+.episode-list { list-style: none; margin: 0; padding: 0; }
+.episode-item { display: flex; align-items: flex-start; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: color 0.3s; }
+.episode-item:hover .ep-title { color: var(--gold-light, #e5c96a); }
+.episode-item.active .ep-title { color: var(--gold); }
+.ep-num { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold-dim); min-width: 28px; padding-top: 3px; flex-shrink: 0; }
+.ep-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--cream); margin-bottom: 4px; font-weight: 400; transition: color 0.3s; }
+.ep-meta { font-size: 13px; color: var(--text-dim); }
+.ep-prog-header { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); letter-spacing: 0.1em; padding: 16px 0 8px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.ep-prog-desc { font-size: 13px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+.ep-season-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.3em; color: var(--gold-dim); text-transform: uppercase; padding: 10px 0 4px 14px; list-style: none; }
+/* viejo estilo — mantenido para no romper nada */
 .radio-prog-header { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.35em; color: var(--gold); text-transform: uppercase; padding: 20px 16px 8px; border-bottom: 1px solid var(--border); }
 .radio-ep-item { display: flex; align-items: center; gap: 0; padding: 0; background: var(--dark-3); border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; overflow: hidden; }
 .radio-ep-item:first-of-type { border-top: 1px solid var(--border); }
@@ -215,8 +227,8 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .rap-speed-btn { background: transparent; border: 1.5px solid var(--border-bright); color: var(--gold-dim); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.05em; padding: 5px 9px; cursor: pointer; border-radius: 3px; transition: color 0.15s, border-color 0.15s; margin-left: 4px; }
 .rap-speed-btn:hover { color: var(--gold); border-color: var(--gold); }
 @media (max-width: 860px) {
-  .radio-layout { grid-template-columns: 1fr; padding: 0 0 80px; }
-  .radio-episode-list { padding-right: 0; }
+  .radio-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 0 80px; }
+  .radio-podcast-desc { font-size: 16px; }
   .radio-player { position: static; border-radius: 0; order: -1; border-left: none; border-right: none; border-top: none; }
 }
 
@@ -908,7 +920,10 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <div class="gold-line"></div>
       </div>
       <div class="radio-layout">
-        <div class="radio-episode-list" id="radio-agora-list"></div>
+        <div>
+          <p class="radio-podcast-desc">"La palabra es el instrumento del alma. Reflexiones sobre filosofía, historia y el camino del perfeccionamiento humano."</p>
+          <ul class="episode-list" id="radio-agora-list"></ul>
+        </div>
         <div class="radio-player">
           <div class="rap-show-bar">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
@@ -2299,11 +2314,12 @@ function rapGenWaveform(seed) {
 
 async function loadRadioAgoraIntranet() {
   const list = document.getElementById('radio-agora-list');
-  list.innerHTML = '<div style="padding:24px;color:var(--text-dim);font-style:italic;">Cargando episodios…</div>';
+  list.innerHTML = '<li style="padding:24px 0;color:var(--text-dim);font-style:italic;">Cargando episodios…</li>';
 
   const { data } = await sb.from('episodios')
     .select('*')
     .eq('publicado', true)
+    .order('programa', { ascending: true })
     .order('temporada', { ascending: true })
     .order('numero',   { ascending: true });
 
@@ -2311,49 +2327,78 @@ async function loadRadioAgoraIntranet() {
   list.innerHTML = '';
 
   if (!_rapEpisodios.length) {
-    list.innerHTML = '<div style="padding:24px;color:var(--text-dim);font-style:italic;">No hay episodios disponibles aún.</div>';
+    list.innerHTML = '<li style="padding:24px 0;color:var(--text-dim);font-style:italic;">No hay episodios disponibles aún.</li>';
     return;
   }
 
-  // Agrupar por programa
-  const grupos = {};
+  // Agrupar por programa → temporada (igual que landing)
+  const programas = {};
   _rapEpisodios.forEach(ep => {
     const prog = ep.programa || 'Radio Ágora';
-    if (!grupos[prog]) grupos[prog] = [];
-    grupos[prog].push(ep);
+    const temp = ep.temporada || 1;
+    if (!programas[prog]) programas[prog] = { desc: ep.descripcion_programa||'', temporadas: {} };
+    if (!programas[prog].temporadas[temp]) programas[prog].temporadas[temp] = [];
+    programas[prog].temporadas[temp].push(ep);
   });
 
-  Object.entries(grupos).forEach(([prog, eps]) => {
-    if (Object.keys(grupos).length > 1) {
-      const header = document.createElement('div');
-      header.className = 'radio-prog-header';
-      header.textContent = prog;
-      list.appendChild(header);
-    }
-    eps.forEach(ep => {
-      const div  = document.createElement('div');
-      div.className  = 'radio-ep-item';
-      div.dataset.id = ep.id;
-      const lock = ep.visibilidad === 'privado'
-        ? '<span class="radio-ep-lock" title="Solo intranet">🔒</span>' : '';
-      div.innerHTML = `
-        <div class="radio-ep-play-col">
-          <div class="radio-ep-play-ico">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+  Object.entries(programas).forEach(([progNombre, progData], pi) => {
+    // Header del programa (colapsable)
+    const progHeader = document.createElement('li');
+    progHeader.style.cssText = 'list-style:none;';
+    progHeader.innerHTML = `
+      <div class="ep-prog-header" onclick="rapTogglePrograma('rap-prog-${pi}','rap-parrow-${pi}')">
+        <div>
+          <div>${progNombre}</div>
+          ${progData.desc ? `<div class="ep-prog-desc">${progData.desc}</div>` : ''}
+        </div>
+        <span id="rap-parrow-${pi}" style="color:var(--gold-dim);font-size:12px;transition:transform 0.3s;">▼</span>
+      </div>`;
+    list.appendChild(progHeader);
+
+    const progContainer = document.createElement('div');
+    progContainer.id = `rap-prog-${pi}`;
+
+    Object.entries(progData.temporadas).forEach(([temp, eps]) => {
+      // Label de temporada
+      const tempLabel = document.createElement('li');
+      tempLabel.className = 'ep-season-label';
+      tempLabel.textContent = `Temporada ${temp}`;
+      progContainer.appendChild(tempLabel);
+
+      // Episodios
+      eps.forEach(ep => {
+        const li = document.createElement('li');
+        li.className = 'episode-item';
+        li.dataset.id = ep.id;
+        li.style.paddingLeft = '14px';
+        const lockBadge = ep.visibilidad === 'privado'
+          ? '<span style="font-size:11px;color:var(--gold-dim);flex-shrink:0;" title="Solo intranet">🔒</span>' : '';
+        li.innerHTML = `
+          <span class="ep-num">${String(ep.numero).padStart(2,'0')}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="ep-title">${ep.titulo}</div>
+            ${ep.descripcion ? `<div style="font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.5;">${ep.descripcion.substring(0,100)}${ep.descripcion.length>100?'…':''}</div>` : ''}
+            <div class="ep-meta" style="margin-top:4px;">${ep.duracion||'—'} · ${ep.categoria||'Reflexión'}</div>
           </div>
-        </div>
-        <div class="radio-ep-body">
-          <div class="radio-ep-num-label">T${ep.temporada||1} · Ep. ${String(ep.numero).padStart(2,'0')}</div>
-          <div class="radio-ep-title">${ep.titulo}</div>
-          <div class="radio-ep-meta">${ep.duracion||''} ${ep.categoria ? '· '+ep.categoria : ''}</div>
-        </div>
-        ${lock}`;
-      div.onclick = () => rapSelectEpisodio(ep);
-      list.appendChild(div);
+          ${lockBadge}`;
+        li.onclick = () => rapSelectEpisodio(ep);
+        progContainer.appendChild(li);
+      });
     });
+
+    list.appendChild(progContainer);
   });
 
   if (_rapEpisodios[0]) rapSelectEpisodio(_rapEpisodios[0]);
+}
+
+function rapTogglePrograma(containerId, arrowId) {
+  const el    = document.getElementById(containerId);
+  const arrow = document.getElementById(arrowId);
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  if (arrow) arrow.style.transform = hidden ? 'rotate(0deg)' : 'rotate(-90deg)';
 }
 
 function rapBuildWaveform(ep) {
@@ -2387,8 +2432,8 @@ function rapUpdateWaveform() {
 
 function rapSelectEpisodio(ep) {
   _rapCurrentEp = ep;
-  document.querySelectorAll('.radio-ep-item').forEach(el => el.classList.remove('active', 'playing'));
-  const row = document.querySelector(`.radio-ep-item[data-id="${ep.id}"]`);
+  document.querySelectorAll('.episode-item').forEach(el => el.classList.remove('active'));
+  const row = document.querySelector(`.episode-item[data-id="${ep.id}"]`);
   if (row) row.classList.add('active');
 
   document.getElementById('rap-prog').textContent  = ep.programa || 'Radio Ágora';
