@@ -1654,7 +1654,7 @@ function renderPermisosLista(items) {
       const checked = mods.includes(mod);
       panelHtml += `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:var(--dark-3);border:1px solid ${checked?'var(--border-bright)':'var(--border)'};cursor:pointer;transition:border-color 0.2s;" id="perm-lbl-${p.id}-${mod}">
         <input type="checkbox" value="${mod}" ${checked?'checked':''}
-          onchange="togglePermiso('${p.id}','${mod}',this.checked,this)"
+          onchange="onPermisoCheck('${p.id}','${mod}',this.checked,this)"
           style="accent-color:var(--gold);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer;">
         <div>
           <div style="font-family:'Cinzel',serif;font-size:11px;color:var(--cream);margin-bottom:2px;">${info.label}</div>
@@ -1662,7 +1662,13 @@ function renderPermisosLista(items) {
         </div>
       </label>`;
     });
-    panelHtml += '</div>';
+    panelHtml += `</div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <button id="perm-save-${p.id}" onclick="guardarPermisosUsuario('${p.id}')"
+        style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:9px 20px;cursor:pointer;border:none;background:var(--border);color:var(--text-dim);transition:background 0.2s,color 0.2s;">
+        💾 Guardar cambios</button>
+      <span id="perm-dirty-${p.id}" style="display:none;font-size:12px;color:var(--gold);font-style:italic;">● Cambios sin guardar</span>
+    </div>`;
     panel.innerHTML = panelHtml;
     card.appendChild(panel);
     lista.appendChild(card);
@@ -1678,62 +1684,93 @@ function togglePermisoCard(perfilId) {
   if (arrow) arrow.style.transform = open ? '' : 'rotate(90deg)';
 }
 
-async function aplicarSugerencia(perfilId, cargo) {
+function aplicarSugerencia(perfilId, cargo) {
   const sugeridos = PERMISOS_SUGERIDOS[cargo] || [];
-  await sb.from('permisos_admin').upsert(
-    { perfil_id: perfilId, modulos: sugeridos, otorgado_por: currentProfile.id, updated_at: new Date() },
-    { onConflict: 'perfil_id' }
-  );
-  toast('Permisos sugeridos para "'+cargo+'" aplicados', 'success');
-  loadPermisosAdmin();
+  const panel = document.getElementById('perm-panel-'+perfilId);
+  if (!panel) return;
+  panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = sugeridos.includes(cb.value);
+    const lbl = document.getElementById('perm-lbl-'+perfilId+'-'+cb.value);
+    if (lbl) lbl.style.borderColor = cb.checked ? 'var(--border-bright)' : 'var(--border)';
+  });
+  markPermisoDirty(perfilId);
+  toast(`Sugerencia para "${cargo}" aplicada — pulsa Guardar para confirmar`, 'success');
 }
 
-async function togglePermiso(perfilId, modulo, activo, cbEl) {
-  const { data: existing } = await sb.from('permisos_admin')
-    .select('modulos').eq('perfil_id', perfilId).maybeSingle();
+// Marca el botón Guardar de un usuario como "pendiente"
+function markPermisoDirty(perfilId) {
+  const btn = document.getElementById('perm-save-'+perfilId);
+  const dot = document.getElementById('perm-dirty-'+perfilId);
+  if (btn) { btn.style.background = 'var(--gold)'; btn.style.color = 'var(--dark)'; }
+  if (dot) dot.style.display = 'inline';
+}
 
-  let mods = existing?.modulos || [];
-  if (activo) { if (!mods.includes(modulo)) mods.push(modulo); }
-  else { mods = mods.filter(m => m !== modulo); }
+// Checkbox cambió — solo actualiza UI local, no guarda
+function onPermisoCheck(perfilId, modulo, activo, cbEl) {
+  const lbl = document.getElementById('perm-lbl-'+perfilId+'-'+modulo);
+  if (lbl) lbl.style.borderColor = activo ? 'var(--border-bright)' : 'var(--border)';
+  markPermisoDirty(perfilId);
+}
 
-  await sb.from('permisos_admin').upsert(
+// Guardar permisos de un usuario al BD
+async function guardarPermisosUsuario(perfilId) {
+  const panel = document.getElementById('perm-panel-'+perfilId);
+  if (!panel) return;
+  const mods = [...panel.querySelectorAll('input[type="checkbox"]:checked')].map(cb => cb.value);
+  const btn = document.getElementById('perm-save-'+perfilId);
+  const dot = document.getElementById('perm-dirty-'+perfilId);
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando…'; }
+
+  const { error } = await sb.from('permisos_admin').upsert(
     { perfil_id: perfilId, modulos: mods, otorgado_por: currentProfile.id, updated_at: new Date() },
     { onConflict: 'perfil_id' }
   );
 
-  // Actualizar borde de la label
-  if (cbEl) {
-    const lbl = document.getElementById('perm-lbl-'+perfilId+'-'+modulo);
-    if (lbl) lbl.style.borderColor = activo ? 'var(--border-bright)' : 'var(--border)';
+  if (error) {
+    toast('Error al guardar: ' + error.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Guardar cambios'; }
+    return;
   }
 
-  // Actualizar los datos en memoria
+  // Actualizar datos en memoria
   if (window._permisosData) {
     const entry = window._permisosData.find(e => e.perfil.id === perfilId);
-    if (entry) {
-      if (activo) { if (!entry.mods.includes(modulo)) entry.mods.push(modulo); }
-      else { entry.mods = entry.mods.filter(m=>m!==modulo); }
-    }
+    if (entry) entry.mods = mods;
   }
-  toast(activo ? 'Permiso otorgado' : 'Permiso revocado', 'success');
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '✓ Guardado';
+    btn.style.background = 'var(--border)';
+    btn.style.color = 'var(--text-dim)';
+    setTimeout(() => { if (btn) btn.textContent = '💾 Guardar cambios'; }, 2500);
+  }
+  if (dot) dot.style.display = 'none';
+  toast('Permisos guardados', 'success');
 }
 
-async function darTodosPermisos(perfilId) {
-  await sb.from('permisos_admin').upsert(
-    { perfil_id: perfilId, modulos: [...MODULOS_PERMISABLES], otorgado_por: currentProfile.id, updated_at: new Date() },
-    { onConflict: 'perfil_id' }
-  );
-  toast('Todos los permisos otorgados', 'success');
-  loadPermisosAdmin();
+// Marcar todos los checkboxes (sin guardar)
+function darTodosPermisos(perfilId) {
+  const panel = document.getElementById('perm-panel-'+perfilId);
+  if (!panel) return;
+  panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = true;
+    const lbl = document.getElementById('perm-lbl-'+perfilId+'-'+cb.value);
+    if (lbl) lbl.style.borderColor = 'var(--border-bright)';
+  });
+  markPermisoDirty(perfilId);
 }
 
-async function quitarTodosPermisos(perfilId) {
-  await sb.from('permisos_admin').upsert(
-    { perfil_id: perfilId, modulos: [], otorgado_por: currentProfile.id, updated_at: new Date() },
-    { onConflict: 'perfil_id' }
-  );
-  toast('Permisos removidos', 'success');
-  loadPermisosAdmin();
+// Desmarcar todos (sin guardar)
+function quitarTodosPermisos(perfilId) {
+  const panel = document.getElementById('perm-panel-'+perfilId);
+  if (!panel) return;
+  panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = false;
+    const lbl = document.getElementById('perm-lbl-'+perfilId+'-'+cb.value);
+    if (lbl) lbl.style.borderColor = 'var(--border)';
+  });
+  markPermisoDirty(perfilId);
 }
 
 // ── GALERÍA ADMIN ──
