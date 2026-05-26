@@ -2060,7 +2060,7 @@ function marcarTodosMiembros(checked) {
 }
 
 async function cargarMiembrosGrupoForm(seleccionados, escritores = []) {
-  const {data} = await sb.from('profiles').select('id,nombre,apellido,role,cargo').order('apellido');
+  const {data} = await sb.from('profiles').select('id,nombre,apellido,role,cargo').neq('role','admin').order('apellido');
   const list = document.getElementById('grupo-miembros-list');
   if (!list || !data) return;
   list.innerHTML = '';
@@ -2250,7 +2250,7 @@ function showModule(name) {
 // ── DASHBOARD ──
 async function loadDashboard() {
   const [users, posts, docs, msgs, unread] = await Promise.all([
-    sb.from('profiles').select('role'),
+    sb.from('profiles').select('role').neq('role','admin'),
     sb.from('posts').select('id', {count:'exact', head:true}),
     sb.from('documents').select('id', {count:'exact', head:true}),
     sb.from('messages').select('id', {count:'exact', head:true}),
@@ -2269,7 +2269,7 @@ async function loadDashboard() {
 
 // ── USERS ──
 async function loadUsers() {
-  const { data } = await sb.from('profiles').select('*').order('apellido').order('nombre');
+  const { data } = await sb.from('profiles').select('*').neq('role','admin').order('apellido').order('nombre');
   // Ordenar por primer apellido, luego primer nombre
   if (data) data.sort((a,b) => {
     const ap1 = (a.apellido||'').trim().split(' ')[0].toLowerCase();
@@ -4319,7 +4319,7 @@ async function saveHero(role) {
 
 // ── MENSAJERÍA ADMIN ──
 async function loadConversations() {
-  const { data: profiles } = await sb.from('profiles').select('id,nombre,apellido,role').neq('id', currentProfile.id).order('nombre');
+  const { data: profiles } = await sb.from('profiles').select('id,nombre,apellido,role').neq('id', currentProfile.id).neq('role','admin').order('nombre');
   const list = document.getElementById('admin-conv-list'); list.innerHTML='';
   (profiles||[]).forEach(p => {
     const div = document.createElement('div'); div.className='msg-item'; div.onclick=()=>openAdminConv(p);
@@ -5362,7 +5362,7 @@ let admPollOpts = [];
 
 async function loadConversationsAdmin() {
   const [profRes, grupRes, encRes] = await Promise.all([
-    sb.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).order('apellido'),
+    sb.from('profiles').select('id,nombre,apellido,role,avatar_url,cargo').neq('id', currentProfile.id).neq('role','admin').order('apellido'),
     sb.from('grupos').select('*').order('created_at', {ascending:false}),
     sb.from('encuestas').select('*').eq('activa', true).order('created_at', {ascending:false})
   ]);
@@ -5710,7 +5710,7 @@ const EC_ROLES = [
 ];
 
 async function loadEmailCampaigns() {
-  const { data: members } = await sb.from('profiles').select('id,nombre,apellido,email,role').order('apellido');
+  const { data: members } = await sb.from('profiles').select('id,nombre,apellido,email,role').neq('role','admin').order('apellido');
   _ecMembers = (members || []).filter(m => m.email);
   const { data: docs } = await sb.from('documents').select('id,nombre,tipo,url').not('url','is',null).order('nombre');
   _ecAllDocs = docs || [];
