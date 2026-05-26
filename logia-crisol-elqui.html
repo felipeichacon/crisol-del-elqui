@@ -442,6 +442,22 @@
 </style>
 </head>
 <body>
+<script>
+  // Si el usuario ya tiene sesión activa en Supabase, redirigir directamente a la intranet.
+  // Esto actúa como red de seguridad: incluso si el botón "atrás" del browser logra llegar aquí,
+  // el usuario vuelve automáticamente sin ver la landing page.
+  (function() {
+    var _sbCheck = supabase.createClient(
+      'https://rpzigsvocrychahsrzfj.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODYzNzAsImV4cCI6MjA5MTI2MjM3MH0.RCtxrM0KzzBjeijgSTomlFPCDKiu9SzutUgpb6PPwUo'
+    );
+    _sbCheck.auth.getSession().then(function(res) {
+      if (res.data && res.data.session) {
+        window.location.replace('/intranet');
+      }
+    });
+  })();
+</script>
 
 <!-- ═══════════ LANDING PAGE ═══════════ -->
 <div id="page-landing">

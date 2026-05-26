@@ -1419,7 +1419,7 @@ function toast(msg, type='') {
 // Cada vez que el usuario llega al fondo del historial interno,
 // se repone el buffer automáticamente.
 function _pushSpaBuffer(module) {
-  const BUFFER = 4;
+  const BUFFER = 20; // buffer amplio para absorber clicks rápidos y comportamiento snapshot del browser
   for (let i = 0; i < BUFFER; i++) {
     history.pushState({ module: module, sentinel: true }, '', '');
   }
