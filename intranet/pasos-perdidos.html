@@ -1362,6 +1362,10 @@ function qh(nombre, apellido) {
   const a = (apellido||'').trim().split(' ')[0];
   return 'Q∴H∴ ' + [n,a].filter(Boolean).join(' ');
 }
+// M2: sanitizar texto antes de inyectar en innerHTML (previene XSS)
+function esc(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODYzNzAsImV4cCI6MjA5MTI2MjM3MH0.RCtxrM0KzzBjeijgSTomlFPCDKiu9SzutUgpb6PPwUo';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -1971,9 +1975,9 @@ async function loadBlogPrimerPub() {
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
     const excerpt = post.extracto || stripHtml(post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
     div.innerHTML = `
-      <div class="post-meta">Q∴H∴ ${post.autor_nombre||'Hermano'} · ${date}</div>
-      <div class="post-title">${post.titulo}</div>
-      <div class="post-excerpt">${excerpt}</div>
+      <div class="post-meta">Q∴H∴ ${esc(post.autor_nombre)||'Hermano'} · ${date}</div>
+      <div class="post-title">${esc(post.titulo)}</div>
+      <div class="post-excerpt">${esc(excerpt)}</div>
       <span class="post-read-more">Leer →</span>`;
     div.onclick = () => openPost(post);
     grid.appendChild(div);
@@ -1999,9 +2003,9 @@ async function loadBlogSegundoPub() {
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
     const excerpt = post.extracto || stripHtml(post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
     div.innerHTML = `
-      <div class="post-meta">Q∴H∴ ${post.autor_nombre||'Hermano'} · ${date}</div>
-      <div class="post-title">${post.titulo}</div>
-      <div class="post-excerpt">${excerpt}</div>
+      <div class="post-meta">Q∴H∴ ${esc(post.autor_nombre)||'Hermano'} · ${date}</div>
+      <div class="post-title">${esc(post.titulo)}</div>
+      <div class="post-excerpt">${esc(excerpt)}</div>
       <span class="post-read-more">Leer →</span>`;
     div.onclick = () => openPost(post);
     grid.appendChild(div);
@@ -2426,7 +2430,7 @@ async function loadGallery() {
       ? `<img class="insta-avatar" src="${avatarUrl}" alt="${nombre}" loading="lazy">`
       : `<div class="insta-avatar-placeholder">${nombre.charAt(0).toUpperCase()}</div>`;
     const fecha = _galleryFormatDate(img.created_at);
-    const caption = img.caption ? `<div class="insta-post-caption">${img.caption}</div>` : '';
+    const caption = img.caption ? `<div class="insta-post-caption">${esc(img.caption)}</div>` : '';
 
     const post = document.createElement('div');
     post.className = 'insta-post';
@@ -2530,11 +2534,11 @@ async function loadPosts() {
   posts.forEach(post => {
     const div = document.createElement('div'); div.className='blog-post-card';
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
-    const autorDisplay = 'Q∴H∴ ' + (post.autor_nombre||'Hermano');
-    const excerpt = post.extracto || (post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
+    const autorDisplay = 'Q∴H∴ ' + esc(post.autor_nombre||'Hermano');
+    const excerpt = esc(post.extracto || (post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : ''));
     div.innerHTML = `
       <div class="post-meta">${autorDisplay} · ${date}${!post.publicado ? ' · Borrador' : ''}</div>
-      <div class="post-title">${post.titulo}</div>
+      <div class="post-title">${esc(post.titulo)}</div>
       <div class="post-excerpt">${excerpt}</div>
       <span class="post-read-more">Leer →</span>
     `;
@@ -2827,7 +2831,7 @@ async function loadRadioAgoraIntranet() {
         li.innerHTML = `
           <span class="ep-num">${String(ep.numero).padStart(2,'0')}</span>
           <div style="flex:1;min-width:0;">
-            <div class="ep-title">${ep.titulo}</div>
+            <div class="ep-title">${esc(ep.titulo)}</div>
             ${ep.descripcion ? `<div style="font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.5;">${ep.descripcion.substring(0,100)}${ep.descripcion.length>100?'…':''}</div>` : ''}
             <div class="ep-meta" style="margin-top:4px;">${ep.duracion||'—'} · ${ep.categoria||'Reflexión'}</div>
           </div>
@@ -3567,7 +3571,7 @@ function renderExplorerContent(carpetaId) {
     row.innerHTML = `
       <div style="font-size:20px;line-height:1;">📁</div>
       <div>
-        <div class="col-name">${cap.nombre}</div>
+        <div class="col-name">${esc(cap.nombre)}</div>
         <span class="col-name sub">${docsEnCap} documento${docsEnCap!==1?'s':''}</span>
       </div>
       <div class="col-meta">—</div>
@@ -3593,11 +3597,11 @@ function renderExplorerContent(carpetaId) {
     row.innerHTML = `
       <div style="font-size:20px;line-height:1;">${icon}</div>
       <div>
-        <div class="col-name">${d.nombre}</div>
+        <div class="col-name">${esc(d.nombre)}</div>
         ${d.descripcion ? `<span class="col-name sub">${d.descripcion.substring(0,100)}${d.descripcion.length>100?'…':''}</span>` : ''}
         ${d.editorial  ? `<span class="col-name sub" style="color:var(--gold-dim);">${d.editorial}</span>` : ''}
       </div>
-      <div class="col-meta">${d.autor_nombre ? 'Q∴H∴ '+d.autor_nombre : '—'}</div>
+      <div class="col-meta">${d.autor_nombre ? 'Q∴H∴ '+esc(d.autor_nombre) : '—'}</div>
       <div>${catBadge}</div>
       <div class="col-meta">${fechaStr}</div>`;
     rows.appendChild(row);
@@ -4106,7 +4110,7 @@ async function openEncuesta(enc) {
         </button>
         <div class="wa-avatar" style="width:40px;height:40px;font-size:20px;background:rgba(201,168,76,0.15);border:1.5px solid rgba(201,168,76,0.3);">📊</div>
         <div class="wa-chat-info">
-          <div class="wa-chat-name">${encFresh.titulo}</div>
+          <div class="wa-chat-name">${esc(encFresh.titulo)}</div>
           <div class="wa-chat-sub">${tipoLabel} · ${encFresh.activa?'<span style="color:var(--gold)">Activa</span>':'Cerrada'}</div>
         </div>
         ${currentProfile.role==='admin'&&encFresh.activa?`<button onclick="cerrarEncuesta('${enc.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--text-dim);background:transparent;border:1px solid var(--border);padding:6px 12px;cursor:pointer;text-transform:uppercase;flex-shrink:0;">Cerrar</button>`:''}
@@ -4149,11 +4153,11 @@ function renderPoll(enc, miVoto) {
     <div class="wa-poll-head">
       <div class="wa-poll-icon">${checkIcon}</div>
       <div class="wa-poll-titles">
-        <div class="wa-poll-title">${enc.titulo}</div>
+        <div class="wa-poll-title">${esc(enc.titulo)}</div>
         <div class="wa-poll-sub">${tipoLabel} · ${totalVotos} voto${totalVotos!==1?'s':''}</div>
       </div>
     </div>
-    ${enc.descripcion ? `<div class="wa-poll-desc">${enc.descripcion}</div>` : ''}
+    ${enc.descripcion ? `<div class="wa-poll-desc">${esc(enc.descripcion)}</div>` : ''}
     <div class="wa-poll-divider"></div>`;
 
   // ── Options ──
@@ -4192,7 +4196,7 @@ function renderPoll(enc, miVoto) {
         <div class="wa-poll-bar${esMio?' mine':''}" style="width:${pct}%"></div>
         <div class="${circClass}">${tickSvg}</div>
         <div class="wa-poll-opt-body">
-          <div class="wa-poll-opt-text">${op.texto}</div>
+          <div class="wa-poll-opt-text">${esc(op.texto)}</div>
           ${voterListHtml}
         </div>
         <div class="wa-poll-stat">
@@ -4206,7 +4210,7 @@ function renderPoll(enc, miVoto) {
       row.innerHTML = `
         <div class="${circClass}">${tickSvg}</div>
         <div class="wa-poll-opt-body">
-          <div class="wa-poll-opt-text">${op.texto}</div>
+          <div class="wa-poll-opt-text">${esc(op.texto)}</div>
         </div>`;
       if (enc.multiple) {
         row.addEventListener('click', () => {
@@ -4420,7 +4424,7 @@ function appendChatMessage(m) {
   const div = document.createElement('div'); div.className='chat-msg'+(mine?' mine':'');
   const time = new Date(m.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
   const initials = (m.autor_nombre||'H').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  div.innerHTML=`<div class="chat-avatar">${initials}</div><div class="chat-bubble"><div class="chat-bubble-author">${mine?'Tú':m.autor_nombre}</div><div class="chat-bubble-text">${m.contenido}</div><div class="chat-bubble-time">${time}</div></div>`;
+  div.innerHTML=`<div class="chat-avatar">${esc(initials)}</div><div class="chat-bubble"><div class="chat-bubble-author">${mine?'Tú':esc(m.autor_nombre)}</div><div class="chat-bubble-text">${esc(m.contenido)}</div><div class="chat-bubble-time">${time}</div></div>`;
   container.appendChild(div);
 }
 

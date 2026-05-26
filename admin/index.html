@@ -1548,6 +1548,10 @@ function qh(nombre, apellido) {
   const a = (apellido||'').trim().split(' ')[0];
   return 'Q∴H∴ ' + [n, a].filter(Boolean).join(' ');
 }
+// M2: sanitizar texto antes de inyectar en innerHTML (previene XSS)
+function esc(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function qhFull(nombre, apellido) {
   // Para campos autor_nombre guardados en BD: sin prenombre, solo nombre + apellido
   const n = (nombre||'').trim().split(' ')[0];
