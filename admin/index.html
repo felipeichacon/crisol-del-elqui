@@ -3052,7 +3052,7 @@ async function savePostModal(publish) {
   const { error } = await sb.from('posts').insert({
     role, audiencia, titulo, contenido, extracto: stripHtml(contenido).substring(0,200),
     autor_id: currentProfile.id,
-    autor_nombre: qhFull(currentProfile.nombre, currentProfile.apellido),
+    autor_nombre: 'Administrador',
     publicado: publish
   });
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
@@ -4530,7 +4530,7 @@ async function saveNoticia(publish) {
     ({ error } = await sb.from('noticias').update(payload).eq('id', noticiaEditId));
   } else {
     payload.autor_id     = currentProfile.id;
-    payload.autor_nombre = currentProfile.nombre + ' ' + (currentProfile.apellido||'');
+    payload.autor_nombre = 'Administrador';
     ({ error } = await sb.from('noticias').insert(payload));
     if (error) {
       // fallback a posts si la tabla no existe
@@ -4538,7 +4538,7 @@ async function saveNoticia(publish) {
         role: 'todos', titulo, contenido,
         extracto:    contenido.substring(0, 220),
         autor_id:    currentProfile.id,
-        autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||''),
+        autor_nombre: 'Administrador',
         publicado:   publish
       });
       error = null;
@@ -5036,7 +5036,7 @@ async function saveEgregoraArticulo(publish) {
     ({ error } = await sb.from('egregora_articulos').insert({
       ...payload,
       autor_id:     currentProfile.id,
-      autor_nombre: currentProfile.nombre + ' ' + (currentProfile.apellido||'')
+      autor_nombre: 'Administrador'
     }));
   }
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
@@ -5191,7 +5191,7 @@ async function saveCorpNoticia(publish) {
     ({ error } = await sb.from('corp_noticias').update(payload).eq('id', corpNoticiaEditId));
   } else {
     payload.autor_id     = currentProfile.id;
-    payload.autor_nombre = currentProfile.nombre+' '+(currentProfile.apellido||'');
+    payload.autor_nombre = 'Administrador';
     ({ error } = await sb.from('corp_noticias').insert(payload));
   }
   _setBusy(false);
@@ -5298,7 +5298,7 @@ async function saveCorpPost(publish) {
     ({ error } = await sb.from('corp_posts').update(payload).eq('id', corpPostEditId));
   } else {
     payload.autor_id     = currentProfile.id;
-    payload.autor_nombre = currentProfile.nombre+' '+(currentProfile.apellido||'');
+    payload.autor_nombre = 'Administrador';
     ({ error } = await sb.from('corp_posts').insert(payload));
   }
   _setBusy(false);
