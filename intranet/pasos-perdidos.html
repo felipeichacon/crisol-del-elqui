@@ -1373,6 +1373,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser      = null;
 let currentProfile   = null;
 let _appInitialized  = false; // evita doble init por onAuthStateChange + init()
+let _inPopstate      = false; // evita pushState durante navegación por popstate
 let currentModule = 'hero';
 let chatChannel   = null;
 let msgChannel    = null;
@@ -1414,10 +1415,19 @@ function toast(msg, type='') {
 
 // ── INIT ──
 async function init() {
-  // Interceptar botón Atrás del navegador: mantener dentro de la SPA
-  window.history.pushState(null, '', window.location.href);
-  window.addEventListener('popstate', () => {
-    window.history.pushState(null, '', window.location.href);
+  // Historial interno de la SPA: cada módulo visitado entra en history del browser
+  window.addEventListener('popstate', (event) => {
+    if (!_appInitialized) return; // ignorar si aún no se inició la app
+    if (event.state?.module) {
+      // Navegar al módulo del estado sin generar un nuevo pushState
+      _inPopstate = true;
+      showModule(event.state.module);
+      _inPopstate = false;
+    } else {
+      // Sin estado propio: el usuario llegó al fondo del historial interno
+      // → re-insertar la portada para que no pueda salir de la SPA
+      history.pushState({ module: currentModule || 'hero' }, '', '');
+    }
   });
 
   const { data: { session } } = await sb.auth.getSession();
@@ -1521,6 +1531,8 @@ function showApp() {
   const _bth = document.getElementById('blog-title-heading'); if(_bth) _bth.textContent = BLOG_LABELS[role] || 'Blog';
   const _crb = document.getElementById('chat-role-badge'); if(_crb) _crb.textContent = ROLE_LABELS[role] || role;
 
+  // Establecer Portada como base del historial interno (replaceState, no pushState)
+  history.replaceState({ module: 'hero' }, '', '');
   showModule('hero');
   loadGallery();
   loadProfiles();
@@ -2344,6 +2356,10 @@ function admMsgModulo(nombre, desc, modKey) {
 const MODULES = ['hero','gallery','blog','blog-orador-pub','blog-primer-pub','blog-segundo-pub','radio-agora-pub','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-venerable','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   closeSidebar(); // cerrar drawer móvil al navegar
+  // Registrar en historial del browser (salvo durante popstate o primera carga)
+  if (_appInitialized && !_inPopstate) {
+    history.pushState({ module: name }, '', '');
+  }
   MODULES.forEach(m => {
     const el = document.getElementById('mod-'+m);
     if (el) el.classList.toggle('hidden', m !== name);
