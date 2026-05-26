@@ -746,7 +746,23 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         </div>
       </div>
 
-      <button class="btn-primary" style="margin-bottom:28px;" onclick="openEgregoraForm()">+ Nuevo artículo</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+        <button class="btn-primary" onclick="openEgregoraForm()">+ Nuevo artículo</button>
+        <div class="adm-bib-search-wrap" style="flex:1;min-width:200px;max-width:400px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" class="adm-bib-search" id="egr-search" placeholder="Buscar por título, contenido, autor…" oninput="admEgregoraSearch(this.value)">
+        </div>
+        <select class="adm-bib-sort-sel" id="egr-cat-filter" onchange="admEgregoraSearch(document.getElementById('egr-search').value)">
+          <option value="">Todas las categorías</option>
+          <option>Reflexión</option><option>Historia masónica</option><option>Filosofía</option>
+          <option>Ritual y simbolismo</option><option>Arte y cultura</option><option>Comunicado</option>
+        </select>
+        <select class="adm-bib-sort-sel" id="egr-estado-filter" onchange="admEgregoraSearch(document.getElementById('egr-search').value)">
+          <option value="">Publicados y borradores</option>
+          <option value="1">Solo publicados</option>
+          <option value="0">Solo borradores</option>
+        </select>
+      </div>
       <div class="content-grid" id="egregora-admin-grid"></div>
     </div>
 
@@ -5050,9 +5066,36 @@ let _allEgregoraArticulos = [];
 async function loadEgregoraAdmin() {
   const { data } = await sb.from('egregora_articulos').select('*').order('created_at', {ascending:false});
   _allEgregoraArticulos = data || [];
+  // Aplicar filtros activos si los hay
+  const term = (document.getElementById('egr-search')?.value || '').trim();
+  const cat  = document.getElementById('egr-cat-filter')?.value || '';
+  const est  = document.getElementById('egr-estado-filter')?.value || '';
+  if (term || cat || est) { admEgregoraSearch(term); return; }
+  _renderEgregoraGrid(_allEgregoraArticulos);
+}
+
+function admEgregoraSearch(q) {
+  const term   = (q||'').trim().toLowerCase();
+  const cat    = document.getElementById('egr-cat-filter')?.value    || '';
+  const estado = document.getElementById('egr-estado-filter')?.value || '';
+  const filtered = _allEgregoraArticulos.filter(a => {
+    if (cat    && a.categoria !== cat)       return false;
+    if (estado === '1' && !a.publicado)      return false;
+    if (estado === '0' &&  a.publicado)      return false;
+    if (term) {
+      const hay = [a.titulo, a.extracto, a.autor_nombre, a.edicion, a.categoria].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(term)) return false;
+    }
+    return true;
+  });
+  _renderEgregoraGrid(filtered);
+}
+
+function _renderEgregoraGrid(data) {
   const grid = document.getElementById('egregora-admin-grid');
+  if (!grid) return;
   grid.innerHTML = '';
-  if (!data?.length) { grid.innerHTML = '<div style=\"color:var(--text-dim);font-style:italic;\">No hay artículos aún.</div>'; return; }
+  if (!data?.length) { grid.innerHTML = '<div style="color:var(--text-dim);font-style:italic;">No hay artículos que coincidan.</div>'; return; }
   data.forEach(a => {
     const div = document.createElement('div');
     div.className = 'content-card';
