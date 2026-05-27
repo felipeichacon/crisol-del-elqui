@@ -1549,6 +1549,10 @@ function showApp() {
   const _bth = document.getElementById('blog-title-heading'); if(_bth) _bth.textContent = BLOG_LABELS[role] || 'Blog';
   const _crb = document.getElementById('chat-role-badge'); if(_crb) _crb.textContent = ROLE_LABELS[role] || role;
 
+  // Blog 1er Vigilante: solo visible para compañeros, maestros y admin (no aprendices)
+  const _nbp = document.getElementById('nav-blog-primer-pub');
+  if (_nbp) _nbp.classList.toggle('hidden', role === 'aprendiz');
+
   // Establecer Portada como base del historial interno (replaceState, no pushState)
   // Luego empujar buffer centinela para que "atrás" nunca salga de la SPA
   history.replaceState({ module: 'hero' }, '', '');
