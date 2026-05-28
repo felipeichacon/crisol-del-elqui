@@ -740,6 +740,25 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
     <button class="btn-login" id="btn-login-submit" onclick="doLogin()">Ingresar al Templo</button>
     <a href="#" class="login-forgot" onclick="doForgotPassword(); return false;">¿Olvidaste tu contraseña?</a>
   </div>
+
+  <!-- Panel cambio de contraseña (se muestra al llegar desde el email de recuperación) -->
+  <div id="reset-card" class="login-card hidden" style="margin-top:0;">
+    <div style="display:inline-block;margin-bottom:24px;filter:drop-shadow(0 0 18px rgba(255,255,255,0.45));">
+      <img src="/logo-crisol.png" alt="Escudo" style="width:130px;height:130px;border-radius:50%;display:block;">
+    </div>
+    <div class="login-title">Nueva contraseña</div>
+    <div class="login-sub">Logia Crisol del Elqui N°189</div>
+    <div class="login-divider"></div>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <input type="password" id="reset-pass1" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Confirmar contraseña</label>
+      <input type="password" id="reset-pass2" placeholder="Repite la contraseña" autocomplete="new-password">
+    </div>
+    <button class="btn-login" id="btn-reset-submit" onclick="doResetPassword()">Guardar contraseña</button>
+  </div>
 </div>
 
 <!-- ══════════ APP ══════════ -->
@@ -1461,6 +1480,20 @@ async function init() {
     }
   });
 
+  // Detectar token de recuperación de contraseña en la URL
+  // (detectSessionInUrl está desactivado en el cliente, lo manejamos manualmente)
+  const _hashParams = new URLSearchParams(window.location.hash.replace('#',''));
+  const _hashType   = _hashParams.get('type');
+  if (_hashType === 'recovery') {
+    const _at = _hashParams.get('access_token');
+    const _rt = _hashParams.get('refresh_token') || '';
+    if (_at) {
+      await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
+      // onAuthStateChange recibirá PASSWORD_RECOVERY y mostrará el formulario
+      history.replaceState(null, '', window.location.pathname); // limpiar el hash de la URL
+    }
+  }
+
   const { data: { session } } = await sb.auth.getSession();
   document.getElementById('loading').style.display = 'none';
   if (session) {
@@ -1481,6 +1514,15 @@ async function init() {
   });
 
   sb.auth.onAuthStateChange(async (_event, session) => {
+    if (_event === 'PASSWORD_RECOVERY') {
+      // Mostrar formulario de cambio de contraseña
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('screen-app').classList.add('hidden');
+      document.getElementById('screen-login').classList.remove('hidden');
+      document.querySelector('.login-card').classList.add('hidden');
+      document.getElementById('reset-card').classList.remove('hidden');
+      return;
+    }
     if (session) {
       // Login exitoso: inicializar solo una vez por sesión
       if (!_appInitialized) {
@@ -1496,6 +1538,8 @@ async function init() {
       _appInitialized = false;
       document.getElementById('screen-app').classList.add('hidden');
       document.getElementById('screen-login').classList.remove('hidden');
+      document.querySelector('.login-card').classList.remove('hidden');
+      document.getElementById('reset-card').classList.add('hidden');
       // Restablecer botón de login por si quedó deshabilitado
       const btn = document.getElementById('btn-login-submit');
       if (btn) { btn.disabled = false; btn.textContent = 'Ingresar al Templo'; }
@@ -1521,8 +1565,32 @@ async function doLogin() {
 async function doForgotPassword() {
   const email = document.getElementById('login-email').value.trim();
   if (!email) { toast('Ingresa tu correo primero', 'error'); return; }
-  await sb.auth.resetPasswordForEmail(email);
+  await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/intranet'
+  });
   toast('Se ha enviado un enlace de recuperación a ' + email);
+}
+
+async function doResetPassword() {
+  const p1 = document.getElementById('reset-pass1').value;
+  const p2 = document.getElementById('reset-pass2').value;
+  if (!p1 || p1.length < 6) { toast('La contraseña debe tener al menos 6 caracteres', 'error'); return; }
+  if (p1 !== p2) { toast('Las contraseñas no coinciden', 'error'); return; }
+  const btn = document.getElementById('btn-reset-submit');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.textContent = 'Guardar contraseña';
+  if (error) {
+    toast('Error: ' + error.message, 'error');
+  } else {
+    toast('¡Contraseña actualizada correctamente!');
+    // Volver al login normal
+    document.getElementById('reset-card').classList.add('hidden');
+    document.querySelector('.login-card').classList.remove('hidden');
+    document.getElementById('reset-pass1').value = '';
+    document.getElementById('reset-pass2').value = '';
+    await sb.auth.signOut();
+  }
 }
 
 async function doLogout() {
