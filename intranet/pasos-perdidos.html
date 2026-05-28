@@ -1410,6 +1410,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
 let currentUser      = null;
 let currentProfile   = null;
 let _appInitialized  = false; // evita doble init por onAuthStateChange + init()
+let _isRecoveryMode  = false; // true mientras se está cambiando contraseña via link de email
 let _inPopstate      = false; // evita pushState durante navegación por popstate
 let currentModule = 'hero';
 let chatChannel   = null;
@@ -1484,9 +1485,8 @@ async function init() {
   // (detectSessionInUrl está desactivado en el cliente, lo manejamos manualmente)
   const _hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   const _hashType   = _hashParams.get('type');
-  let   _isRecovery = false;
   if (_hashType === 'recovery') {
-    _isRecovery = true;
+    _isRecoveryMode = true;
     const _at = _hashParams.get('access_token');
     const _rt = _hashParams.get('refresh_token') || '';
     if (_at) {
@@ -1497,7 +1497,7 @@ async function init() {
 
   const { data: { session } } = await sb.auth.getSession();
   document.getElementById('loading').style.display = 'none';
-  if (_isRecovery) {
+  if (_isRecoveryMode) {
     // Mostrar formulario de cambio de contraseña directamente
     document.getElementById('screen-login').classList.remove('hidden');
     document.querySelector('.login-card').classList.add('hidden');
@@ -1521,7 +1521,7 @@ async function init() {
 
   sb.auth.onAuthStateChange(async (_event, session) => {
     if (_event === 'PASSWORD_RECOVERY') {
-      // Mostrar formulario de cambio de contraseña
+      _isRecoveryMode = true;
       document.getElementById('loading').style.display = 'none';
       document.getElementById('screen-app').classList.add('hidden');
       document.getElementById('screen-login').classList.remove('hidden');
@@ -1529,6 +1529,8 @@ async function init() {
       document.getElementById('reset-card').classList.remove('hidden');
       return;
     }
+    // Bloquear entrada a la app mientras se está cambiando contraseña
+    if (_isRecoveryMode) return;
     if (session) {
       // Login exitoso: inicializar solo una vez por sesión
       if (!_appInitialized) {
@@ -1590,6 +1592,7 @@ async function doResetPassword() {
     toast('Error: ' + error.message, 'error');
   } else {
     toast('¡Contraseña actualizada correctamente!');
+    _isRecoveryMode = false;
     // Volver al login normal
     document.getElementById('reset-card').classList.add('hidden');
     document.querySelector('.login-card').classList.remove('hidden');
