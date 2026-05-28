@@ -1566,7 +1566,7 @@ async function doForgotPassword() {
   const email = document.getElementById('login-email').value.trim();
   if (!email) { toast('Ingresa tu correo primero', 'error'); return; }
   await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/intranet'
+    redirectTo: 'https://crisoldelelqui.cl/intranet'
   });
   toast('Se ha enviado un enlace de recuperación a ' + email);
 }
