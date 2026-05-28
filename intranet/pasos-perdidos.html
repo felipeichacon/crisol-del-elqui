@@ -4194,10 +4194,12 @@ async function loadGrupos() {
   //   b) el grupo es para su rol (aprendiz/companero/maestro)
   //   c) el grupo es para 'oficialidad' y el miembro tiene cargo
   const tieneOficialidad = esOficialidad(currentProfile);
+  const _gRol = rol === 'admin' ? 'maestro' : rol;
   const todos = (porRol.data||[]).filter(g => {
     const gRoles = g.roles || ['todos'];
-    return gRoles.includes('todos')
-      || gRoles.includes(rol)
+    return rol === 'admin'
+      || gRoles.includes('todos')
+      || gRoles.includes(_gRol)
       || (gRoles.includes('oficialidad') && tieneOficialidad);
   });
 
@@ -4414,24 +4416,25 @@ async function sendDirecto() {
 async function openGrupoRol() {
   waActiveConv = { tipo: 'rol' };
   renderConvList();
+  const _rolCanal = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
   renderChatArea(
     `<div class="wa-avatar" style="width:40px;height:40px;">⬡</div>`,
-    'Canal del Rol — ' + (ROLE_LABELS[currentProfile.role]||''),
+    'Canal del Rol — ' + (ROLE_LABELS[_rolCanal]||''),
     'Chat grupal del grado', false
   );
 
   const { data } = await sb.from('chat_messages')
-    .select('*').eq('role', currentProfile.role)
+    .select('*').eq('role', _rolCanal)
     .order('created_at').limit(100);
   renderWaMessages(data||[], 'rol');
 
   if (waGroupChannel) { sb.removeChannel(waGroupChannel); waGroupChannel=null; }
-  waGroupChannel = sb.channel('warol-'+currentProfile.role)
+  waGroupChannel = sb.channel('warol-'+_rolCanal)
     .on('postgres_changes', {event:'INSERT',schema:'public',table:'chat_messages',
-      filter:`role=eq.${currentProfile.role}`},
+      filter:`role=eq.${_rolCanal}`},
       async () => {
         if (waActiveConv?.tipo==='rol') {
-          const {data:m} = await sb.from('chat_messages').select('*').eq('role',currentProfile.role).order('created_at').limit(100);
+          const {data:m} = await sb.from('chat_messages').select('*').eq('role',_rolCanal).order('created_at').limit(100);
           renderWaMessages(m||[], 'rol');
         }
       }).subscribe();
@@ -4441,8 +4444,9 @@ async function sendRol() {
   const input = document.getElementById('wa-msg-input');
   const text = input.value.trim(); if (!text) return;
   input.value = '';
+  const _rolCanal = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
   await sb.from('chat_messages').insert({
-    role: currentProfile.role,
+    role: _rolCanal,
     author_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
     contenido: text
@@ -4461,7 +4465,7 @@ async function openGrupo(grupo) {
   renderChatArea(
     `<div class="wa-avatar" style="width:40px;height:40px;">◈</div>`,
     grupo.nombre,
-    (grupo.descripcion||'Grupo') + (modoGrupo==='restringido'&&!puedeEscribir?' · Solo lectura':''), 
+    (grupo.descripcion||'Grupo') + (grupo.modo_escritura==='restringido'&&!puedeEscribir?' · Solo lectura':''),
     !puedeEscribir
   );
 
