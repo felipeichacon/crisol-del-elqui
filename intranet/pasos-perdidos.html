@@ -1469,8 +1469,7 @@ async function init() {
     await loadProfile();
     showApp();
   } else {
-    // Sin sesión → volver a la landing page
-    window.location.replace('/');
+    document.getElementById('screen-login').classList.remove('hidden');
   }
 
   // Keyboard: ESC closes overlays
