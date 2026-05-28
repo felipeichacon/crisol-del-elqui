@@ -2953,15 +2953,24 @@ async function uploadGalleryImages(input) {
   const files = Array.from(input.files); if (!files.length) return;
   input.value = '';
   toast('Subiendo ' + files.length + ' imagen(es)…');
+  // admin sube a carpeta maestro (el bucket no tiene carpeta 'admin')
+  const folderRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
+  let ok = 0;
   for (const file of files) {
-    const path = currentProfile.role + '/' + Date.now() + '-' + file.name;
-    const { error } = await sb.storage.from('gallery').upload(path, file);
-    if (error) { toast('Error: ' + file.name, 'error'); continue; }
+    // Sanitizar nombre: quitar caracteres problemáticos, conservar extensión
+    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+    const safeName = Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.' + ext;
+    const path = folderRole + '/' + safeName;
+    const { error } = await sb.storage.from('gallery').upload(path, file, { contentType: file.type });
+    if (error) { toast('Error al subir: ' + error.message, 'error'); continue; }
     const { data: { publicUrl } } = sb.storage.from('gallery').getPublicUrl(path);
-    await sb.from('gallery').insert({ role: currentProfile.role, url: publicUrl, author_id: currentProfile.id });
+    const { error: dbErr } = await sb.from('gallery').insert({
+      role: folderRole, url: publicUrl, author_id: currentProfile.id
+    });
+    if (dbErr) { toast('Error al guardar: ' + dbErr.message, 'error'); continue; }
+    ok++;
   }
-  toast('Galería actualizada');
-  loadGallery();
+  if (ok > 0) { toast(ok + ' foto(s) subida(s)'); loadGallery(); }
 }
 
 // ── BLOG / POSTS ──
