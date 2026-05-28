@@ -2727,9 +2727,9 @@ async function _iaCalSave(){
     lugar:        document.getElementById('iadm-cal-lugar').value.trim()||null,
     tipo:         document.getElementById('iadm-cal-tipo').value,
     autor_plancha_id:       aId,
-    autor_plancha_nombre:   aId ? aEl.options[aEl.selectedIndex]?.text : null,
+    autor_plancha_nombre:   aId ? (()=>{ const m=(allProfiles||[]).find(x=>x.id===aId); return m?'Q∴H∴ '+((m.nombre||'').split(' ')[0]+' '+(m.apellido||'').split(' ')[0]).trim():null; })() : null,
     relator_plancha_id:     rId,
-    relator_plancha_nombre: rId ? rEl.options[rEl.selectedIndex]?.text : null,
+    relator_plancha_nombre: rId ? (()=>{ const m=(allProfiles||[]).find(x=>x.id===rId); return m?'Q∴H∴ '+((m.nombre||'').split(' ')[0]+' '+(m.apellido||'').split(' ')[0]).trim():null; })() : null,
   };
   const btn=document.getElementById('iadm-cal-save-btn'); btn.disabled=true; btn.textContent='Guardando…';
   let error;
@@ -3635,8 +3635,8 @@ function openPpCalEvento(e) {
   `;
   if (e.lugar) bodyHtml += `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:90px;">Lugar</span><span style="font-size:15px;color:var(--text);">${e.lugar}</span></div>`;
   bodyHtml += `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:90px;">Grados</span><span style="font-size:15px;color:var(--text);">${rolesStr}</span></div>`;
-  if (e.autor_plancha_nombre) bodyHtml += `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:90px;">Autor Plancha</span><span style="font-size:15px;color:var(--text);">Q∴H∴ ${e.autor_plancha_nombre}</span></div>`;
-  if (e.relator_plancha_nombre) bodyHtml += `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:90px;">Relator</span><span style="font-size:15px;color:var(--text);">Q∴H∴ ${e.relator_plancha_nombre}</span></div>`;
+  if (e.autor_plancha_nombre) bodyHtml += `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:90px;">Autor Plancha</span><span style="font-size:15px;color:var(--text);">${e.autor_plancha_nombre}</span></div>`;
+  if (e.relator_plancha_nombre) bodyHtml += `<div style="display:flex;gap:12px;"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:0.2em;min-width:90px;">Relator</span><span style="font-size:15px;color:var(--text);">${e.relator_plancha_nombre}</span></div>`;
   if (e.descripcion) bodyHtml += `<div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border);font-size:15px;color:var(--text-dim);line-height:1.8;">${e.descripcion}</div>`;
 
   document.getElementById('pp-cal-modal-body').innerHTML = bodyHtml;
