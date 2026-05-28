@@ -1,5 +1,5 @@
 // Service Worker — Logia Crisol del Elqui N°189
-const CACHE = 'crisol-v5';   // ← cambiar versión invalida todo el caché anterior
+const CACHE = 'crisol-v6';   // ← cambiar versión invalida todo el caché anterior
 const SHELL = ['/', '/logia-crisol-elqui.html', '/logo-crisol.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -10,7 +10,6 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  // Borrar cachés de versiones anteriores
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
@@ -56,6 +55,42 @@ self.addEventListener('fetch', e => {
         }
         return res;
       });
+    })
+  );
+});
+
+// ── PUSH NOTIFICATIONS ──
+self.addEventListener('push', e => {
+  let data = { title: 'Templo Crisol', body: 'Tienes un mensaje nuevo', url: '/intranet' };
+  try { if (e.data) data = { ...data, ...e.data.json() }; } catch {}
+
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:    data.body,
+      icon:    '/logo-crisol.png',
+      badge:   '/logo-crisol.png',
+      vibrate: [200, 100, 200],
+      tag:     'crisol-msg',           // agrupa notificaciones del mismo tipo
+      renotify: true,
+      data:    { url: data.url }
+    })
+  );
+});
+
+// ── CLICK EN NOTIFICACIÓN ──
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const target = e.notification.data?.url || '/intranet';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      // Si la app ya está abierta, enfocarla
+      for (const client of list) {
+        if (client.url.includes('crisoldelelqui.cl') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Si no, abrirla
+      return clients.openWindow('https://crisoldelelqui.cl' + target);
     })
   );
 });

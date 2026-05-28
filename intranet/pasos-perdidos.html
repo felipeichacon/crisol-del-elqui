@@ -1605,6 +1605,7 @@ async function doResetPassword() {
 async function doLogout() {
   if (chatChannel) sb.removeChannel(chatChannel);
   if (msgChannel)  sb.removeChannel(msgChannel);
+  updateAppBadge(0); // limpiar badge del ícono
   // Limpiar campos del formulario de login
   const eml = document.getElementById('login-email');
   const pwd = document.getElementById('login-pass');
@@ -1655,6 +1656,60 @@ function showApp() {
   inyectarModulosAdmin();
   initBlogBadge(); // comprobación silenciosa al arrancar
   initAllBadges(); // badges para galería, radio, biblioteca, calendario
+  initPushNotifications(); // solicitar permiso y suscribirse al push
+}
+
+// ── PUSH NOTIFICATIONS ──
+const VAPID_PUBLIC_KEY = 'BHdyVxsvdl5w72eQg9GRoPfJM8fpMzViXAa-LA5C7UurwR2MpwspSNKbdl99TDMXWv8vghZSAFp-2tNei9nk2LU';
+
+function _urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64   = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw      = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function initPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!currentProfile) return;
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+
+    // Si ya tiene suscripción activa, registrarla (puede haber cambiado de dispositivo)
+    let sub = await reg.pushManager.getSubscription();
+
+    if (!sub) {
+      // Pedir permiso solo si no se ha negado antes
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    // Guardar/actualizar suscripción en Supabase
+    const key  = sub.getKey('p256dh');
+    const auth = sub.getKey('auth');
+    await sb.from('push_subscriptions').upsert({
+      user_id:  currentProfile.id,
+      endpoint: sub.endpoint,
+      p256dh:   btoa(String.fromCharCode(...new Uint8Array(key))),
+      auth:     btoa(String.fromCharCode(...new Uint8Array(auth)))
+    }, { onConflict: 'user_id,endpoint' });
+
+  } catch(e) {
+    console.warn('Push subscription error:', e);
+  }
+}
+
+// Actualizar badge del ícono de la app con mensajes sin leer
+function updateAppBadge(count) {
+  if ('setAppBadge' in navigator) {
+    if (count > 0) navigator.setAppBadge(count);
+    else navigator.clearAppBadge();
+  }
 }
 
 async function initBlogBadge() {
@@ -4975,6 +5030,8 @@ async function loadUnreadCount() {
     badge.classList.add('hidden');
     if (total) total.textContent = '';
   }
+  // Actualizar badge del ícono de la app
+  updateAppBadge(count);
   // Refrescar lista para mostrar badges por conversación
   if (currentModule === 'mensajes') renderConvList();
 }
