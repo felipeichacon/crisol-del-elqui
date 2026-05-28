@@ -1379,7 +1379,14 @@ function esc(str) {
 }
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemlnc3ZvY3J5Y2hhaHNyemZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODYzNzAsImV4cCI6MjA5MTI2MjM3MH0.RCtxrM0KzzBjeijgSTomlFPCDKiu9SzutUgpb6PPwUo';
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    storage: sessionStorage,   // sesión se borra al cerrar la app/pestaña
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  }
+});
 
 let currentUser      = null;
 let currentProfile   = null;
