@@ -1484,19 +1484,25 @@ async function init() {
   // (detectSessionInUrl está desactivado en el cliente, lo manejamos manualmente)
   const _hashParams = new URLSearchParams(window.location.hash.replace('#',''));
   const _hashType   = _hashParams.get('type');
+  let   _isRecovery = false;
   if (_hashType === 'recovery') {
+    _isRecovery = true;
     const _at = _hashParams.get('access_token');
     const _rt = _hashParams.get('refresh_token') || '';
     if (_at) {
       await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
-      // onAuthStateChange recibirá PASSWORD_RECOVERY y mostrará el formulario
       history.replaceState(null, '', window.location.pathname); // limpiar el hash de la URL
     }
   }
 
   const { data: { session } } = await sb.auth.getSession();
   document.getElementById('loading').style.display = 'none';
-  if (session) {
+  if (_isRecovery) {
+    // Mostrar formulario de cambio de contraseña directamente
+    document.getElementById('screen-login').classList.remove('hidden');
+    document.querySelector('.login-card').classList.add('hidden');
+    document.getElementById('reset-card').classList.remove('hidden');
+  } else if (session) {
     currentUser     = session.user;
     _appInitialized = true;
     await loadProfile();
