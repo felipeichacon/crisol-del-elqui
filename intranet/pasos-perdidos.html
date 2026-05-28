@@ -2957,20 +2957,34 @@ async function uploadGalleryImages(input) {
   const folderRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
   let ok = 0;
   for (const file of files) {
-    // Sanitizar nombre: quitar caracteres problemáticos, conservar extensión
-    const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
-    const safeName = Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.' + ext;
-    const path = folderRole + '/' + safeName;
-    const { error } = await sb.storage.from('gallery').upload(path, file, { contentType: file.type });
-    if (error) { toast('Error al subir: ' + error.message, 'error'); continue; }
-    const { data: { publicUrl } } = sb.storage.from('gallery').getPublicUrl(path);
-    const { error: dbErr } = await sb.from('gallery').insert({
-      role: folderRole, url: publicUrl, author_id: currentProfile.id
-    });
-    if (dbErr) { toast('Error al guardar: ' + dbErr.message, 'error'); continue; }
-    ok++;
+    try {
+      // Sanitizar nombre: sin espacios ni caracteres especiales
+      const ext = (file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      const safeName = Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.' + ext;
+      const path = folderRole + '/' + safeName;
+
+      // 1. Subir a Storage
+      const { error: storErr } = await sb.storage.from('gallery').upload(path, file, { upsert: false });
+      if (storErr) { toast('Storage: ' + storErr.message, 'error'); continue; }
+
+      // 2. Obtener URL pública
+      const { data: urlData } = sb.storage.from('gallery').getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl;
+      if (!publicUrl) { toast('No se pudo obtener URL pública', 'error'); continue; }
+
+      // 3. Guardar en tabla gallery
+      const { error: dbErr } = await sb.from('gallery').insert({
+        role: folderRole, url: publicUrl, author_id: currentProfile.id
+      });
+      if (dbErr) { toast('BD: ' + dbErr.message, 'error'); continue; }
+
+      ok++;
+    } catch(e) {
+      toast('Excepción: ' + (e?.message || String(e)), 'error');
+    }
   }
-  if (ok > 0) { toast(ok + ' foto(s) subida(s)'); loadGallery(); }
+  if (ok > 0) { toast(ok + ' foto(s) subida(s) ✓'); loadGallery(); }
+  else { toast('No se subió ninguna foto — revisa los errores', 'error'); }
 }
 
 // ── BLOG / POSTS ──
