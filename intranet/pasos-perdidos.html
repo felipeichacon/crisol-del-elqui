@@ -2964,11 +2964,11 @@ async function uploadGalleryImages(input) {
       const path = folderRole + '/' + safeName;
 
       // 1. Subir a Storage
-      const { error: storErr } = await sb.storage.from('gallery').upload(path, file, { upsert: false });
+      const { error: storErr } = await sb.storage.from('Gallery').upload(path, file, { upsert: false });
       if (storErr) { toast('Storage: ' + storErr.message, 'error'); continue; }
 
       // 2. Obtener URL pública
-      const { data: urlData } = sb.storage.from('gallery').getPublicUrl(path);
+      const { data: urlData } = sb.storage.from('Gallery').getPublicUrl(path);
       const publicUrl = urlData?.publicUrl;
       if (!publicUrl) { toast('No se pudo obtener URL pública', 'error'); continue; }
 
