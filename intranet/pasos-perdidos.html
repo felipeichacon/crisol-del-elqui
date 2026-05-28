@@ -2727,9 +2727,9 @@ async function _iaCalSave(){
     lugar:        document.getElementById('iadm-cal-lugar').value.trim()||null,
     tipo:         document.getElementById('iadm-cal-tipo').value,
     autor_plancha_id:       aId,
-    autor_plancha_nombre:   aId ? (()=>{ const m=(allProfiles||[]).find(x=>x.id===aId); return m?'Q∴H∴ '+((m.nombre||'').split(' ')[0]+' '+(m.apellido||'').split(' ')[0]).trim():null; })() : null,
+    autor_plancha_nombre:   aId ? qh((allProfiles||[]).find(x=>x.id===aId)?.nombre, (allProfiles||[]).find(x=>x.id===aId)?.apellido) : null,
     relator_plancha_id:     rId,
-    relator_plancha_nombre: rId ? (()=>{ const m=(allProfiles||[]).find(x=>x.id===rId); return m?'Q∴H∴ '+((m.nombre||'').split(' ')[0]+' '+(m.apellido||'').split(' ')[0]).trim():null; })() : null,
+    relator_plancha_nombre: rId ? qh((allProfiles||[]).find(x=>x.id===rId)?.nombre, (allProfiles||[]).find(x=>x.id===rId)?.apellido) : null,
   };
   const btn=document.getElementById('iadm-cal-save-btn'); btn.disabled=true; btn.textContent='Guardando…';
   let error;
@@ -3512,12 +3512,14 @@ async function loadCalendar() {
   const rol = currentProfile.role;
   const { data } = await sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
 
-  // Filtrar por rol del miembro
+  // Filtrar por rol del miembro (admin ve todo como maestro)
+  const _calRol = rol === 'admin' ? 'maestro' : rol;
   const _tieneOficialidad = esOficialidad(currentProfile);
   _ppCalEventos = (data||[]).filter(e => {
     if (!e.roles || !e.roles.length) return false;
+    if (rol === 'admin') return true;
     return e.roles.includes('todos')
-      || e.roles.includes(rol)
+      || e.roles.includes(_calRol)
       || (e.roles.includes('oficialidad') && _tieneOficialidad);
   });
 
