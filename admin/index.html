@@ -4529,8 +4529,11 @@ async function saveNoticia(publish) {
 
   let imgUrl = noticiaImgFile ? null : noticiaExistingImgUrl;
   if (noticiaImgFile) {
-    const path = Date.now() + '-' + noticiaImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sb.storage.from('Noticias').upload(path, noticiaImgFile, {upsert:true});
+    let uploadFile;
+    try { uploadFile = await convertImageToJpeg(noticiaImgFile); }
+    catch(e) { toast('Error al procesar imagen: ' + e.message, 'error'); return; }
+    const path = Date.now() + '-' + uploadFile.name.replace(/\s/g,'_');
+    const { error: upErr } = await sb.storage.from('Noticias').upload(path, uploadFile, {upsert:true, contentType: uploadFile.type});
     if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
@@ -4904,9 +4907,12 @@ async function saveEpisodio(publish) {
   // Subir nueva portada si fue seleccionada
   if (radioImgFile) {
     _setBusy(true, '⏳ Subiendo portada…');
-    const ext  = radioImgFile.name.split('.').pop().toLowerCase();
+    let uploadImgFile;
+    try { uploadImgFile = await convertImageToJpeg(radioImgFile); }
+    catch(e) { _setBusy(false); toast('Error al procesar imagen: ' + e.message, 'error'); return; }
+    const ext  = uploadImgFile.name.split('.').pop().toLowerCase();
     const path = 'portadas/ep-' + num + '-' + Date.now() + '.' + ext;
-    const { error: imgErr } = await sb.storage.from('Audio').upload(path, radioImgFile, { upsert: true });
+    const { error: imgErr } = await sb.storage.from('Audio').upload(path, uploadImgFile, { upsert: true, contentType: uploadImgFile.type });
     if (imgErr) { _setBusy(false); toast('Error al subir portada: ' + imgErr.message, 'error'); return; }
     const { data: { publicUrl: imgPublicUrl } } = sb.storage.from('Audio').getPublicUrl(path);
     imgUrl = imgPublicUrl;
@@ -4977,6 +4983,31 @@ async function deleteEpisodio(id) {
 }
 
 
+// ── UTILIDAD: convertir imagen a JPEG (maneja AVIF, HEIC y otros formatos no soportados) ──
+async function convertImageToJpeg(file, quality = 0.92) {
+  const SUPPORTED = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (SUPPORTED.includes(file.type)) return file; // ya es soportado, no convertir
+
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img  = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        if (!blob) { reject(new Error('No se pudo convertir la imagen')); return; }
+        const safeName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+        resolve(new File([blob], safeName, { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('No se pudo leer la imagen')); };
+    img.src = url;
+  });
+}
+
 // ── REVISTA EGRÉGORA ──
 let egrImgFile        = null;
 let egrEditId         = null;
@@ -5034,8 +5065,11 @@ async function saveEgregoraArticulo(publish) {
 
   let imgUrl = egrImgFile ? null : egrExistingImgUrl;
   if (egrImgFile) {
-    const path = Date.now() + '-' + egrImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sb.storage.from('Egregora').upload(path, egrImgFile, {upsert:true});
+    let uploadFile;
+    try { uploadFile = await convertImageToJpeg(egrImgFile); }
+    catch(e) { toast('Error al procesar imagen: ' + e.message, 'error'); return; }
+    const path = Date.now() + '-' + uploadFile.name.replace(/\s/g,'_');
+    const { error: upErr } = await sb.storage.from('Egregora').upload(path, uploadFile, {upsert:true, contentType: uploadFile.type});
     if (upErr) { toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Egregora').getPublicUrl(path);
     imgUrl = publicUrl;
@@ -5219,8 +5253,11 @@ async function saveCorpNoticia(publish) {
   let imgUrl = corpNoticiaImgFile ? null : corpNoticiaExistingImg;
   if (corpNoticiaImgFile) {
     _setBusy(true, '⏳ Subiendo imagen…');
-    const path = 'corp/' + Date.now() + '-' + corpNoticiaImgFile.name.replace(/\s/g,'_');
-    const { error: upErr } = await sb.storage.from('Noticias').upload(path, corpNoticiaImgFile, {upsert:true});
+    let uploadFile;
+    try { uploadFile = await convertImageToJpeg(corpNoticiaImgFile); }
+    catch(e) { _setBusy(false); toast('Error al procesar imagen: ' + e.message, 'error'); return; }
+    const path = 'corp/' + Date.now() + '-' + uploadFile.name.replace(/\s/g,'_');
+    const { error: upErr } = await sb.storage.from('Noticias').upload(path, uploadFile, {upsert:true, contentType: uploadFile.type});
     if (upErr) { _setBusy(false); toast('Error al subir imagen: ' + upErr.message, 'error'); return; }
     const { data: { publicUrl } } = sb.storage.from('Noticias').getPublicUrl(path);
     imgUrl = publicUrl;
