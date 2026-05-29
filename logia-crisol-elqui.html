@@ -273,6 +273,16 @@
   #page-egregora textarea::placeholder { color: var(--text-dim); }
   #page-egregora input:focus,
   #page-egregora textarea:focus { border-color: var(--border-bright) !important; }
+  /* Quill alignment classes — para el lector de artículos Egrégora */
+  .egr-article-content { font-size:19px; line-height:2; color:var(--text); margin-bottom:96px; }
+  .egr-article-content p { margin-bottom:0.6em; }
+  .egr-article-content .ql-align-justify { text-align: justify !important; }
+  .egr-article-content .ql-align-center  { text-align: center !important; }
+  .egr-article-content .ql-align-right   { text-align: right !important; }
+  .egr-article-content h1,.egr-article-content h2,.egr-article-content h3 { font-family:'Cinzel',serif; color:var(--gold-light); margin:20px 0 8px; }
+  .egr-article-content strong { color:var(--cream); }
+  .egr-article-content blockquote { border-left:3px solid var(--gold-dim); padding-left:16px; color:var(--text-dim); margin:12px 0; }
+  .egr-article-content img { max-width:100%; height:auto; display:block; margin:12px 0; }
 
   /* HAMBURGER & MOBILE MENU */
   .nav-hamburger { display: none; flex-direction: column; gap: 5px; background: transparent; border: none; cursor: pointer; padding: 4px; z-index: 200; }
@@ -973,11 +983,12 @@
       const div = document.createElement('div');
       div.className = 'blog-card';
       div.style.cssText = 'max-width:800px;margin:0 auto;';
+      const vExcerpt = p.extracto || stripHtml(p.contenido||'').substring(0,280) + (p.contenido?.length > 280 ? '…' : '');
       div.innerHTML = `
         <div class="blog-category">Venerable Maestro</div>
-        <h3 class="blog-title" style="font-size:clamp(20px,2.5vw,28px);margin-bottom:20px;">${p.titulo}</h3>
-        <p class="blog-excerpt" style="font-size:18px;line-height:2;white-space:pre-wrap;">${p.contenido}</p>
-        <div class="blog-author" style="margin-top:24px;">${p.autor_nombre||'V∴M∴'}</div>`;
+        <h3 class="blog-title" style="font-size:clamp(20px,2.5vw,28px);margin-bottom:20px;">${escHtml(p.titulo)}</h3>
+        <p class="blog-excerpt" style="font-size:18px;line-height:2;">${escHtml(vExcerpt)}</p>
+        <div class="blog-author" style="margin-top:24px;">${escHtml(p.autor_nombre||'V∴M∴')}</div>`;
       grid.appendChild(div);
     });
   }
@@ -1769,6 +1780,11 @@
     d.textContent = String(s ?? '');
     return d.innerHTML;
   }
+  function stripHtml(html) {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    return d.textContent || d.innerText || '';
+  }
 
   function showEgregoraPage(articulo = null) {
     document.getElementById('page-landing').style.display = 'none';
@@ -1827,7 +1843,7 @@
         ${data.autor_nombre ? `<div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">Por ${escHtml(data.autor_nombre)}</div>` : ''}
         <div style="font-size:13px;color:var(--text-dim);font-style:italic;margin-bottom:52px;">${escHtml(fecha)}</div>
         <div style="width:50px;height:1px;background:var(--gold);margin-bottom:52px;"></div>
-        <div style="font-size:19px;line-height:2;color:var(--text);white-space:pre-wrap;margin-bottom:96px;">${escHtml(data.contenido || '')}</div>
+        <div class="egr-article-content">${data.contenido || ''}</div>
 
         <!-- Foro integrado -->
         <div id="egr-foro-anchor" style="border-top:1px solid var(--border);padding-top:72px;">
