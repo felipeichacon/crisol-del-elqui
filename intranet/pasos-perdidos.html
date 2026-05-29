@@ -264,9 +264,9 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
 .blog-reader-content h1,.blog-reader-content h2,.blog-reader-content h3 { font-family: 'Cinzel', serif; color: var(--gold-light); margin: 14px 0 6px; }
 /* Quill alignment classes — preserved from editor to reader */
 .blog-reader-content p { text-align: left; }
-.blog-reader-content .ql-align-justify { text-align: justify; }
-.blog-reader-content .ql-align-center  { text-align: center; }
-.blog-reader-content .ql-align-right   { text-align: right; }
+.blog-reader-content .ql-align-justify { text-align: justify !important; }
+.blog-reader-content .ql-align-center  { text-align: center !important; }
+.blog-reader-content .ql-align-right   { text-align: right !important; }
 
 /* ── MODULE: CALENDAR ── */
 .calendar-wrap { padding: 0 48px 48px; }
@@ -3169,7 +3169,8 @@ async function loadPosts() {
     const div = document.createElement('div'); div.className='blog-post-card';
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
     const autorDisplay = 'Q∴H∴ ' + esc(post.autor_nombre||'Hermano');
-    const excerpt = esc(post.extracto || (post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : ''));
+    const rawExcerpt = post.extracto || stripHtml(post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
+    const excerpt = esc(rawExcerpt);
     div.innerHTML = `
       <div class="post-meta">${autorDisplay} · ${date}${!post.publicado ? ' · Borrador' : ''}</div>
       <div class="post-title">${esc(post.titulo)}</div>
@@ -3203,12 +3204,12 @@ async function loadBlogOrador() {
   posts.forEach(post => {
     const div = document.createElement('div'); div.className = 'blog-post-card';
     const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
-    const autorDisplay = 'Q∴H∴ ' + (post.autor_nombre||'Hermano');
-    const excerpt = post.extracto || (post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
+    const autorDisplay = 'Q∴H∴ ' + esc(post.autor_nombre||'Hermano');
+    const rawExcerpt2 = post.extracto || stripHtml(post.contenido||'').substring(0,200) + (post.contenido?.length > 200 ? '…' : '');
     div.innerHTML = `
       <div class="post-meta">${autorDisplay} · ${date}</div>
-      <div class="post-title">${post.titulo}</div>
-      <div class="post-excerpt">${excerpt}</div>
+      <div class="post-title">${esc(post.titulo)}</div>
+      <div class="post-excerpt">${esc(rawExcerpt2)}</div>
       <span class="post-read-more">Leer →</span>
     `;
     div.onclick = () => openPost(post);
