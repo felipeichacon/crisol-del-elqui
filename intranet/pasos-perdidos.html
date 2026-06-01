@@ -5284,12 +5284,14 @@ async function uploadAvatar(input) {
   const file = input.files[0]; if (!file) return;
   toast('Subiendo foto…');
   const path = currentProfile.id + '/avatar.' + file.name.split('.').pop();
-  await sb.storage.from('avatars').upload(path, file, { upsert: true });
-  const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(path);
-  await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentProfile.id);
+  const { error: upErr } = await sb.storage.from('Avatars').upload(path, file, { upsert: true });
+  if (upErr) { toast('Error al subir foto: ' + upErr.message, 'error'); return; }
+  const { data: { publicUrl } } = sb.storage.from('Avatars').getPublicUrl(path);
+  const { error: dbErr } = await sb.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentProfile.id);
+  if (dbErr) { toast('Error al guardar foto: ' + dbErr.message, 'error'); return; }
   currentProfile.avatar_url = publicUrl;
   document.getElementById('pf-avatar-preview').src = publicUrl;
-  toast('Foto de perfil actualizada');
+  toast('Foto de perfil actualizada', 'success');
 }
 
 // ── START ──
