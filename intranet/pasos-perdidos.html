@@ -1707,9 +1707,14 @@ async function initPushNotifications() {
 
 // Actualizar badge del ícono de la app con mensajes sin leer
 function updateAppBadge(count) {
+  // Actualizar badge en la página actual
   if ('setAppBadge' in navigator) {
     if (count > 0) navigator.setAppBadge(count);
     else navigator.clearAppBadge();
+  }
+  // Sincronizar contador al SW para que lo conserve si la app va a segundo plano
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'SET_BADGE', count });
   }
 }
 

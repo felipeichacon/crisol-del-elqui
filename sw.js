@@ -1,5 +1,5 @@
 // Service Worker — Logia Crisol del Elqui N°189
-const CACHE = 'crisol-v6';   // ← cambiar versión invalida todo el caché anterior
+const CACHE = 'crisol-v7';   // ← cambiar versión invalida todo el caché anterior
 const SHELL = ['/', '/logia-crisol-elqui.html', '/logo-crisol.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -59,10 +59,28 @@ self.addEventListener('fetch', e => {
   );
 });
 
+// ── Badge counter (persiste en SW para cuando la app está cerrada) ──
+let _swBadgeCount = 0;
+
+function _swSetBadge(n) {
+  _swBadgeCount = Math.max(0, n);
+  if ('setAppBadge' in self.navigator) {
+    if (_swBadgeCount > 0) self.navigator.setAppBadge(_swBadgeCount);
+    else                   self.navigator.clearAppBadge();
+  }
+}
+
 // ── PUSH NOTIFICATIONS ──
 self.addEventListener('push', e => {
-  let data = { title: 'Templo Crisol', body: 'Tienes un mensaje nuevo', url: '/intranet' };
+  let data = { title: 'Templo Crisol', body: 'Tienes un mensaje nuevo', url: '/intranet', badgeCount: null };
   try { if (e.data) data = { ...data, ...e.data.json() }; } catch {}
+
+  // Actualizar badge del ícono: usar el contador enviado por el servidor o incrementar
+  if (data.badgeCount != null) {
+    _swSetBadge(data.badgeCount);
+  } else {
+    _swSetBadge(_swBadgeCount + 1);
+  }
 
   e.waitUntil(
     self.registration.showNotification(data.title, {
@@ -93,4 +111,11 @@ self.addEventListener('notificationclick', e => {
       return clients.openWindow('https://crisoldelelqui.cl' + target);
     })
   );
+});
+
+// ── Mensaje desde la app para sincronizar el badge real ──
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SET_BADGE') {
+    _swSetBadge(e.data.count ?? 0);
+  }
 });
