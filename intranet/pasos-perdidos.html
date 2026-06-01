@@ -4562,6 +4562,12 @@ async function openGrupoRol() {
     'Chat grupal del grado', false
   );
 
+  // Marcar canal del rol como leído
+  sb.from('canal_lectura').upsert({
+    perfil_id: currentProfile.id, canal_tipo: 'rol', canal_id: _rolCanal,
+    leido_hasta: new Date().toISOString()
+  }, { onConflict: 'perfil_id,canal_tipo,canal_id' }).then(() => loadUnreadCount());
+
   const { data } = await sb.from('chat_messages')
     .select('*').eq('role', _rolCanal)
     .order('created_at').limit(100);
@@ -4607,6 +4613,12 @@ async function openGrupo(grupo) {
     (grupo.descripcion||'Grupo') + (grupo.modo_escritura==='restringido'&&!puedeEscribir?' · Solo lectura':''),
     !puedeEscribir
   );
+
+  // Marcar grupo como leído
+  sb.from('canal_lectura').upsert({
+    perfil_id: currentProfile.id, canal_tipo: 'grupo', canal_id: grupo.id,
+    leido_hasta: new Date().toISOString()
+  }, { onConflict: 'perfil_id,canal_tipo,canal_id' }).then(() => loadUnreadCount());
 
   const {data} = await sb.from('grupo_mensajes').select('*').eq('grupo_id',grupo.id).order('created_at').limit(100);
   renderWaMessages(data||[], 'grupo');
@@ -5016,18 +5028,26 @@ async function guardarEncuesta() {
 
 // ── UNREAD COUNT ──
 async function loadUnreadCount() {
+  const rol = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
+
+  // Mapa de no leídos por remitente (solo directos) para badges en la lista
   const { data: unreadMsgs } = await sb.from('messages')
     .select('id,from_id')
     .eq('to_id', currentProfile.id)
     .eq('leido', false);
 
-  // Reconstruir mapa por remitente
   _unreadByUser = {};
   (unreadMsgs||[]).forEach(m => {
     _unreadByUser[m.from_id] = (_unreadByUser[m.from_id] || 0) + 1;
   });
 
-  const count = (unreadMsgs||[]).length;
+  // Conteo total: directos + grupos + canal del rol (via función SQL)
+  const { data: totalData } = await sb.rpc('get_unread_count', {
+    p_user_id:   currentProfile.id,
+    p_user_role: rol
+  });
+  const count = totalData ?? (unreadMsgs||[]).length;
+
   const badge = document.getElementById('badge-mensajes');
   const total = document.getElementById('wa-unread-total');
   if (count > 0) {
