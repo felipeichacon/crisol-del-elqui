@@ -4911,10 +4911,10 @@ async function saveEpisodio(publish) {
     try { uploadImgFile = await convertImageToJpeg(radioImgFile); }
     catch(e) { _setBusy(false); toast('Error al procesar imagen: ' + e.message, 'error'); return; }
     const ext  = uploadImgFile.name.split('.').pop().toLowerCase();
-    const path = 'portadas/ep-' + num + '-' + Date.now() + '.' + ext;
-    const { error: imgErr } = await sb.storage.from('Audio').upload(path, uploadImgFile, { upsert: true, contentType: uploadImgFile.type });
+    const path = 'radio-portadas/ep-' + num + '-' + Date.now() + '.' + ext;
+    const { error: imgErr } = await sb.storage.from('Gallery').upload(path, uploadImgFile, { upsert: true, contentType: uploadImgFile.type });
     if (imgErr) { _setBusy(false); toast('Error al subir portada: ' + imgErr.message, 'error'); return; }
-    const { data: { publicUrl: imgPublicUrl } } = sb.storage.from('Audio').getPublicUrl(path);
+    const { data: { publicUrl: imgPublicUrl } } = sb.storage.from('Gallery').getPublicUrl(path);
     imgUrl = imgPublicUrl;
   }
 
