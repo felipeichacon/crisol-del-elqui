@@ -2670,8 +2670,116 @@ async function _iaBibDelete(id) {
   toast('Documento eliminado'); await _iaBibLoad();
 }
 
+// ── GESTIÓN GALERÍA (superadmin) ──
+let _galAdmData = [];
+let _galAdmFiltroRol = '';
+let _galAdmFiltroVis = '';
+
 async function loadAdmGaleria() {
-  document.getElementById('adm-galeria-content').innerHTML = admMsgModulo('Galería', 'Sube imágenes a la galería de la intranet.', 'galeria');
+  const ct = document.getElementById('adm-galeria-content');
+  if (!ct) return;
+  ct.innerHTML = `
+    <div style="max-width:960px;">
+      <!-- Filtros -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:24px;">
+        <select id="gal-adm-rol" onchange="_galAdmApplyFilter()"
+          style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:8px 12px;outline:none;letter-spacing:0.1em;">
+          <option value="">Todos los grados</option>
+          <option value="aprendiz">Aprendiz</option>
+          <option value="companero">Compañero</option>
+          <option value="maestro">Maestro</option>
+        </select>
+        <select id="gal-adm-vis" onchange="_galAdmApplyFilter()"
+          style="background:var(--dark-3);border:1px solid var(--border);color:var(--text);font-family:'Cinzel',serif;font-size:11px;padding:8px 12px;outline:none;letter-spacing:0.1em;">
+          <option value="">Todas las fotos</option>
+          <option value="visible">Solo visibles</option>
+          <option value="oculta">Solo ocultas</option>
+        </select>
+        <span id="gal-adm-count" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);margin-left:auto;"></span>
+      </div>
+      <!-- Grid -->
+      <div id="gal-adm-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:3px;"></div>
+    </div>`;
+  await _galAdmLoad();
+}
+
+async function _galAdmLoad() {
+  const { data } = await sb.from('gallery')
+    .select('*, profiles:author_id(nombre,apellido)')
+    .order('created_at', { ascending: false });
+  _galAdmData = data || [];
+  _galAdmApplyFilter();
+}
+
+function _galAdmApplyFilter() {
+  _galAdmFiltroRol = document.getElementById('gal-adm-rol')?.value || '';
+  _galAdmFiltroVis = document.getElementById('gal-adm-vis')?.value || '';
+  const filtered = _galAdmData.filter(img => {
+    if (_galAdmFiltroRol && img.role !== _galAdmFiltroRol) return false;
+    if (_galAdmFiltroVis === 'visible' && !img.visible) return false;
+    if (_galAdmFiltroVis === 'oculta' && img.visible) return false;
+    return true;
+  });
+  _galAdmRender(filtered);
+}
+
+function _galAdmRender(imgs) {
+  const grid = document.getElementById('gal-adm-grid');
+  const count = document.getElementById('gal-adm-count');
+  if (!grid) return;
+  if (count) count.textContent = imgs.length + ' foto' + (imgs.length !== 1 ? 's' : '');
+  grid.innerHTML = '';
+  if (!imgs.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim);font-style:italic;">No hay fotos con estos filtros.</div>';
+    return;
+  }
+  const ROL_LABEL = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', todos:'Todos' };
+  imgs.forEach(img => {
+    const autor = img.profiles ? (img.profiles.nombre||'') + ' ' + (img.profiles.apellido||'') : '—';
+    const fecha = new Date(img.created_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' });
+    const oculta = !img.visible;
+    const cell = document.createElement('div');
+    cell.style.cssText = 'position:relative;aspect-ratio:1;overflow:hidden;background:var(--dark-4);';
+    cell.innerHTML = `
+      <img src="${img.url}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;${oculta?'opacity:0.35;filter:grayscale(80%)':''}">
+      ${oculta ? `<div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.75);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.15em;color:#ff9966;padding:3px 7px;text-transform:uppercase;">Oculta</div>` : ''}
+      <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;color:var(--gold-dim);padding:2px 6px;text-transform:uppercase;">${ROL_LABEL[img.role]||img.role||''}</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:28px 8px 8px;">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(autor.trim()||'—')}</div>
+        <div style="font-size:10px;color:var(--text-dim);">${fecha}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button onclick="_galAdmToggle('${img.id}',${img.visible})"
+            style="flex:1;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 4px;border:none;cursor:pointer;background:${oculta?'var(--gold)':'rgba(255,255,255,0.12)'};color:${oculta?'var(--dark)':'var(--text)'};transition:background 0.2s;">
+            ${oculta ? 'Mostrar' : 'Ocultar'}
+          </button>
+          <button onclick="_galAdmDelete('${img.id}')"
+            style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 8px;border:none;cursor:pointer;background:rgba(220,60,60,0.25);color:#ff8888;">
+            ✕
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(cell);
+  });
+}
+
+async function _galAdmToggle(id, currentlyVisible) {
+  const { error } = await sb.from('gallery').update({ visible: !currentlyVisible }).eq('id', id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast(currentlyVisible ? 'Foto ocultada' : 'Foto visible', 'success');
+  const img = _galAdmData.find(i => i.id === id);
+  if (img) img.visible = !currentlyVisible;
+  _galAdmApplyFilter();
+  loadGallery(); // refrescar galería pública
+}
+
+async function _galAdmDelete(id) {
+  if (!confirm('¿Eliminar esta foto permanentemente?')) return;
+  const { error } = await sb.from('gallery').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast('Foto eliminada');
+  _galAdmData = _galAdmData.filter(i => i.id !== id);
+  _galAdmApplyFilter();
+  loadGallery();
 }
 
 // ── CALENDARIO ADMIN INLINE ──
@@ -3027,7 +3135,10 @@ async function loadGallery() {
   const feed = document.getElementById('gallery-feed');
   feed.innerHTML = '<p class="insta-empty" style="color:var(--text-dim);padding:60px 24px;text-align:center;">Cargando…</p>';
 
-  const { data } = await sb.from('gallery').select('*').order('created_at', { ascending: false });
+  const isAdmin = currentProfile?.role === 'admin';
+  let q = sb.from('gallery').select('*').order('created_at', { ascending: false });
+  if (!isAdmin) q = q.eq('visible', true);
+  const { data } = await q;
 
   feed.innerHTML = '';
   if (!data || !data.length) {
