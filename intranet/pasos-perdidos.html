@@ -1249,8 +1249,9 @@ body { background: var(--dark); color: var(--text); font-family: 'Cormorant Gara
         <!-- DATOS PERSONALES (editable) -->
         <div class="form-section-title">Datos Personales</div>
         <div class="form-grid">
-          <div class="form-field"><label>Nombre(s)</label><input type="text" id="pf-nombre" placeholder="Nombres completos"></div>
-          <div class="form-field"><label>Apellido(s)</label><input type="text" id="pf-apellido" placeholder="Apellidos completos"></div>
+          <div class="form-field"><label>Nombre</label><input type="text" id="pf-nombre" placeholder="Nombre"></div>
+          <div class="form-field"><label>Apellido 1</label><input type="text" id="pf-apellido1" placeholder="Apellido 1"></div>
+          <div class="form-field"><label>Apellido 2</label><input type="text" id="pf-apellido2" placeholder="Apellido 2"></div>
           <div class="form-field"><label>RUT</label><input type="text" id="pf-rut" placeholder="12.345.678-9"></div>
           <div class="form-field"><label>Fecha de nacimiento</label><input type="date" id="pf-nacimiento"></div>
           <div class="form-field"><label>Estado civil</label>
@@ -5109,8 +5110,10 @@ function fillProfileForm() {
   if (p.avatar_url) document.getElementById('pf-avatar-preview').src = p.avatar_url;
 
   // Datos personales
-  document.getElementById('pf-nombre').value     = S(p.nombre);
-  document.getElementById('pf-apellido').value   = S(p.apellido);
+  document.getElementById('pf-nombre').value      = S(p.nombre);
+  const _pfApParts = (p.apellido||'').trim().split(/\s+/);
+  document.getElementById('pf-apellido1').value   = _pfApParts[0] || '';
+  document.getElementById('pf-apellido2').value   = _pfApParts.slice(1).join(' ') || '';
   document.getElementById('pf-rut').value        = S(p.rut);
   document.getElementById('pf-nacimiento').value = S(p.fecha_nacimiento);
   document.getElementById('pf-estado').value     = S(p.estado_civil);
@@ -5225,7 +5228,7 @@ async function saveProfile() {
   const updates = {
     // Datos personales
     nombre:           t('pf-nombre'),
-    apellido:         t('pf-apellido'),
+    apellido:         [t('pf-apellido1'), t('pf-apellido2')].filter(Boolean).join(' ') || null,
     rut:              t('pf-rut'),
     fecha_nacimiento: d('pf-nacimiento'),
     estado_civil:     document.getElementById('pf-estado')?.value || null,

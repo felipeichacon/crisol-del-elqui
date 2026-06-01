@@ -509,7 +509,8 @@ tr:hover td { background: rgba(201,168,76,0.04); }
         <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);">Información personal</div>
         <div class="form-grid" style="margin-bottom:28px;">
           <div class="field"><label>Nombre</label><input type="text" id="nu-nombre" placeholder="Nombre"></div>
-          <div class="field"><label>Apellido</label><input type="text" id="nu-apellido" placeholder="Apellido"></div>
+          <div class="field"><label>Apellido 1</label><input type="text" id="nu-apellido1" placeholder="Apellido 1"></div>
+          <div class="field"><label>Apellido 2</label><input type="text" id="nu-apellido2" placeholder="Apellido 2"></div>
           <div class="field"><label>RUT</label><input type="text" id="nu-rut" placeholder="12.345.678-9"></div>
           <div class="field"><label>Fecha de nacimiento</label><input type="date" id="nu-nacimiento"></div>
           <div class="field"><label>Teléfono</label><input type="text" id="nu-telefono" placeholder="+56 9 ..."></div>
@@ -2400,6 +2401,10 @@ function editUser(id) {
   const sec = (label) => `<div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin:28px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--border);">${label}</div>`;
   const field = (label, content, optional=false) => `<div class="field"><label>${label}${optional?` <span style="font-size:11px;color:var(--text-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">(opcional)</span>`:''}</label>${content}</div>`;
 
+  const _apParts = (u.apellido||'').trim().split(/\s+/);
+  const _euAp1 = _apParts[0] || '';
+  const _euAp2 = _apParts.slice(1).join(' ') || '';
+
   let famHTML = '';
   fam.forEach((f,i) => {
     famHTML += `<div id="eu-fam-row-${i}" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
@@ -2450,7 +2455,8 @@ function editUser(id) {
       ${sec('Información personal')}
       <div class="form-grid" style="margin-bottom:8px;">
         ${field('Nombre', inp('eu-nombre', u.nombre, 'Nombre'))}
-        ${field('Apellido', inp('eu-apellido', u.apellido, 'Apellido'))}
+        ${field('Apellido 1', inp('eu-apellido1', _euAp1, 'Apellido 1'))}
+        ${field('Apellido 2', inp('eu-apellido2', _euAp2, 'Apellido 2'))}
         ${field('RUT', inp('eu-rut', u.rut, '12.345.678-9'))}
         ${field('Fecha de nacimiento', dateinp('eu-nacimiento', u.fecha_nacimiento))}
         ${field('Teléfono', inp('eu-tel', u.telefono, '+56 9 ...'))}
@@ -2582,7 +2588,7 @@ async function saveEditUser(id) {
   // Merge: partir de los datos actuales y solo pisar los campos del formulario
   const updates = Object.assign({}, current, {
     nombre:             document.getElementById('eu-nombre').value.trim(),
-    apellido:           document.getElementById('eu-apellido').value.trim(),
+    apellido:           [document.getElementById('eu-apellido1').value.trim(), document.getElementById('eu-apellido2').value.trim()].filter(Boolean).join(' '),
     rut:                document.getElementById('eu-rut').value.trim() || null,
     fecha_nacimiento:   document.getElementById('eu-nacimiento').value || null,
     telefono:           document.getElementById('eu-tel').value.trim() || null,
@@ -2724,7 +2730,7 @@ function resetNuForm() {
   nuAvatarFile = null;
   nuFamiliares = [];
   document.getElementById('nu-avatar-preview').innerHTML = '◉';
-  ['nu-email','nu-pass','nu-nombre','nu-apellido','nu-rut','nu-telefono',
+  ['nu-email','nu-pass','nu-nombre','nu-apellido1','nu-apellido2','nu-rut','nu-telefono',
    'nu-profesion','nu-trabajo','nu-puesto','nu-direccion','nu-ciudad',
    'nu-deporte','nu-cultura','nu-bio','nu-corp-cargo'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value='';
@@ -2802,8 +2808,10 @@ function updateGrados() {
 async function createUser() {
   const email    = document.getElementById('nu-email').value.trim();
   const pass     = document.getElementById('nu-pass').value;
-  const nombre   = document.getElementById('nu-nombre').value.trim();
-  const apellido = document.getElementById('nu-apellido').value.trim();
+  const nombre    = document.getElementById('nu-nombre').value.trim();
+  const _ap1      = document.getElementById('nu-apellido1').value.trim();
+  const _ap2      = document.getElementById('nu-apellido2').value.trim();
+  const apellido  = [_ap1, _ap2].filter(Boolean).join(' ');
   const role     = document.getElementById('nu-role').value;
   if (!email||!pass||!nombre) { toast('Correo, contraseña y nombre son obligatorios', 'error'); return; }
   if (pass.length < 8) { toast('La contraseña debe tener al menos 8 caracteres', 'error'); return; }
