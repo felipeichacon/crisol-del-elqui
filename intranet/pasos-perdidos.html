@@ -2041,6 +2041,8 @@ const AUDIENCIA_LABEL = { todos:'✦ Todos los Grados', aprendiz:'I° Aprendiz',
 async function admCargarListaBlog(contentId, rolBlog) {
   const lista = document.getElementById(contentId+'-lista');
   if (!lista) return;
+  // Limpiar instancias Quill huérfanas de ediciones previas antes de reconstruir el DOM
+  Object.keys(_quillInstances).filter(k => k.startsWith('edit-quill-')).forEach(k => delete _quillInstances[k]);
   const { data } = await sb.from('posts').select('*')
     .eq('autor_id', currentProfile.id)
     .eq('role', rolBlog)
@@ -2339,6 +2341,8 @@ async function oradorPublicarNueva(publish) {
 async function oradorCargarLista() {
   const lista = document.getElementById('orador-lista-posts');
   if (!lista) return;
+  // Limpiar Quill huérfanos de ediciones previas del Orador
+  Object.keys(_quillInstances).filter(k => k.startsWith('orador-edit-quill-')).forEach(k => delete _quillInstances[k]);
   lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">Cargando…</div>';
   let q = sb.from('posts').select('*').eq('role', 'maestro');
   // Admin ve todos los posts del Orador; el Orador solo ve los suyos
@@ -2655,7 +2659,7 @@ async function _iaBibSave() {
     if (!file) { toast('Selecciona un archivo','error'); btn.disabled=false; btn.textContent='Guardar documento'; return; }
     const ext = file.name.split('.').pop().toLowerCase();
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const path = 'docs/'+Date.now()+'-'+safeName;
+    const path = 'docs/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'-'+safeName;
     const { error: upErr } = await sb.storage.from('documents').upload(path, file, {upsert:false});
     if (upErr) { toast('Error al subir: '+upErr.message,'error'); btn.disabled=false; btn.textContent='Guardar documento'; return; }
     const { data: pub } = sb.storage.from('documents').getPublicUrl(path);
@@ -2873,7 +2877,8 @@ async function loadAdmCalendario() {
   await _iaCalLoadMembers(); await _iaCalLoad();
 }
 async function _iaCalLoadMembers() {
-  const { data } = await sb.from('profiles').select('id,nombre,apellido,cargo').order('nombre');
+  const { data } = await sb.from('profiles').select('id,nombre,apellido,cargo')
+    .eq('activo', true).neq('email', 'admin@crisoldelelqui.cl').order('apellido');
   const opts = '<option value="">— Sin designar —</option>' + (data||[]).map(m => {
     const n = ((m.nombre||'').split(' ')[0]+' '+(m.apellido||'').split(' ')[0]).trim();
     return `<option value="${m.id}">Q∴H∴ ${n}${m.cargo?' — '+m.cargo:''}</option>`;
@@ -2882,7 +2887,8 @@ async function _iaCalLoadMembers() {
 }
 async function _iaCalLoad() {
   const tipo = document.getElementById('iadm-cal-filter')?.value||'';
-  let q = sb.from('calendario').select('*').order('fecha_inicio',{ascending:true});
+  const _calDesde = new Date(new Date().getFullYear()-1,0,1).toISOString();
+  let q = sb.from('calendario').select('*').gte('fecha_inicio',_calDesde).order('fecha_inicio',{ascending:true});
   if (tipo) q = q.eq('tipo', tipo);
   const { data, error } = await q;
   if (error) { toast('Error al cargar eventos: '+error.message,'error'); return; }
@@ -3051,6 +3057,10 @@ function admMsgModulo(nombre, desc, modKey) {
 const MODULES = ['hero','gallery','blog','blog-orador-pub','blog-primer-pub','blog-segundo-pub','radio-agora-pub','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-orador','adm-blog-venerable','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   closeSidebar(); // cerrar drawer móvil al navegar
+  // Al salir de mensajería, limpiar canal Realtime activo del chat
+  if (currentModule === 'mensajes' && name !== 'mensajes' && waGroupChannel) {
+    sb.removeChannel(waGroupChannel); waGroupChannel = null;
+  }
   // Registrar en historial del browser (salvo durante popstate o primera carga)
   if (_appInitialized && !_inPopstate) {
     history.pushState({ module: name }, '', '');
@@ -3365,12 +3375,28 @@ function markBlogSeen() {
   if (badge) badge.classList.add('hidden');
 }
 
+// Sanitizador liviano: elimina scripts, iframes y atributos de evento
+function _sanitizePostHtml(html) {
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  d.querySelectorAll('script,iframe,object,embed,form').forEach(el => el.remove());
+  d.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(a => {
+      if (a.name.startsWith('on') || a.name === 'href' && /^javascript:/i.test(a.value)) {
+        el.removeAttribute(a.name);
+      }
+    });
+  });
+  return d.innerHTML;
+}
+
 function openPost(post) {
   const reader = document.getElementById('blog-reader');
   const date = new Date(post.created_at).toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
   document.getElementById('blog-reader-meta').textContent = 'Q∴H∴ ' + (post.autor_nombre||'Hermano') + ' · ' + date + (post.publicado ? '' : ' · Borrador');
   document.getElementById('blog-reader-title').textContent = post.titulo;
-  document.getElementById('blog-reader-content').innerHTML = post.contenido;
+  document.getElementById('blog-reader-content').innerHTML = _sanitizePostHtml(post.contenido);
+  markBlogSeen(); // BUG-I10: limpiar badge al leer
   reader.classList.add('open');
   reader.scrollTop = 0;
   document.body.style.overflow = 'hidden';
@@ -3796,7 +3822,8 @@ function calNextMonth() {
 
 async function loadCalendar() {
   const rol = currentProfile.role;
-  const { data } = await sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
+  const _calD = new Date(new Date().getFullYear()-1,0,1).toISOString();
+  const { data } = await sb.from('calendario').select('*').gte('fecha_inicio',_calD).order('fecha_inicio',{ascending:true});
 
   // Filtrar por rol del miembro (admin ve todo como maestro)
   const _calRol = rol === 'admin' ? 'maestro' : rol;
@@ -4394,7 +4421,8 @@ async function uploadDocument(input) {
   const ext = file.name.split('.').pop().toLowerCase();
   const tipo = ['pdf','docx','doc'].includes(ext) ? (ext==='pdf'?'pdf':'docx') : ['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
   const _docRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
-  const path = _docRole+'/'+Date.now()+'-'+file.name;
+  const _safeDocName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path = _docRole+'/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'-'+_safeDocName;
   const { error } = await sb.storage.from('documents').upload(path, file);
   if (error) { toast('Error al subir', 'error'); return; }
   const { data: urlData } = sb.storage.from('documents').getPublicUrl(path);
@@ -5048,17 +5076,18 @@ function renderPoll(enc, miVoto) {
 }
 
 async function votarEncuesta(encId, opcionId) {
-  // Guardar en BD
-  await sb.from('encuesta_votos').insert({
+  // Upsert para evitar doble voto (protección contra múltiples pestañas / doble clic)
+  const { error } = await sb.from('encuesta_votos').upsert({
     encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: [opcionId]
-  });
+  }, { onConflict: 'encuesta_id,perfil_id' });
+  if (error) { toast('Error al registrar voto: ' + error.message, 'error'); return; }
   // Actualizar opciones localmente y persistir
   const encActual = waActiveConv?.encuesta || {};
   const opcionesActualizadas = (encActual.opciones||[]).map(o =>
-    o.id === opcionId ? {...o, votos: [...(o.votos||[]), currentProfile.id]} : o
+    o.id === opcionId ? {...o, votos: [...new Set([...(o.votos||[]), currentProfile.id])]} : o
   );
-  await sb.from('encuestas').update({ opciones: opcionesActualizadas }).eq('id', encId);
-  // Render inmediato con estado local — sin re-fetch de miVoto
+  const { error: updErr } = await sb.from('encuestas').update({ opciones: opcionesActualizadas }).eq('id', encId);
+  if (updErr) { toast('Error al guardar voto: ' + updErr.message, 'error'); return; }
   const encFinal = { ...encActual, opciones: opcionesActualizadas };
   waActiveConv.encuesta = encFinal;
   renderPoll(encFinal, { encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: [opcionId] });
@@ -5067,17 +5096,17 @@ async function votarEncuesta(encId, opcionId) {
 async function submitMultiVoto(encId) {
   if (_pollPendingVotos.size === 0) { toast('Selecciona al menos una opción', 'error'); return; }
   const opcionIds = [..._pollPendingVotos];
-  // Guardar en BD
-  await sb.from('encuesta_votos').insert({
+  // Upsert para evitar doble voto
+  const { error } = await sb.from('encuesta_votos').upsert({
     encuesta_id: encId, perfil_id: currentProfile.id, opcion_ids: opcionIds
-  });
-  // Actualizar opciones localmente y persistir
+  }, { onConflict: 'encuesta_id,perfil_id' });
+  if (error) { toast('Error al registrar voto: ' + error.message, 'error'); return; }
   const encActual = waActiveConv?.encuesta || {};
   const opcionesActualizadas = (encActual.opciones||[]).map(o =>
-    opcionIds.includes(o.id) ? {...o, votos: [...(o.votos||[]), currentProfile.id]} : o
+    opcionIds.includes(o.id) ? {...o, votos: [...new Set([...(o.votos||[]), currentProfile.id])]} : o
   );
-  await sb.from('encuestas').update({ opciones: opcionesActualizadas }).eq('id', encId);
-  // Render inmediato con estado local
+  const { error: updErr } = await sb.from('encuestas').update({ opciones: opcionesActualizadas }).eq('id', encId);
+  if (updErr) { toast('Error al guardar voto: ' + updErr.message, 'error'); return; }
   const encFinal = { ...encActual, opciones: opcionesActualizadas };
   waActiveConv.encuesta = encFinal;
   _pollPendingVotos.clear();

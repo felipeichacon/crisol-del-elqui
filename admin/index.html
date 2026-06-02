@@ -3922,7 +3922,9 @@ async function loadCalendario() {
     const { data: members } = await sb
       .from('profiles')
       .select('id,nombre,apellido,cargo')
-      .order('nombre');
+      .eq('activo', true)
+      .neq('email', 'admin@crisoldelelqui.cl')
+      .order('apellido');
     const opts = (members||[]).map(m => {
       const n1 = (m.nombre||'').split(' ')[0]; const a1 = (m.apellido||'').split(' ')[0];
       const label = 'Q∴H∴ ' + [n1,a1].filter(Boolean).join(' ') + (m.cargo ? ' — ' + m.cargo : '');
@@ -3933,7 +3935,9 @@ async function loadCalendario() {
     });
   }
 
-  let q = sb.from('calendario').select('*').order('fecha_inicio', {ascending:true});
+  // Cargar desde inicio del año anterior para no traer todo el historial
+  const _calDesde = new Date(new Date().getFullYear() - 1, 0, 1).toISOString();
+  let q = sb.from('calendario').select('*').gte('fecha_inicio', _calDesde).order('fecha_inicio', {ascending:true});
   if (tipoFilter) q = q.eq('tipo', tipoFilter);
 
   const { data, error: calErr } = await q;
@@ -4490,9 +4494,14 @@ async function sendBroadcast() {
   if (!targets?.length) { toast('No hay miembros activos en los roles seleccionados', 'error'); return; }
   toast('Enviando a '+targets.length+' miembros…');
   const msgs = targets.map(t => ({ from_id:currentProfile.id, to_id:t.id, contenido:mensaje }));
-  const { error } = await sb.from('messages').insert(msgs);
-  if (error) { toast('Error al enviar', 'error'); return; }
-  document.getElementById('broadcast-log').textContent = '✓ Mensaje enviado a '+targets.length+' miembros el '+new Date().toLocaleString('es-CL');
+  // Enviar en chunks de 100 para no superar límite de PostgREST
+  let enviados = 0;
+  for (let i = 0; i < msgs.length; i += 100) {
+    const { error } = await sb.from('messages').insert(msgs.slice(i, i + 100));
+    if (error) { toast('Error al enviar (chunk '+(i/100+1)+'): '+error.message, 'error'); return; }
+    enviados += msgs.slice(i, i + 100).length;
+  }
+  document.getElementById('broadcast-log').textContent = '✓ Mensaje enviado a '+enviados+' miembros el '+new Date().toLocaleString('es-CL');
   document.getElementById('bc-mensaje').value='';
   document.getElementById('bc-asunto').value='';
   ['aprendiz','companero','maestro','todos'].forEach(r=>{ const el=document.getElementById('bc-'+r); if(el) el.checked=false; });
