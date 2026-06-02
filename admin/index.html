@@ -2165,21 +2165,23 @@ async function guardarGrupo() {
       modo_escritura: modo,
       roles: rolesF
     }).select().single();
-    if (error) { toast('Error: '+error.message,'error'); return; }
+    if (error) { toast('Error al crear grupo: '+error.message,'error'); return; }
     grupoId = data.id;
   } else {
-    await sb.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo, roles:rolesF}).eq('id',editId);
-    await sb.from('grupo_miembros').delete().eq('grupo_id',editId);
+    const {error: updErr} = await sb.from('grupos').update({nombre, descripcion:desc, modo_escritura:modo, roles:rolesF}).eq('id',editId);
+    if (updErr) { toast('Error al actualizar grupo: '+updErr.message,'error'); return; }
+    const {error: delErr} = await sb.from('grupo_miembros').delete().eq('grupo_id',editId);
+    if (delErr) { toast('Error al actualizar miembros: '+delErr.message,'error'); return; }
   }
 
-  await sb.from('grupo_miembros').insert(
+  const {error: insErr} = await sb.from('grupo_miembros').insert(
     miembroIds.map(pid => ({
-      grupo_id:  grupoId,
-      perfil_id: pid,
-      es_admin:  false,
+      grupo_id:       grupoId,
+      perfil_id:      pid,
       puede_escribir: escritorIds.includes(pid)
     }))
   );
+  if (insErr) { toast('Error al guardar miembros: '+insErr.message,'error'); return; }
 
   document.getElementById('modal-overlay-grupos').classList.add('hidden');
   toast(editId?'Grupo actualizado':'Grupo creado','success');
