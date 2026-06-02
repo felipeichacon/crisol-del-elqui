@@ -2463,7 +2463,9 @@ async function oradorEliminar(id) {
   if (!confirm('¿Eliminar esta entrada?')) return;
   const row = document.getElementById('orador-row-' + id);
   if (row) row.remove(); // remoción optimista inmediata
-  const { error } = await sb.from('posts').delete().eq('id', id);
+  let q = sb.from('posts').delete().eq('id', id);
+  if (currentProfile.role !== 'admin') q = q.eq('autor_id', currentProfile.id);
+  const { error } = await q;
   if (error) {
     toast('Error al eliminar: ' + error.message, 'error');
     await oradorCargarLista(); // restaurar estado real si falló
