@@ -615,6 +615,7 @@
             </div>
           </div>
           <audio id="real-audio-player" style="display:none;" preload="none"></audio>
+          <div id="spotify-embed-wrap" style="display:none;padding:4px 0 8px;"></div>
           <div class="rap-wave-row">
             <div class="rap-waveform" id="waveform" onclick="landWaveformClick(event)"></div>
             <div class="rap-time-badge">
@@ -1248,6 +1249,18 @@
     if (arrow) arrow.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
   }
 
+  // Detecta si una URL es de Spotify y devuelve la URL del embed, o null si no lo es
+  function getSpotifyEmbedUrl(url) {
+    if (!url) return null;
+    // Formato URI: spotify:episode:ID o spotify:show:ID
+    const uriMatch = url.match(/^spotify:(episode|show|track):([A-Za-z0-9]+)$/);
+    if (uriMatch) return `https://open.spotify.com/embed/${uriMatch[1]}/${uriMatch[2]}`;
+    // Formato web: https://open.spotify.com/episode/ID (con o sin parámetros)
+    const webMatch = url.match(/open\.spotify\.com\/(episode|show|track)\/([A-Za-z0-9]+)/);
+    if (webMatch) return `https://open.spotify.com/embed/${webMatch[1]}/${webMatch[2]}`;
+    return null;
+  }
+
   function selectEpFromDB(ep) {
     _landCurrentEp = ep;
     document.getElementById('player-title').textContent = ep.titulo;
@@ -1265,15 +1278,42 @@
     if (ico) ico.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
     document.getElementById('current-time').textContent = '0:00';
     document.getElementById('player-duration').textContent = ep.duracion || '0:00';
-    landBuildWaveform(ep);
-    const btn = document.getElementById('play-btn');
-    if (ep.audio_url) {
-      _audio.src = ep.audio_url;
-      _audio.playbackRate = _landSpeeds[_landSpeedIdx];
-      if (btn) btn.disabled = false;
-    } else {
+
+    const spotifyEmbed = document.getElementById('spotify-embed-wrap');
+    const waveRow      = document.querySelector('.rap-wave-row');
+    const controls     = document.querySelector('.rap-controls');
+    const btn          = document.getElementById('play-btn');
+    const spotifyUrl   = getSpotifyEmbedUrl(ep.audio_url || '');
+
+    if (spotifyUrl) {
+      // URL de Spotify: mostrar iframe embed, ocultar controles nativos
       _audio.src = '';
       if (btn) btn.disabled = true;
+      if (waveRow)  waveRow.style.display  = 'none';
+      if (controls) controls.style.display = 'none';
+      if (spotifyEmbed) {
+        spotifyEmbed.style.display = 'block';
+        spotifyEmbed.innerHTML = `<iframe
+          src="${spotifyUrl}"
+          width="100%" height="152" frameborder="0"
+          allowtransparency="true"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          style="border-radius:4px;" loading="lazy"></iframe>`;
+      }
+    } else {
+      // Audio directo: restaurar controles nativos
+      if (spotifyEmbed) { spotifyEmbed.style.display = 'none'; spotifyEmbed.innerHTML = ''; }
+      if (waveRow)  waveRow.style.display  = '';
+      if (controls) controls.style.display = '';
+      landBuildWaveform(ep);
+      if (ep.audio_url) {
+        _audio.src = ep.audio_url;
+        _audio.playbackRate = _landSpeeds[_landSpeedIdx];
+        if (btn) btn.disabled = false;
+      } else {
+        _audio.src = '';
+        if (btn) btn.disabled = true;
+      }
     }
   }
 
