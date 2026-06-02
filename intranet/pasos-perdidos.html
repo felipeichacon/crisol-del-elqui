@@ -4468,11 +4468,14 @@ async function loadGrupos() {
   });
 
   // Marcar si el miembro puede escribir
+  // Admin siempre puede escribir en todos los grupos
   waGrupos = todos.map(g => ({
     ...g,
-    _puede_escribir: gruposExplicitos.has(g.id)
-      ? escrituraMap[g.id] !== false
-      : g.modo_escritura !== 'restringido' // libre = puede escribir si tiene el rol
+    _puede_escribir: rol === 'admin'
+      ? true
+      : gruposExplicitos.has(g.id)
+        ? escrituraMap[g.id] !== false
+        : g.modo_escritura !== 'restringido'
   }));
 }
 
