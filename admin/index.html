@@ -1584,7 +1584,8 @@ const MODULOS_PERMISABLES = [
   'egregora',
   'radio-agora',
   'biblioteca','galeria','calendario',
-  'corp-noticias','corp-blog','mensajeria'
+  'corp-noticias','corp-blog','mensajeria',
+  'encuestas'           // Crear encuestas y consultas de asistencia
 ];
 
 const MODULOS_INFO = {
@@ -1600,17 +1601,18 @@ const MODULOS_INFO = {
   'calendario':      { label: 'Calendario',                  desc: 'Crear y editar eventos' },
   'corp-noticias':   { label: 'Corp. Noticias',              desc: 'Gestionar noticias de la Corporación' },
   'corp-blog':       { label: 'Corp. Blog',                  desc: 'Publicar en el blog de la Corporación' },
-  'mensajeria':      { label: 'Mensajería',                  desc: 'Mensajería, grupos y encuestas' },
+  'mensajeria':      { label: 'Mensajería',                  desc: 'Acceso al módulo de mensajería' },
+  'encuestas':       { label: 'Crear Encuestas',             desc: 'Crear encuestas, votaciones y consultas de asistencia a tenidas' },
 };
 
 // Sugerencias de permisos por cargo
 const PERMISOS_SUGERIDOS = {
-  'Venerable Maestro':        ['noticias','blog-venerable','egregora','calendario','mensajeria'],
-  'Orador':                   ['blog-orador','egregora'],
-  'Primer Vigilante':         ['blog-primer-vig','biblioteca'],
+  'Venerable Maestro':        ['noticias','blog-venerable','egregora','calendario','mensajeria','encuestas'],
+  'Orador':                   ['blog-orador','egregora','encuestas'],
+  'Primer Vigilante':         ['blog-primer-vig','biblioteca','encuestas'],
   'Segundo Vigilante':        ['blog-segundo-vig','biblioteca'],
-  'Secretario':               ['noticias','calendario','mensajeria'],
-  'Hospitalario':             ['mensajeria'],
+  'Secretario':               ['noticias','calendario','mensajeria','encuestas'],
+  'Hospitalario':             ['mensajeria','encuestas'],
   'Bibliotecario y Archivero':['biblioteca'],
   'Maestro de Ceremonias':    ['calendario'],
   'Maestro de Banquetes':     ['mensajeria'],
@@ -2667,7 +2669,8 @@ async function saveEditUser(id) {
   ['id','created_at','updated_at','calendar_token','email',
    'email_confirmed_at','last_sign_in_at','raw_app_meta_data',
    'raw_user_meta_data','is_super_admin','encrypted_password',
-   'confirmation_token','recovery_token','aud','role_auth'
+   'confirmation_token','recovery_token','aud','role_auth',
+   'activo'  // activo solo se cambia via toggleUser(), no desde el formulario de edición
   ].forEach(k => delete updates[k]);
   const { error } = await sb.from('profiles').update(updates).eq('id', id);
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }

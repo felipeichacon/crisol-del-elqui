@@ -1802,6 +1802,7 @@ const ADM_MODULOS_CONFIG = {
   'corp-noticias':   { id:'adm-corp-noticias',  icon:'◫', label:'Corp. Noticias',            fn:'loadAdmCorpNoticias'  },
   'corp-blog':       { id:'adm-corp-blog',      icon:'✦', label:'Corp. Blog',                fn:'loadAdmCorpBlog'      },
   'mensajeria':      { id:'adm-mensajeria',     icon:'✉', label:'Admin Mensajería',          fn:'loadAdmMensajeria'    },
+  'encuestas':       { id:'adm-encuestas',      icon:'📊', label:'Crear Encuestas',           fn:'loadAdmEncuestas'     },
 };
 
 function inyectarModulosAdmin() {
@@ -3029,6 +3030,21 @@ async function loadAdmMensajeria() {
   </div>`;
 }
 
+async function loadAdmEncuestas() {
+  const ct = document.getElementById('adm-encuestas-content');
+  if (!ct) return;
+  ct.innerHTML = `<div style="max-width:560px;">
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:20px;">
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:10px;">Encuestas y Asistencia</div>
+      <div style="font-size:15px;color:var(--text-dim);line-height:1.8;margin-bottom:20px;">Crea votaciones, encuestas de asistencia a tenidas y consultas desde el módulo de mensajería.</div>
+      <button onclick="showModule('mensajes');setTimeout(()=>switchTab('encuestas'),300)"
+        style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;background:var(--gold);color:var(--dark);border:none;padding:12px 22px;cursor:pointer;">
+        Ir a Encuestas →
+      </button>
+    </div>
+  </div>`;
+}
+
 function admMsgModulo(nombre, desc, modKey) {
   const esSuperAdmin = currentProfile?.role === 'admin';
   const accion = esSuperAdmin
@@ -3090,6 +3106,7 @@ function showModule(name) {
   if (name === 'adm-corp-noticias') loadAdmCorpNoticias();
   if (name === 'adm-corp-blog')     loadAdmCorpBlog();
   if (name === 'adm-mensajeria')    loadAdmMensajeria();
+  if (name === 'adm-encuestas')     loadAdmEncuestas();
   if (name === 'gallery')    { _markModuleSeen('gallery_seen','badge-gallery'); loadGallery(); }
   if (name === 'blog')       { loadPosts(); }
   if (name === 'blog-orador-pub') {
@@ -4448,6 +4465,8 @@ let waGroupChannel = null;
 
 // ── INIT MENSAJERÍA ──
 async function loadConversations() {
+  // Asegurar que allProfiles esté cargado antes de usarlo (evita race condition en primera carga)
+  if (!allProfiles.length) await loadProfiles();
   await Promise.all([loadGrupos(), loadEncuestas()]);
   await loadUnreadCount();
   renderConvList();
@@ -4586,7 +4605,10 @@ function renderConvList(query='') {
     const encHeader = document.createElement('div');
     encHeader.style.cssText = 'padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;';
     encHeader.innerHTML = `<span style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;">Encuestas activas</span>`;
-    if (currentProfile.role === 'admin' || currentProfile.role === 'maestro') {
+    const _puedeEncuesta = currentProfile.role === 'admin'
+      || esOficialidad(currentProfile)
+      || currentProfile._permisos?.includes('encuestas');
+    if (_puedeEncuesta) {
       const btn = document.createElement('button');
       btn.textContent = '+ Nueva';
       btn.style.cssText = "font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:6px 12px;cursor:pointer;";
