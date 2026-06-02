@@ -2942,9 +2942,7 @@ async function loadPosts(type) {
   allPosts = data || [];
   const gridId = type==='noticia' ? 'noticias-grid' : 'blog-grid';
   const posts = (type==='blog' && currentBlogRole)
-    ? allPosts.filter(p => currentBlogRole==='maestro'
-        ? (p.role==='maestro' || p.role==='todos')
-        : p.role===currentBlogRole)
+    ? allPosts.filter(p => p.role===currentBlogRole || p.role==='todos')
     : allPosts;
   renderPostsGrid(posts, gridId);
 }

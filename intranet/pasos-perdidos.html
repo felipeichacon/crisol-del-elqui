@@ -1433,7 +1433,8 @@ function esOficialidad(perfil) { return !!(perfil?.cargo); }
 const BLOG_LABELS = {
   aprendiz:  'Blog del Segundo Vigilante',
   companero: 'Blog del Primer Vigilante',
-  maestro:   'Blog'
+  maestro:   'Blog',
+  admin:     'Blog'
 };
 const ROLE_ICONS = {
   aprendiz:  '◈',
@@ -1725,7 +1726,7 @@ async function initBlogBadge() {
   const { data } = await sb.from('posts')
     .select('created_at')
     .eq('role', 'maestro')
-    .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
+    .or(`audiencia.is.null,audiencia.eq.todos,audiencia.eq.${userRole}`)
     .eq('publicado', true)
     .order('created_at', { ascending: false })
     .limit(1);
@@ -2186,7 +2187,7 @@ async function loadBlogPrimerPub() {
   const userRole = rawRole === 'admin' ? 'maestro' : rawRole;
   const { data } = await sb.from('posts').select('*')
     .eq('role', 'companero').eq('publicado', true)
-    .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
+    .or(`audiencia.is.null,audiencia.eq.todos,audiencia.eq.${userRole}`)
     .order('created_at', { ascending: false });
   grid.innerHTML = '';
   const posts = data || [];
@@ -2215,7 +2216,7 @@ async function loadBlogSegundoPub() {
   const userRole = rawRole === 'admin' ? 'maestro' : rawRole;
   const { data } = await sb.from('posts').select('*')
     .eq('role', 'aprendiz').eq('publicado', true)
-    .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
+    .or(`audiencia.is.null,audiencia.eq.todos,audiencia.eq.${userRole}`)
     .order('created_at', { ascending: false });
   grid.innerHTML = '';
   const posts = data || [];
@@ -3121,11 +3122,12 @@ async function loadHero() {
 async function uploadHeroImage(input) {
   const file = input.files[0]; if (!file) return;
   toast('Subiendo portada…');
-  const path = currentProfile.role + '/hero-' + Date.now() + '.' + file.name.split('.').pop();
-  const { data, error } = await sb.storage.from('heroes').upload(path, file, { upsert: true });
-  if (error) { toast('Error al subir imagen', 'error'); return; }
+  const _heroRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
+  const path = _heroRole + '/hero-' + Date.now() + '.' + file.name.split('.').pop();
+  const { error } = await sb.storage.from('heroes').upload(path, file, { upsert: true });
+  if (error) { toast('Error al subir imagen: ' + error.message, 'error'); return; }
   const { data: { publicUrl } } = sb.storage.from('heroes').getPublicUrl(path);
-  await sb.from('hero_images').update({ url: publicUrl, updated_at: new Date() }).eq('role', currentProfile.role);
+  await sb.from('hero_images').update({ url: publicUrl, updated_at: new Date() }).eq('role', _heroRole);
   document.getElementById('hero-img').src = publicUrl;
   toast('Portada actualizada');
 }
@@ -3315,7 +3317,7 @@ async function loadBlogOrador() {
   const { data } = await sb.from('posts')
     .select('*')
     .eq('role', 'maestro')
-    .or(`audiencia.eq.todos,audiencia.eq.${userRole}`)
+    .or(`audiencia.is.null,audiencia.eq.todos,audiencia.eq.${userRole}`)
     .eq('publicado', true)
     .order('created_at', { ascending: false });
 
@@ -4391,7 +4393,8 @@ async function uploadDocument(input) {
   toast('Subiendo documento…');
   const ext = file.name.split('.').pop().toLowerCase();
   const tipo = ['pdf','docx','doc'].includes(ext) ? (ext==='pdf'?'pdf':'docx') : ['jpg','jpeg','png'].includes(ext)?'jpg':'otro';
-  const path = currentProfile.role+'/'+Date.now()+'-'+file.name;
+  const _docRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
+  const path = _docRole+'/'+Date.now()+'-'+file.name;
   const { error } = await sb.storage.from('documents').upload(path, file);
   if (error) { toast('Error al subir', 'error'); return; }
   const { data: urlData } = sb.storage.from('documents').getPublicUrl(path);
@@ -4399,7 +4402,7 @@ async function uploadDocument(input) {
   if (!publicUrl) { toast('Error: no se pudo obtener URL del documento', 'error'); return; }
   const nombre = prompt('Nombre del documento:', file.name.replace(/\.[^.]+$/,'')) || file.name;
   const categoria = prompt('Categoría (ej: Historia, Rituales, Administrativo):') || '';
-  const { error: dbErr } = await sb.from('documents').insert({ role: currentProfile.role, nombre, url: publicUrl, tipo, categoria, autor_id: currentProfile.id });
+  const { error: dbErr } = await sb.from('documents').insert({ role: _docRole, nombre, url: publicUrl, tipo, categoria, autor_id: currentProfile.id });
   if (dbErr) { toast('Error al registrar documento: '+dbErr.message, 'error'); return; }
   toast('Documento subido');
   loadDocuments();
@@ -4480,7 +4483,7 @@ async function loadGrupos() {
 }
 
 async function loadEncuestas() {
-  const rol = currentProfile.role;
+  const rol = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
   const { data } = await sb.from('encuestas')
     .select('*')
     .eq('activa', true)
@@ -4531,7 +4534,7 @@ function renderConvList(query='') {
 
   } else if (waTab === 'grupos') {
     // Canal general siempre primero
-    const rolLabel = ROLE_LABELS[currentProfile.role]||'Hermanos';
+    const rolLabel = ROLE_LABELS[currentProfile.role === 'admin' ? 'maestro' : currentProfile.role]||'Hermanos';
     const generalItem = makeConvItem(
       null, 'Canal del Rol — ' + rolLabel,
       'Chat del '+rolLabel, null,
