@@ -13,7 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js" defer></script>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -2339,9 +2339,10 @@ async function oradorCargarLista() {
   const lista = document.getElementById('orador-lista-posts');
   if (!lista) return;
   lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">Cargando…</div>';
-  const { data } = await sb.from('posts')
-    .select('*').eq('role', 'maestro')
-    .order('created_at', { ascending: false });
+  let q = sb.from('posts').select('*').eq('role', 'maestro');
+  // Admin ve todos los posts del Orador; el Orador solo ve los suyos
+  if (currentProfile.role !== 'admin') q = q.eq('autor_id', currentProfile.id);
+  const { data } = await q.order('created_at', { ascending: false });
   lista.innerHTML = '';
   if (!data?.length) {
     lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No hay entradas publicadas aún.</div>';
@@ -2432,17 +2433,21 @@ async function oradorGuardarEdicion(id, publish) {
   const contenido = getQuillContent('orador-edit-quill-' + id);
   const audiencia = document.getElementById('orador-edit-aud-' + id)?.value || 'todos';
   if (!titulo || !contenido) { toast('Completa título y contenido', 'error'); return; }
-  const { error } = await sb.from('posts').update({
+  let upd = sb.from('posts').update({
     titulo, contenido, audiencia, publicado: publish,
     extracto: stripHtml(contenido).substring(0, 200)
   }).eq('id', id);
+  if (currentProfile.role !== 'admin') upd = upd.eq('autor_id', currentProfile.id);
+  const { error } = await upd;
   if (error) { toast('Error: '+error.message, 'error'); return; }
   toast(publish ? 'Publicado' : 'Borrador guardado', 'success');
   await oradorCargarLista();
 }
 
 async function oradorToggle(id, publicado) {
-  const { error } = await sb.from('posts').update({ publicado: !publicado }).eq('id', id);
+  let upd = sb.from('posts').update({ publicado: !publicado }).eq('id', id);
+  if (currentProfile.role !== 'admin') upd = upd.eq('autor_id', currentProfile.id);
+  const { error } = await upd;
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   toast(publicado ? 'Despublicado' : 'Publicado', 'success');
   await oradorCargarLista();
@@ -4568,7 +4573,7 @@ function renderConvList(query='') {
       const tipoLabel = e.tipo==='asistencia' ? 'Asistencia a Tenida'
                       : e.tipo==='agape'       ? 'Ágape'
                       : 'Encuesta';
-      const opcPreview = (e.opciones||[]).slice(0,2).map(o=>`<div style="font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;">· ${o.texto}</div>`).join('');
+      const opcPreview = (e.opciones||[]).slice(0,2).map(o=>`<div style="font-size:12px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;">· ${esc(o.texto||'')}</div>`).join('');
       const item = document.createElement('div');
       item.className = 'wa-conv-item' + (waActiveConv?.tipo==='encuesta' && waActiveConv.id===e.id ? ' active' : '');
       item.onclick = () => openEncuesta(e);
@@ -4576,7 +4581,7 @@ function renderConvList(query='') {
         <div class="wa-avatar" style="background:rgba(201,168,76,0.14);border:1.5px solid rgba(201,168,76,0.28);font-size:16px;">📊</div>
         <div class="wa-conv-info" style="min-width:0;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:6px;">
-            <div class="wa-conv-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;">${e.titulo}</div>
+            <div class="wa-conv-name" style="min-width:0;overflow:hidden;text-overflow:ellipsis;">${esc(e.titulo)}</div>
             <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--${e.activa?'gold':'text-dim'});flex-shrink:0;">${e.activa?'Activa':'Cerrada'}</div>
           </div>
           <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:3px;">${tipoLabel}</div>
@@ -4604,11 +4609,11 @@ function makeConvItem(avatarUrl, nombre, preview, meta, onclick, unreadCount) {
 
   item.innerHTML = `${avatarHtml}
     <div class="wa-conv-info">
-      <div class="wa-conv-name">${nombre}</div>
-      <div class="wa-conv-preview">${preview||''}</div>
+      <div class="wa-conv-name">${esc(nombre)}</div>
+      <div class="wa-conv-preview">${esc(preview||'')}</div>
     </div>
     <div class="wa-conv-meta" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-      <div class="wa-conv-time">${meta||''}</div>
+      <div class="wa-conv-time">${esc(meta||'')}</div>
       ${unreadHtml}
     </div>`;
   return item;
@@ -4713,7 +4718,7 @@ async function sendRol() {
   const _rolCanal = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
   const { error } = await sb.from('chat_messages').insert({
     role: _rolCanal,
-    author_id: currentProfile.id,
+    autor_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
     contenido: text
   });
@@ -4841,7 +4846,7 @@ function renderWaMessages(msgs, tipo, unreadIds) {
 
     const isMine = tipo==='directo'
       ? m.from_id === currentProfile.id
-      : m.author_id===currentProfile.id || m.autor_id===currentProfile.id;
+      : m.autor_id===currentProfile.id;
 
     const wrap = document.createElement('div');
     wrap.className = 'wa-bubble-wrap ' + (isMine?'mine':'theirs');
