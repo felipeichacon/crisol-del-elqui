@@ -1920,7 +1920,8 @@ async function admLoadNoticiasList(content) {
 
 async function admEliminarNoticia(id) {
   if (!confirm('¿Eliminar esta noticia?')) return;
-  await sb.from('noticias').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  const { error } = await sb.from('noticias').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  if (error) { toast('Error al eliminar: '+error.message,'error'); return; }
   toast('Noticia eliminada');
   const content = document.getElementById('adm-noticias-content');
   if (content) await admLoadNoticiasList(content);
@@ -2511,7 +2512,8 @@ async function admPublicarEgregora(publish) {
 
 async function admEliminarEgregora(id) {
   if (!confirm('¿Eliminar este artículo?')) return;
-  await sb.from('egregora_articulos').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  const { error } = await sb.from('egregora_articulos').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  if (error) { toast('Error al eliminar: '+error.message,'error'); return; }
   toast('Artículo eliminado'); loadAdmEgregora();
 }
 
@@ -3399,9 +3401,13 @@ async function _quillImageHandler(quillId) {
 }
 
 function initQuillEditor(containerId, opts = {}) {
-  if (_quillInstances[containerId]) { delete _quillInstances[containerId]; }
   const el = document.getElementById(containerId);
   if (!el) return null;
+  if (_quillInstances[containerId]) {
+    // Limpiar DOM para evitar toolbars duplicadas y listeners dobles
+    delete _quillInstances[containerId];
+    el.innerHTML = '';
+  }
   const q = new Quill('#' + containerId, {
     theme: 'snow',
     placeholder: opts.placeholder || 'Escribe aquí…',
@@ -4383,10 +4389,13 @@ async function uploadDocument(input) {
   const path = currentProfile.role+'/'+Date.now()+'-'+file.name;
   const { error } = await sb.storage.from('documents').upload(path, file);
   if (error) { toast('Error al subir', 'error'); return; }
-  const { data: { publicUrl } } = sb.storage.from('documents').getPublicUrl(path);
+  const { data: urlData } = sb.storage.from('documents').getPublicUrl(path);
+  const publicUrl = urlData?.publicUrl;
+  if (!publicUrl) { toast('Error: no se pudo obtener URL del documento', 'error'); return; }
   const nombre = prompt('Nombre del documento:', file.name.replace(/\.[^.]+$/,'')) || file.name;
   const categoria = prompt('Categoría (ej: Historia, Rituales, Administrativo):') || '';
-  await sb.from('documents').insert({ role: currentProfile.role, nombre, url: publicUrl, tipo, categoria, autor_id: currentProfile.id });
+  const { error: dbErr } = await sb.from('documents').insert({ role: currentProfile.role, nombre, url: publicUrl, tipo, categoria, autor_id: currentProfile.id });
+  if (dbErr) { toast('Error al registrar documento: '+dbErr.message, 'error'); return; }
   toast('Documento subido');
   loadDocuments();
 }
@@ -4655,10 +4664,11 @@ async function sendDirecto() {
   const input = document.getElementById('wa-msg-input');
   const text = input.value.trim(); if (!text || !waActiveConv) return;
   input.value = '';
-  await sb.from('messages').insert({
+  const { error } = await sb.from('messages').insert({
     from_id: currentProfile.id, to_id: waActiveConv.id,
     contenido: text
   });
+  if (error) { toast('Error al enviar: '+error.message,'error'); input.value = text; return; }
   openDirecto(waActiveConv.perfil);
 }
 
@@ -4701,12 +4711,13 @@ async function sendRol() {
   const text = input.value.trim(); if (!text) return;
   input.value = '';
   const _rolCanal = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
-  await sb.from('chat_messages').insert({
+  const { error } = await sb.from('chat_messages').insert({
     role: _rolCanal,
     author_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
     contenido: text
   });
+  if (error) { toast('Error al enviar: '+error.message,'error'); input.value = text; return; }
   openGrupoRol();
 }
 
@@ -4750,12 +4761,13 @@ async function sendGrupo() {
   const input = document.getElementById('wa-msg-input');
   const text = input.value.trim(); if (!text || !waActiveConv) return;
   input.value = '';
-  await sb.from('grupo_mensajes').insert({
+  const { error } = await sb.from('grupo_mensajes').insert({
     grupo_id: waActiveConv.id,
     autor_id: currentProfile.id,
     autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
     contenido: text
   });
+  if (error) { toast('Error al enviar: '+error.message,'error'); input.value = text; return; }
   openGrupo(waActiveConv.grupo);
 }
 
@@ -4837,13 +4849,14 @@ function renderWaMessages(msgs, tipo, unreadIds) {
     const time = new Date(m.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
     const senderName = isMine ? '' : (m.autor_nombre ? 'Q∴H∴ '+m.autor_nombre : '');
     const senderHtml = (!isMine && tipo!=='directo' && senderName)
-      ? `<div class="wa-bubble-sender">${senderName}</div>` : '';
+      ? `<div class="wa-bubble-sender">${esc(senderName)}</div>` : '';
 
     wrap.innerHTML = `<div class="wa-bubble">
       ${senderHtml}
-      <div class="wa-bubble-text">${m.contenido}</div>
+      <div class="wa-bubble-text"></div>
       <div class="wa-bubble-time">${time}</div>
     </div>`;
+    wrap.querySelector('.wa-bubble-text').textContent = m.contenido;
     container.appendChild(wrap);
   });
 
@@ -5188,49 +5201,7 @@ function subscribeMessages() {
       }).subscribe();
 }
 
-// ── CHAT ──
-async function loadChat() {
-  const { data } = await sb.from('chat_messages')
-    .select('*').eq('role', currentProfile.role)
-    .order('created_at').limit(100);
-  const container = document.getElementById('chat-messages');
-  container.innerHTML = '';
-  (data||[]).forEach(m => appendChatMessage(m));
-  container.scrollTop = container.scrollHeight;
-}
-
-function appendChatMessage(m) {
-  const container = document.getElementById('chat-messages');
-  const mine = m.author_id === currentProfile.id;
-  const div = document.createElement('div'); div.className='chat-msg'+(mine?' mine':'');
-  const time = new Date(m.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-  const initials = (m.autor_nombre||'H').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  div.innerHTML=`<div class="chat-avatar">${esc(initials)}</div><div class="chat-bubble"><div class="chat-bubble-author">${mine?'Tú':esc(m.autor_nombre)}</div><div class="chat-bubble-text">${esc(m.contenido)}</div><div class="chat-bubble-time">${time}</div></div>`;
-  container.appendChild(div);
-}
-
-async function sendChatMessage() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim(); if (!text) return;
-  await sb.from('chat_messages').insert({
-    role: currentProfile.role,
-    author_id: currentProfile.id,
-    autor_nombre: (currentProfile.nombre||'').trim().split(' ')[0] + ' ' + ((currentProfile.apellido||'').trim().split(' ')[0]),
-    contenido: text
-  });
-  input.value = '';
-}
-
-function subscribeChat() {
-  chatChannel = sb.channel('chat-'+currentProfile.role)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `role=eq.${currentProfile.role}` },
-      payload => {
-        appendChatMessage(payload.new);
-        const container = document.getElementById('chat-messages');
-        container.scrollTop = container.scrollHeight;
-      })
-    .subscribe();
-}
+// ── CHAT LEGACY (eliminado — reemplazado por WA-style en openGrupoRol/sendRol) ──
 
 // ── MI PERFIL ──
 function fillProfileForm() {

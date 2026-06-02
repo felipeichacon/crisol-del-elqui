@@ -1359,9 +1359,9 @@ tr:hover td { background: rgba(201,168,76,0.04); }
       <div class="broadcast-box">
         <div class="broadcast-title">Seleccionar destinatarios</div>
         <div class="role-checks">
-          <label class="role-check"><input type="checkbox" id="bc-aprendiz" value="aprendiz"><span>Aprendices</span></label>
-          <label class="role-check"><input type="checkbox" id="bc-companero" value="companero"><span>Compañeros</span></label>
-          <label class="role-check"><input type="checkbox" id="bc-maestro" value="maestro"><span>Maestros</span></label>
+          <label class="role-check"><input type="checkbox" id="bc-aprendiz" value="aprendiz" onchange="_bcSyncTodos()"><span>Aprendices</span></label>
+          <label class="role-check"><input type="checkbox" id="bc-companero" value="companero" onchange="_bcSyncTodos()"><span>Compañeros</span></label>
+          <label class="role-check"><input type="checkbox" id="bc-maestro" value="maestro" onchange="_bcSyncTodos()"><span>Maestros</span></label>
           <label class="role-check"><input type="checkbox" id="bc-todos" onchange="toggleAllRoles(this)"><span>Todos</span></label>
         </div>
         <div class="field" style="margin-bottom:16px;"><label>Asunto</label><input type="text" id="bc-asunto" placeholder="Asunto del mensaje"></div>
@@ -4471,6 +4471,10 @@ async function loadUnread() {
 // ── BROADCAST ──
 function toggleAllRoles(cb) {
   ['aprendiz','companero','maestro'].forEach(r => document.getElementById('bc-'+r).checked = cb.checked);
+}
+function _bcSyncTodos() {
+  const all = ['aprendiz','companero','maestro'].every(r => document.getElementById('bc-'+r).checked);
+  document.getElementById('bc-todos').checked = all;
 }
 
 async function sendBroadcast() {
