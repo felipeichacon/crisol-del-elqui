@@ -2719,9 +2719,10 @@ async function loadAdmGaleria() {
 }
 
 async function _galAdmLoad() {
-  const { data } = await sb.from('gallery')
-    .select('*, profiles:author_id(nombre,apellido)')
+  const { data, error } = await sb.from('gallery')
+    .select('*')
     .order('created_at', { ascending: false });
+  if (error) { toast('Error cargando galería: ' + error.message, 'error'); return; }
   _galAdmData = data || [];
   _galAdmApplyFilter();
 }
@@ -2749,8 +2750,11 @@ function _galAdmRender(imgs) {
     return;
   }
   const ROL_LABEL = { aprendiz:'Aprendiz', companero:'Compañero', maestro:'Maestro', todos:'Todos' };
+  const authorMap = {};
+  (allProfiles || []).forEach(p => { authorMap[p.id] = p; });
   imgs.forEach(img => {
-    const autor = img.profiles ? (img.profiles.nombre||'') + ' ' + (img.profiles.apellido||'') : '—';
+    const p = authorMap[img.author_id];
+    const autor = p ? (p.nombre||'') + ' ' + (p.apellido||'') : '—';
     const fecha = new Date(img.created_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' });
     const oculta = !img.visible;
     const cell = document.createElement('div');
