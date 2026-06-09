@@ -1626,9 +1626,14 @@ async function loadProfile() {
   currentProfile = data;
 
   // Cargar permisos de administración
-  const { data: perm } = await sb.from('permisos_admin')
-    .select('modulos').eq('perfil_id', data.id).maybeSingle();
-  currentProfile._permisos = perm?.modulos || [];
+  // El rol admin tiene TODOS los módulos por defecto; otros usuarios los reciben de la tabla
+  if (data.role === 'admin') {
+    currentProfile._permisos = Object.keys(ADM_MODULOS_CONFIG);
+  } else {
+    const { data: perm } = await sb.from('permisos_admin')
+      .select('modulos').eq('perfil_id', data.id).maybeSingle();
+    currentProfile._permisos = perm?.modulos || [];
+  }
 }
 
 // ── SHOW APP ──
