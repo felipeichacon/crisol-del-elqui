@@ -4179,7 +4179,7 @@ function openPpCalEvento(e) {
 
 // ── PROFILES ──
 async function loadProfiles() {
-  const { data } = await sb.from('profiles').select('*').eq('activo', true).order('apellido');
+  const { data } = await sb.from('profiles').select('*').eq('activo', true).neq('role', 'admin').order('apellido');
   allProfiles = (data||[]).sort((a,b) => {
     const ap = (a.apellido||'').split(' ')[0].toLowerCase();
     const bp = (b.apellido||'').split(' ')[0].toLowerCase();
