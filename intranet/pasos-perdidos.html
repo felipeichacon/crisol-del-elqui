@@ -2865,7 +2865,7 @@ async function loadAdmCalendario() {
         <option value="social">Evento Social</option><option value="corporacion">Corporación Elqui</option>
       </select>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 280px;gap:2px;">
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:2px;align-items:stretch;">
       <div style="background:var(--dark-3);border:1px solid var(--border);padding:22px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
           <button onclick="_iaCalPrev()" style="background:transparent;border:1px solid var(--border);color:var(--gold);padding:7px 13px;cursor:pointer;font-size:14px;">‹</button>
@@ -2877,9 +2877,9 @@ async function loadAdmCalendario() {
         </div>
         <div id="iadm-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;"></div>
       </div>
-      <div style="background:var(--dark-3);border:1px solid var(--border);overflow-y:auto;max-height:500px;">
-        <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--cream);text-transform:uppercase;">Próximos eventos</div>
-        <div id="iadm-cal-list"></div>
+      <div style="background:var(--dark-3);border:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:var(--cream);text-transform:uppercase;flex-shrink:0;">Próximos eventos</div>
+        <div id="iadm-cal-list" style="overflow-y:auto;flex:1;"></div>
       </div>
     </div>
   </div>`;
