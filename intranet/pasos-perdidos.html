@@ -884,10 +884,35 @@ body { background: var(--dark); color: var(--text); font-family: 'Aptos','Calibr
     </div>
 
     <!-- Gallery FAB (fixed, shown when gallery active) -->
-    <button class="gallery-fab" id="gallery-fab" title="Subir foto" onclick="document.getElementById('gallery-upload-input').click()">
+    <button class="gallery-fab" id="gallery-fab" title="Subir foto" onclick="openGalleryUploadModal()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
-    <input type="file" id="gallery-upload-input" accept="image/*" multiple style="display:none" onchange="uploadGalleryImages(this)">
+    <input type="file" id="gallery-upload-input" accept="image/*" multiple style="display:none" onchange="_galUploadFilesSelected(this)">
+
+    <!-- Gallery Upload Modal -->
+    <div id="gallery-upload-modal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,10,32,0.92);align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeGalleryUploadModal()">
+      <div style="background:var(--dark-2);border:1px solid var(--border-bright);max-width:480px;width:100%;padding:36px;position:relative;">
+        <button onclick="closeGalleryUploadModal()" style="position:absolute;top:14px;right:18px;background:transparent;border:none;color:var(--gold-dim);font-size:22px;cursor:pointer;">✕</button>
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.4em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;">Subir fotografía</div>
+
+        <!-- Drop area / file selector -->
+        <div id="gal-drop-area" onclick="document.getElementById('gallery-upload-input').click()" style="border:1px dashed var(--border-bright);padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:18px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border-bright)'">
+          <div id="gal-drop-label" style="font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);letter-spacing:0.15em;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 10px;color:var(--gold-dim)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Seleccionar foto(s)
+          </div>
+        </div>
+
+        <!-- Caption -->
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px;">Descripción <span style="font-style:italic;font-family:inherit;">(opcional)</span></div>
+        <textarea id="gal-upload-caption" rows="3" maxlength="300" placeholder="Breve contexto de la fotografía…" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Aptos','Calibri','Trebuchet MS','Segoe UI',system-ui,sans-serif;font-size:15px;padding:11px 14px;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:20px;"></textarea>
+
+        <div style="display:flex;gap:12px;">
+          <button id="gal-upload-btn" onclick="uploadGalleryImages()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;background:var(--gold);color:var(--dark);border:none;padding:12px 22px;cursor:pointer;">Subir</button>
+          <button onclick="closeGalleryUploadModal()" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:12px 22px;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Gallery Lightbox -->
     <div class="gallery-lightbox" id="gallery-lightbox" onclick="closeGalleryLightbox()">
@@ -3480,32 +3505,57 @@ function closeGalleryLightbox() {
   document.body.style.overflow = '';
 }
 
-async function uploadGalleryImages(input) {
-  const files = Array.from(input.files); if (!files.length) return;
+let _galPendingFiles = [];
+
+function openGalleryUploadModal() {
+  _galPendingFiles = [];
+  document.getElementById('gal-upload-caption').value = '';
+  document.getElementById('gal-drop-label').innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 10px;color:var(--gold-dim)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Seleccionar foto(s)`;
+  const modal = document.getElementById('gallery-upload-modal');
+  modal.style.display = 'flex';
+}
+
+function closeGalleryUploadModal() {
+  document.getElementById('gallery-upload-modal').style.display = 'none';
+  _galPendingFiles = [];
+}
+
+function _galUploadFilesSelected(input) {
+  _galPendingFiles = Array.from(input.files);
   input.value = '';
-  toast('Subiendo ' + files.length + ' imagen(es)…');
-  // admin sube a carpeta maestro (el bucket no tiene carpeta 'admin')
+  if (!_galPendingFiles.length) return;
+  const label = _galPendingFiles.length === 1
+    ? _galPendingFiles[0].name
+    : _galPendingFiles.length + ' fotos seleccionadas';
+  document.getElementById('gal-drop-label').innerHTML =
+    `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;margin:0 auto 8px;color:var(--gold)"><polyline points="20 6 9 17 4 12"/></svg><span style="color:var(--gold);">${esc(label)}</span>`;
+}
+
+async function uploadGalleryImages() {
+  const files = _galPendingFiles;
+  if (!files.length) { toast('Selecciona al menos una foto', 'error'); return; }
+  const caption = (document.getElementById('gal-upload-caption')?.value || '').trim() || null;
+
+  const btn = document.getElementById('gal-upload-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Subiendo…'; }
+
   const folderRole = currentProfile.role === 'admin' ? 'maestro' : currentProfile.role;
   let ok = 0;
   for (const file of files) {
     try {
-      // Sanitizar nombre: sin espacios ni caracteres especiales
       const ext = (file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
       const safeName = Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.' + ext;
       const path = folderRole + '/' + safeName;
 
-      // 1. Subir a Storage
       const { error: storErr } = await sb.storage.from('Gallery').upload(path, file, { upsert: false });
       if (storErr) { toast('Storage: ' + storErr.message, 'error'); continue; }
 
-      // 2. Obtener URL pública
       const { data: urlData } = sb.storage.from('Gallery').getPublicUrl(path);
       const publicUrl = urlData?.publicUrl;
       if (!publicUrl) { toast('No se pudo obtener URL pública', 'error'); continue; }
 
-      // 3. Guardar en tabla gallery
       const { error: dbErr } = await sb.from('gallery').insert({
-        role: folderRole, url: publicUrl, author_id: currentProfile.id
+        role: folderRole, url: publicUrl, author_id: currentProfile.id, caption
       });
       if (dbErr) { toast('BD: ' + dbErr.message, 'error'); continue; }
 
@@ -3514,7 +3564,9 @@ async function uploadGalleryImages(input) {
       toast('Excepción: ' + (e?.message || String(e)), 'error');
     }
   }
-  if (ok > 0) { toast(ok + ' foto(s) subida(s) ✓'); loadGallery(); }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Subir'; }
+  if (ok > 0) { closeGalleryUploadModal(); toast(ok + ' foto(s) subida(s) ✓'); loadGallery(); }
   else { toast('No se subió ninguna foto — revisa los errores', 'error'); }
 }
 
