@@ -3606,35 +3606,8 @@ async function admLoadCorpBlogList() {
   }).join('');
 }
 
-// ── MENSAJERÍA ADMIN INLINE ──
-async function loadAdmMensajeria() {
-  const ct = document.getElementById('adm-mensajeria-content');
-  if (!ct) return;
-  ct.innerHTML = `<div style="max-width:560px;">
-    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:20px;">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:10px;">Mensajería</div>
-      <div style="font-size:15px;color:var(--text-dim);line-height:1.8;margin-bottom:20px;">Gestiona conversaciones directas, grupos y asistencia a tenidas desde el módulo de mensajería.</div>
-      <button onclick="showModule('mensajes')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;background:var(--gold);color:var(--dark);border:none;padding:12px 22px;cursor:pointer;">
-        Ir a Mensajería →
-      </button>
-    </div>
-  </div>`;
-}
-
-async function loadAdmEncuestas() {
-  const ct = document.getElementById('adm-encuestas-content');
-  if (!ct) return;
-  ct.innerHTML = `<div style="max-width:560px;">
-    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:20px;">
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);margin-bottom:10px;">Encuestas y Asistencia</div>
-      <div style="font-size:15px;color:var(--text-dim);line-height:1.8;margin-bottom:20px;">Crea votaciones, encuestas de asistencia a tenidas y consultas desde el módulo de mensajería.</div>
-      <button onclick="showModule('mensajes');setTimeout(()=>switchTab('encuestas'),300)"
-        style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;background:var(--gold);color:var(--dark);border:none;padding:12px 22px;cursor:pointer;">
-        Ir a Encuestas →
-      </button>
-    </div>
-  </div>`;
-}
+// Nota: los módulos admin 'adm-mensajeria' y 'adm-encuestas' ya no tienen UI propia;
+// showModule() los redirige directo al módulo de mensajería (ver showModule).
 
 function admMsgModulo(nombre, desc, modKey) {
   const esSuperAdmin = currentProfile?.role === 'admin';
@@ -3664,6 +3637,9 @@ function admMsgModulo(nombre, desc, modKey) {
 const MODULES = ['hero','gallery','blog','blog-orador-pub','blog-primer-pub','blog-segundo-pub','radio-agora-pub','calendar','profiles','biblioteca','mensajes','mi-perfil','adm-noticias','adm-blog-orador','adm-blog-venerable','adm-blog-primer','adm-blog-segundo','adm-egregora','adm-radio-agora','adm-biblioteca','adm-galeria','adm-calendario','adm-corp-noticias','adm-corp-blog','adm-mensajeria'];
 function showModule(name) {
   closeSidebar(); // cerrar drawer móvil al navegar
+  // Estos módulos admin no tienen UI propia: entran directo al módulo de mensajería
+  if (name === 'adm-mensajeria') { showModule('mensajes'); return; }
+  if (name === 'adm-encuestas')  { showModule('mensajes'); setTimeout(() => switchTab('encuestas'), 300); return; }
   // Al salir de mensajería, limpiar canal Realtime activo del chat
   if (currentModule === 'mensajes' && name !== 'mensajes' && waGroupChannel) {
     sb.removeChannel(waGroupChannel); waGroupChannel = null;
@@ -3696,8 +3672,6 @@ function showModule(name) {
   if (name === 'adm-calendario')    loadAdmCalendario();
   if (name === 'adm-corp-noticias') loadAdmCorpNoticias();
   if (name === 'adm-corp-blog')     loadAdmCorpBlog();
-  if (name === 'adm-mensajeria')    loadAdmMensajeria();
-  if (name === 'adm-encuestas')     loadAdmEncuestas();
   if (name === 'gallery')    { _markModuleSeen('gallery_seen','badge-gallery'); loadGallery(); }
   if (name === 'blog')       { loadPosts(); }
   if (name === 'blog-orador-pub') {
