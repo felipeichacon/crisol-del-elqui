@@ -2507,57 +2507,136 @@ async function oradorEliminar(id) {
 
 
 
+// ── REVISTA EGRÉGORA — editor completo (delegable por permiso 'egregora') ──
+const _ADM_EGR_CATS = ['Reflexión','Historia masónica','Filosofía','Ritual y simbolismo','Arte y cultura','Comunicado'];
+let _admEgrEditId = null, _admEgrImg = null, _admEgrImgUrl = null, _admEgrAll = [];
+
 async function loadAdmEgregora() {
   const content = document.getElementById('adm-egregora-content');
   if (!content) return;
+  _admEgrEditId = null; _admEgrImg = null; _admEgrImgUrl = null;
+  const cats = _ADM_EGR_CATS.map(c => `<option>${c}</option>`).join('');
   content.innerHTML = `
-    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
-      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nuevo artículo — Revista Egrégora</div>
-      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
-        <input id="admegr-titulo" type="text" placeholder="Título del artículo" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Aptos','Calibri','Trebuchet MS','Segoe UI',system-ui,sans-serif;font-size:17px;padding:10px 14px;outline:none;"></div>
-      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
-        <div id="admegr-quill"></div></div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="admPublicarEgregora(true)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
-        <button onclick="admPublicarEgregora(false)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:760px;">
+      <div id="admegr-form-title" style="${_ADM_TITLE}">Nuevo artículo — Revista Egrégora</div>
+      ${_admField('Fotografía / Imagen (opcional)', `<input id="admegr-img" type="file" accept="image/*" onchange="_admEgrImg=this.files[0]||null" style="${_ADM_INPUT}">`)}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">${_admField('Edición / Número', `<input id="admegr-edicion" type="text" placeholder="Ej: Edición N°3 · 2026" style="${_ADM_INPUT}">`)}</div>
+        <div style="flex:1;min-width:180px;">${_admField('Categoría', `<select id="admegr-cat" style="${_ADM_INPUT}">${cats}</select>`)}</div>
+      </div>
+      ${_admField('Título del artículo', `<input id="admegr-titulo" type="text" placeholder="Título del artículo" style="${_ADM_INPUT}">`)}
+      ${_admField('Contenido', `<div id="admegr-quill"></div>`)}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button id="admegr-btn-pub" onclick="admGuardarEgregora(true)" style="${_ADM_BTN_PUB}">Publicar artículo</button>
+        <button id="admegr-btn-draft" onclick="admGuardarEgregora(false)" style="${_ADM_BTN_LINE}">Guardar borrador</button>
+        <button id="admegr-btn-cancel" onclick="loadAdmEgregora()" style="${_ADM_BTN_CANCEL}">Cancelar edición</button>
       </div>
     </div>
-    <div id="admegr-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
-  initQuillEditor('admegr-quill', { placeholder: 'Escribe el artículo…' });
-  const { data } = await sb.from('egregora_articulos').select('*').eq('autor_id',currentProfile.id).order('created_at',{ascending:false}).limit(20);
-  const lista = document.getElementById('admegr-lista');
-  if (!data?.length) { lista.innerHTML='<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado artículos aún.</div>'; return; }
-  data.forEach(a => {
-    const div = document.createElement('div');
-    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
-    div.innerHTML = `<div><div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${a.titulo}</div>
-      <div style="font-size:12px;color:var(--text-dim);">${a.publicado?'Publicado':'Borrador'} · ${new Date(a.created_at).toLocaleDateString('es-CL')}</div></div>
-    <button onclick="admEliminarEgregora('${a.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
-    lista.appendChild(div);
-  });
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;max-width:760px;">
+      <input id="admegr-search" type="text" placeholder="Buscar por título, contenido, autor…" oninput="_admEgrRender()" style="${_ADM_INPUT}flex:2;min-width:200px;">
+      <select id="admegr-cat-filter" onchange="_admEgrRender()" style="${_ADM_INPUT}flex:1;min-width:150px;"><option value="">Todas las categorías</option>${cats}</select>
+      <select id="admegr-estado-filter" onchange="_admEgrRender()" style="${_ADM_INPUT}flex:1;min-width:150px;"><option value="">Publicados y borradores</option><option value="1">Solo publicados</option><option value="0">Solo borradores</option></select>
+    </div>
+    <div id="admegr-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;max-width:760px;"></div>`;
+  initQuillEditor('admegr-quill', { placeholder: 'Escribe el contenido del artículo…' });
+  await _admEgrLoad();
 }
 
-async function admPublicarEgregora(publish) {
-  const titulo    = document.getElementById('admegr-titulo')?.value.trim();
-  const contenido = getQuillContent('admegr-quill');
-  if (!titulo || !contenido) { toast('Completa los campos','error'); return; }
-  const { error } = await sb.from('egregora_articulos').insert({
-    titulo, contenido, extracto: stripHtml(contenido).substring(0,240),
-    categoria: 'Reflexión', autor_id: currentProfile.id,
-    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
-    publicado: publish
+async function _admEgrLoad() {
+  const { data, error } = await sb.from('egregora_articulos').select('*').order('created_at', { ascending: false });
+  if (error) { const g=document.getElementById('admegr-grid'); if(g) g.innerHTML=`<div style="color:#ff6b6b;">Error: ${error.message}</div>`; return; }
+  _admEgrAll = data || [];
+  _admEgrRender();
+}
+
+function _admEgrRender() {
+  const grid = document.getElementById('admegr-grid');
+  if (!grid) return;
+  const term = (document.getElementById('admegr-search')?.value||'').trim().toLowerCase();
+  const cat  = document.getElementById('admegr-cat-filter')?.value||'';
+  const est  = document.getElementById('admegr-estado-filter')?.value||'';
+  const data = _admEgrAll.filter(a => {
+    if (cat && a.categoria !== cat) return false;
+    if (est === '1' && !a.publicado) return false;
+    if (est === '0' &&  a.publicado) return false;
+    if (term) { const hay=[a.titulo,a.extracto,a.autor_nombre,a.edicion,a.categoria].filter(Boolean).join(' ').toLowerCase(); if(!hay.includes(term)) return false; }
+    return true;
   });
-  if (error) { toast('Error: '+error.message,'error'); return; }
-  toast(publish?'Artículo publicado':'Borrador guardado','success');
-  document.getElementById('admegr-titulo').value = '';
+  if (!data.length) { grid.innerHTML='<div style="color:var(--text-dim);font-style:italic;grid-column:1/-1;padding:16px 0;">No hay artículos que coincidan.</div>'; return; }
+  grid.innerHTML = data.map(a => {
+    const img = a.imagen_url
+      ? `<img src="${a.imagen_url}" style="width:100%;height:150px;object-fit:cover;display:block;">`
+      : `<div style="width:100%;height:150px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:30px;opacity:0.2;">◈</div>`;
+    const estado = a.publicado ? '<span style="color:#4caf50;">Publicado</span>' : '<span style="color:var(--gold-dim);">Borrador</span>';
+    const fecha = a.created_at ? new Date(a.created_at).toLocaleDateString('es-CL') : '';
+    return `<div style="background:var(--dark-3);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;">
+      ${img}
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:6px;flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--gold-dim);text-transform:uppercase;">${esc(a.edicion||'Egrégora')} · ${esc(a.categoria||'Reflexión')} · ${estado}</div>
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);line-height:1.3;">${esc(a.titulo)}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${esc(a.autor_nombre||'—')} · ${fecha}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:8px;">
+          <button onclick="admEditarEgregora('${a.id}')" style="${_ADM_ROWBTN}color:var(--gold);border:1px solid var(--border-bright);">Editar</button>
+          <button onclick="admToggleEgregora('${a.id}',${!!a.publicado})" style="${_ADM_ROWBTN}color:var(--text-dim);border:1px solid var(--border);">${a.publicado?'Despublicar':'Publicar'}</button>
+          <button onclick="admEliminarEgregora('${a.id}')" style="${_ADM_ROWBTN}color:#ff6b6b;border:1px solid rgba(220,60,60,0.4);">Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function admGuardarEgregora(publish) {
+  const titulo = document.getElementById('admegr-titulo')?.value.trim();
+  const contenido = getQuillContent('admegr-quill');
+  if (!titulo || !contenido) { toast('Título y contenido son obligatorios','error'); return; }
+  let imgUrl = _admEgrImgUrl;
+  if (_admEgrImg) {
+    const path = Date.now()+'-'+_admEgrImg.name.replace(/\s/g,'_');
+    const { error } = await sb.storage.from('Egregora').upload(path, _admEgrImg, { upsert:false });
+    if (error) { toast('Error al subir imagen: '+error.message,'error'); return; }
+    imgUrl = sb.storage.from('Egregora').getPublicUrl(path).data.publicUrl;
+  }
+  const payload = {
+    titulo, contenido, extracto: stripHtml(contenido).substring(0,240),
+    edicion: document.getElementById('admegr-edicion')?.value.trim()||null,
+    categoria: document.getElementById('admegr-cat')?.value||'Reflexión',
+    imagen_url: imgUrl||null, publicado: publish
+  };
+  let error;
+  if (_admEgrEditId) ({ error } = await sb.from('egregora_articulos').update(payload).eq('id', _admEgrEditId));
+  else {
+    payload.autor_id = currentProfile.id;
+    payload.autor_nombre = (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]);
+    ({ error } = await sb.from('egregora_articulos').insert(payload));
+  }
+  if (error) { toast('Error al guardar: '+error.message,'error'); return; }
+  toast(_admEgrEditId ? 'Cambios guardados' : (publish?'Artículo publicado':'Borrador guardado'),'success');
   loadAdmEgregora();
 }
 
+async function admEditarEgregora(id) {
+  let a = _admEgrAll.find(x=>x.id===id);
+  if (!a) { const r = await sb.from('egregora_articulos').select('*').eq('id',id).single(); a = r.data; }
+  if (!a) { toast('No se encontró el artículo','error'); return; }
+  _admEgrEditId = id; _admEgrImgUrl = a.imagen_url||null; _admEgrImg = null;
+  document.getElementById('admegr-form-title').textContent = 'Editar artículo';
+  document.getElementById('admegr-edicion').value = a.edicion||'';
+  document.getElementById('admegr-cat').value = a.categoria||'Reflexión';
+  document.getElementById('admegr-titulo').value = a.titulo||'';
+  initQuillEditor('admegr-quill', { content: a.contenido||'' });
+  document.getElementById('admegr-btn-cancel').style.display='';
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+async function admToggleEgregora(id, pub) {
+  const { error } = await sb.from('egregora_articulos').update({ publicado: !pub }).eq('id', id);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  toast(pub?'Despublicado':'Publicado'); _admEgrLoad();
+}
 async function admEliminarEgregora(id) {
   if (!confirm('¿Eliminar este artículo?')) return;
-  const { error } = await sb.from('egregora_articulos').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  const { error } = await sb.from('egregora_articulos').delete().eq('id', id);
   if (error) { toast('Error al eliminar: '+error.message,'error'); return; }
-  toast('Artículo eliminado'); loadAdmEgregora();
+  toast('Artículo eliminado'); _admEgrLoad();
 }
 
 // ── Helpers compartidos de los editores delegables (radio / corp) ──
