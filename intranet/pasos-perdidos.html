@@ -1856,19 +1856,20 @@ function inyectarModulosAdmin() {
   section.style.display = '';
   items.innerHTML = '';
 
-  // Si el usuario tiene blog-orador en permisos y NO es el Orador por cargo,
-  // ocultamos el ítem público de lectura (el admin verá el módulo admin en su lugar)
-  const tieneBlogOrador = permisos.includes('blog-orador');
-  const esOradorPorCargo = currentProfile.cargo === 'Orador';
-  const navPub = document.getElementById('nav-blog-orador-pub');
-  if (navPub) navPub.classList.toggle('hidden', tieneBlogOrador && !esOradorPorCargo);
+  // Evitar menús duplicados: si el usuario tiene el permiso de administración de un blog,
+  // se oculta su ítem de LECTURA en "Contenido" y queda solo el de "Administración".
+  [
+    ['blog-venerable',  'nav-blog-venerable-pub'],
+    ['blog-orador',     'nav-blog-orador-pub'],
+    ['blog-primer-vig', 'nav-blog-primer-pub'],
+    ['blog-segundo-vig','nav-blog-segundo-pub'],
+  ].forEach(([perm, navId]) => {
+    if (permisos.includes(perm)) { const el = document.getElementById(navId); if (el) el.classList.add('hidden'); }
+  });
 
   permisos.forEach(mod => {
     const cfg = ADM_MODULOS_CONFIG[mod];
     if (!cfg) return;
-    // Si es el Orador por cargo, saltamos blog-orador del panel admin
-    // (ya tiene acceso directo al blog desde el ítem estático del nav)
-    if (mod === 'blog-orador' && esOradorPorCargo) return;
 
     const div = document.createElement('div');
     div.className = 'nav-item';
