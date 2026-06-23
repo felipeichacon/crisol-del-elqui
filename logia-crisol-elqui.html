@@ -978,7 +978,7 @@
       .eq('role', 'venerable')
       .eq('publicado', true)
       .order('created_at', { ascending: false })
-      .limit(3);
+      .limit(1);
 
     if (!data?.length) {
       grid.innerHTML = `<div class="blog-card" style="grid-column:1/-1;text-align:center;padding:40px;">
