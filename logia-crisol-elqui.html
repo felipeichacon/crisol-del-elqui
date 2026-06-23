@@ -977,6 +977,7 @@
       .select('*')
       .eq('role', 'venerable')
       .eq('publicado', true)
+      .or('audiencia.is.null,audiencia.eq.publico')
       .order('created_at', { ascending: false })
       .limit(1);
 
