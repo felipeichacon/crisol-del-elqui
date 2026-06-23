@@ -2981,6 +2981,11 @@ async function _galAdmDelete(id) {
 let _iaCalEventos = [], _iaCalYear = new Date().getFullYear(), _iaCalMonth = new Date().getMonth(), _iaCalEditId = null;
 const _IA_CAL_COLORS = {tenida_ordinaria:'var(--gold)',tenida_extraordinaria:'#d4a07a',tenida_conjunta:'#c47ad4',iniciacion:'#7aaed4',aumento_salario:'#a0d47a',exaltacion:'#d47a7a',evento:'#7ac4c4',tenida_otra_logia:'#8ad47a',consejo_oficiales:'#7ab0d4',camara_aprendiz:'#b07ad4',camara_companero:'#c4a07a',camara_maestro:'#7ac4d4',corporacion:'#7ad4a0',reunion_blanca:'#c8c8c8'};
 const _IA_CAL_LABELS = {tenida_ordinaria:'Tenida Ordinaria',tenida_extraordinaria:'Tenida Extraordinaria',tenida_conjunta:'Tenida Conjunta',iniciacion:'Ceremonia de Iniciación',aumento_salario:'Ceremonia de Aumento de Salario',exaltacion:'Ceremonia de Exaltación',evento:'Evento',tenida_otra_logia:'Tenida Otra Logia',consejo_oficiales:'Consejo de Oficiales',camara_aprendiz:'Cámara de Instrucción Aprendiz',camara_companero:'Cámara de Instrucción Compañero',camara_maestro:'Cámara de Instrucción Maestro',corporacion:'Corporación Elqui',reunion_blanca:'Reunión Blanca'};
+// Conversión correcta entre timestamptz (UTC) y hora local de Chile.
+// fecha_inicio llega como ISO con offset (ej. 2026-12-17T22:00:00+00:00); NO hacer string-slice
+// del UTC para mostrar/editar — eso corre el día. Usar siempre new Date() + getters locales.
+function _iaCalLocalYMD(iso){ if(!iso)return ''; const d=new Date(iso); if(isNaN(d))return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function _iaCalToLocalInput(iso){ if(!iso)return ''; const d=new Date(iso); if(isNaN(d))return ''; const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
 async function loadAdmCalendario() {
   const ct = document.getElementById('adm-calendario-content');
   if (!ct) return;
@@ -3114,7 +3119,7 @@ function _iaCalRenderGrid() {
     cell.onclick=()=>_iaCalOpenNewOnDay(_iaCalYear,_iaCalMonth,d);
     const num=document.createElement('div'); num.style.cssText=`font-family:'Cinzel',serif;font-size:10px;color:${isToday?'var(--gold)':'var(--text-dim)'};margin-bottom:2px;`; num.textContent=d; cell.appendChild(num);
     const dayStr=`${_iaCalYear}-${String(_iaCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayEvts=_iaCalEventos.filter(e=>(e.fecha_inicio||'').startsWith(dayStr));
+    const dayEvts=_iaCalEventos.filter(e=>_iaCalLocalYMD(e.fecha_inicio)===dayStr);
     dayEvts.slice(0,2).forEach(e=>{const dot=document.createElement('div');dot.style.cssText=`font-size:9px;color:${_IA_CAL_COLORS[e.tipo]||'var(--gold)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`;dot.textContent='● '+e.titulo;dot.onclick=ev=>{ev.stopPropagation();_iaCalOpenEdit(e);};cell.appendChild(dot);});
     if(dayEvts.length>2){const m=document.createElement('div');m.style.cssText='font-size:9px;color:var(--text-dim);';m.textContent='+'+(dayEvts.length-2)+' más';cell.appendChild(m);}
     grid.appendChild(cell);
@@ -3122,8 +3127,8 @@ function _iaCalRenderGrid() {
 }
 function _iaCalRenderList() {
   const list=document.getElementById('iadm-cal-list'); if(!list) return;
-  const todayStr=new Date().toISOString().slice(0,10);
-  const proximos=_iaCalEventos.filter(e=>(e.fecha_inicio||'').slice(0,10)>=todayStr).slice(0,15);
+  const _hoy=new Date(); const todayStr=`${_hoy.getFullYear()}-${String(_hoy.getMonth()+1).padStart(2,'0')}-${String(_hoy.getDate()).padStart(2,'0')}`;
+  const proximos=_iaCalEventos.filter(e=>_iaCalLocalYMD(e.fecha_inicio)>=todayStr).slice(0,15);
   if(!proximos.length){list.innerHTML='<div style="padding:18px;font-size:13px;color:var(--text-dim);font-style:italic;">No hay eventos próximos.</div>';return;}
   list.innerHTML='';
   proximos.forEach(e=>{
@@ -3131,9 +3136,9 @@ function _iaCalRenderList() {
     div.style.cssText='padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s;';
     div.onmouseover=()=>div.style.background='rgba(201,168,76,0.05)'; div.onmouseout=()=>div.style.background='transparent';
     div.onclick=()=>_iaCalOpenEdit(e);
-    const [fy,fm,fd]=(e.fecha_inicio||'').slice(0,10).split('-').map(Number);
-    const fechaStr=new Date(fy,fm-1,fd).toLocaleDateString('es-CL',{day:'numeric',month:'short'});
-    const hora=(e.fecha_inicio||'').slice(11,16)||'';
+    const _df=new Date(e.fecha_inicio);
+    const fechaStr=isNaN(_df)?'':_df.toLocaleDateString('es-CL',{day:'numeric',month:'short'});
+    const hora=isNaN(_df)?'':_df.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false});
     const rolesStr=(e.roles||[]).includes('todos')?'Todos':(e.roles||[]).map(r=>({aprendiz:'Ap.',companero:'Comp.',maestro:'M.',oficialidad:'Ofic.'}[r]||r)).join(' ');
     div.innerHTML=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span style="width:6px;height:6px;border-radius:50%;background:${_IA_CAL_COLORS[e.tipo]||'var(--gold)'};flex-shrink:0;display:inline-block;"></span><div style="font-family:'Cinzel',serif;font-size:11px;color:var(--cream);line-height:1.3;">${e.titulo}</div></div><div style="font-size:11px;color:var(--text-dim);margin-left:12px;">${fechaStr}${hora?' · '+hora:''}</div><div style="font-size:9px;color:var(--gold-dim);margin-left:12px;font-family:'Cinzel',serif;">${_IA_CAL_LABELS[e.tipo]||e.tipo} · ${rolesStr}</div>`;
     list.appendChild(div);
@@ -3167,8 +3172,8 @@ function _iaCalOpenEdit(e){
   document.getElementById('iadm-cal-desc').value=e.descripcion||'';
   document.getElementById('iadm-cal-lugar').value=e.lugar||'';
   document.getElementById('iadm-cal-tipo').value=e.tipo||'tenida_ordinaria';
-  document.getElementById('iadm-cal-inicio').value=(e.fecha_inicio||'').slice(0,16);
-  document.getElementById('iadm-cal-fin').value=(e.fecha_fin||'').slice(0,16);
+  document.getElementById('iadm-cal-inicio').value=_iaCalToLocalInput(e.fecha_inicio);
+  document.getElementById('iadm-cal-fin').value=_iaCalToLocalInput(e.fecha_fin);
   document.querySelectorAll('[name="iadm-cal-rol"]').forEach(cb=>{cb.checked=(e.roles||[]).includes(cb.value);});
   const a=document.getElementById('iadm-cal-autor');if(a)a.value=e.autor_plancha_id||'';
   const r=document.getElementById('iadm-cal-relator');if(r)r.value=e.relator_plancha_id||'';
