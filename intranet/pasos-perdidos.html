@@ -2153,8 +2153,8 @@ async function admCargarListaBlog(contentId, rolBlog) {
   if (!lista) return;
   // Limpiar instancias Quill huérfanas de ediciones previas antes de reconstruir el DOM
   Object.keys(_quillInstances).filter(k => k.startsWith('edit-quill-')).forEach(k => delete _quillInstances[k]);
-  // El blog del Venerable lo gestionan TODOS los que tengan el permiso, sobre TODAS las entradas (como el superadmin).
-  const verTodo = rolBlog === 'venerable';
+  // Todos los blogs los gestiona quien tenga el permiso, sobre TODAS las entradas (como el superadmin).
+  const verTodo = true;
   let _q = sb.from('posts').select('*').eq('role', rolBlog);
   if (!verTodo) _q = _q.eq('autor_id', currentProfile.id);
   const { data } = await _q.order('created_at',{ascending:false}).limit(50);
@@ -2236,7 +2236,6 @@ async function admGuardarEdicionBlog(id, contentId, rolBlog, publish) {
     titulo, contenido, extracto: stripHtml(contenido).substring(0, 200),
     audiencia, publicado: publish
   }).eq('id', id);
-  if (rolBlog !== 'venerable') _upd = _upd.eq('autor_id', currentProfile.id);
   const { error } = await _upd;
   if (error) { toast('Error al guardar: ' + error.message, 'error'); return; }
   toast(publish ? 'Publicado' : 'Borrador guardado', 'success');
@@ -2245,7 +2244,6 @@ async function admGuardarEdicionBlog(id, contentId, rolBlog, publish) {
 
 async function admToggleEntradaBlog(id, contentId, rolBlog, publicado) {
   let _upd = sb.from('posts').update({ publicado: !publicado }).eq('id', id);
-  if (rolBlog !== 'venerable') _upd = _upd.eq('autor_id', currentProfile.id);
   const { error } = await _upd;
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   toast(publicado ? 'Despublicado' : 'Publicado');
@@ -2257,7 +2255,6 @@ async function admEliminarEntradaBlog(id, contentId, rolBlog) {
   const row = document.getElementById('post-row-' + id);
   if (row) row.remove(); // remoción optimista inmediata
   let _del = sb.from('posts').delete().eq('id', id);
-  if (rolBlog !== 'venerable') _del = _del.eq('autor_id', currentProfile.id);
   const { error } = await _del;
   if (error) {
     toast('Error al eliminar: ' + error.message, 'error');
@@ -2485,7 +2482,7 @@ async function oradorCargarLista() {
   lista.innerHTML = '<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">Cargando…</div>';
   let q = sb.from('posts').select('*').eq('role', 'maestro');
   // Admin ve todos los posts del Orador; el Orador solo ve los suyos
-  if (currentProfile.role !== 'admin') q = q.eq('autor_id', currentProfile.id);
+  // Sin filtro de autor: el editor del Orador lo usan solo quienes tienen el permiso, y gestionan todas las entradas.
   const { data } = await q.order('created_at', { ascending: false });
   lista.innerHTML = '';
   if (!data?.length) {
@@ -2581,7 +2578,7 @@ async function oradorGuardarEdicion(id, publish) {
     titulo, contenido, audiencia, publicado: publish,
     extracto: stripHtml(contenido).substring(0, 200)
   }).eq('id', id);
-  if (currentProfile.role !== 'admin') upd = upd.eq('autor_id', currentProfile.id);
+  // Sin filtro de autor: el editor del Orador lo usan solo quienes tienen el permiso, y gestionan todas las entradas.
   const { error } = await upd;
   if (error) { toast('Error: '+error.message, 'error'); return; }
   toast(publish ? 'Publicado' : 'Borrador guardado', 'success');
@@ -2590,7 +2587,7 @@ async function oradorGuardarEdicion(id, publish) {
 
 async function oradorToggle(id, publicado) {
   let upd = sb.from('posts').update({ publicado: !publicado }).eq('id', id);
-  if (currentProfile.role !== 'admin') upd = upd.eq('autor_id', currentProfile.id);
+  // Sin filtro de autor: el editor del Orador lo usan solo quienes tienen el permiso, y gestionan todas las entradas.
   const { error } = await upd;
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   toast(publicado ? 'Despublicado' : 'Publicado', 'success');
@@ -2602,7 +2599,7 @@ async function oradorEliminar(id) {
   const row = document.getElementById('orador-row-' + id);
   if (row) row.remove(); // remoción optimista inmediata
   let q = sb.from('posts').delete().eq('id', id);
-  if (currentProfile.role !== 'admin') q = q.eq('autor_id', currentProfile.id);
+  // Sin filtro de autor: el editor del Orador lo usan solo quienes tienen el permiso, y gestionan todas las entradas.
   const { error } = await q;
   if (error) {
     toast('Error al eliminar: ' + error.message, 'error');
