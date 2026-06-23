@@ -2257,6 +2257,11 @@ function loadAdmBlogPrimer()    { buildAdmBlogModule('adm-blog-primer-content', 
 function loadAdmBlogSegundo()   { buildAdmBlogModule('adm-blog-segundo-content',  'Blog Segundo Vigilante','aprendiz');  }
 
 // ── Módulos admin de blog inyectados en la intranet (para el oficial desde su perfil) ──
+function loadAdmBlogVenerableIntranet() {
+  const el = document.getElementById('blog-venerable-grid');
+  if (el) el.style.cssText = 'padding:0 48px 48px;display:block;';
+  buildAdmBlogModule('blog-venerable-grid', 'Blog Venerable Maestro', 'venerable');
+}
 function loadAdmBlogPrimerIntranet() {
   const el = document.getElementById('blog-primer-grid');
   if (el) el.style.cssText = 'padding:0 48px 48px;display:block;';
@@ -3839,7 +3844,11 @@ function showModule(name) {
   if (name === 'adm-corp-blog')     loadAdmCorpBlog();
   if (name === 'gallery')    { _markModuleSeen('gallery_seen','badge-gallery'); loadGallery(); }
   if (name === 'blog')       { loadPosts(); }
-  if (name === 'blog-venerable-pub') { loadBlogVenerablePub(); }
+  if (name === 'blog-venerable-pub') {
+    const esVenerable = currentProfile?.cargo === 'Venerable Maestro' || currentProfile?._permisos?.includes('blog-venerable');
+    if (esVenerable) loadAdmBlogVenerableIntranet();
+    else             loadBlogVenerablePub();
+  }
   if (name === 'blog-orador-pub') {
     markBlogSeen();
     const esOrador = currentProfile?.cargo === 'Orador' || currentProfile?._permisos?.includes('blog-orador');
