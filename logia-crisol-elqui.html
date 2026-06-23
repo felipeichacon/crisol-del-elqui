@@ -961,7 +961,7 @@
           <div class="news-date">${fecha}</div>
           <h3 class="news-title">${escHtml(n.titulo)}</h3>
           <p class="news-excerpt">${escHtml(n.extracto||stripHtml(n.contenido||'').substring(0,160)+'…')}</p>
-          <a href="#" class="news-link" onclick="event.preventDefault()">Leer más →</a>
+          <span class="news-link">Leer más →</span>
         </div>`;
       grid.appendChild(card);
     });
@@ -1379,7 +1379,7 @@
       const card = document.createElement('div');
       card.className = 'news-card';
       card.onclick = () => openCorpNoticia(n);
-      card.innerHTML = `${imgHtml}<div class="news-card-body"><div class="news-tag">${escHtml(n.tag||'Corporación')}</div><div class="news-date">${fecha}</div><h3 class="news-title">${escHtml(n.titulo)}</h3><p class="news-excerpt">${escHtml(n.extracto||stripHtml(n.contenido||'').substring(0,160)+'…')}</p><a href="#" class="news-link" onclick="event.preventDefault()">Leer más →</a></div>`;
+      card.innerHTML = `${imgHtml}<div class="news-card-body"><div class="news-tag">${escHtml(n.tag||'Corporación')}</div><div class="news-date">${fecha}</div><h3 class="news-title">${escHtml(n.titulo)}</h3><p class="news-excerpt">${escHtml(n.extracto||stripHtml(n.contenido||'').substring(0,160)+'…')}</p><span class="news-link">Leer más →</span></div>`;
       grid.appendChild(card);
     });
   }
