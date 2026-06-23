@@ -1888,75 +1888,137 @@ function inyectarModulosAdmin() {
 // Cada función carga la UI correspondiente del admin
 // usando el cliente Supabase anon del miembro logueado
 
+// ── NOTICIAS — editor completo (delegable por permiso 'noticias') ──
+const _ADM_NOT_TAGS = ['Tenida','Comunidad','Conferencia','Cultura','Social','Aniversario','Corporación','Destacado'];
+let _admNotEditId = null, _admNotImg = null, _admNotImgUrl = null, _admNotAll = [];
+
 async function loadAdmNoticias() {
   const content = document.getElementById('adm-noticias-content');
   if (!content) return;
-  content.innerHTML = admFormNoticia();
-  initQuillEditor('admn-quill', { placeholder: 'Contenido de la noticia…' });
-  await admLoadNoticiasList(content);
-}
-
-function admFormNoticia() {
-  return `
-    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:680px;">
-      <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Nueva noticia</div>
-      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Título</label>
-        <input id="admn-titulo" type="text" placeholder="Título de la noticia" style="width:100%;background:var(--dark-4);border:1px solid var(--border);color:var(--text);font-family:'Aptos','Calibri','Trebuchet MS','Segoe UI',system-ui,sans-serif;font-size:17px;padding:10px 14px;outline:none;"></div>
-      <div style="margin-bottom:14px;"><label style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:var(--gold-dim);text-transform:uppercase;display:block;margin-bottom:6px;">Contenido</label>
-        <div id="admn-quill"></div></div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="admPublicarNoticia(true)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dark);background:var(--gold);border:none;padding:12px 22px;cursor:pointer;">Publicar</button>
-        <button onclick="admPublicarNoticia(false)" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid var(--border-bright);padding:12px 22px;cursor:pointer;">Borrador</button>
+  _admNotEditId = null; _admNotImg = null; _admNotImgUrl = null;
+  const tags = _ADM_NOT_TAGS.map(t => `<option>${t}</option>`).join('');
+  content.innerHTML = `
+    <div style="background:var(--dark-3);border:1px solid var(--border);padding:28px;margin-bottom:24px;max-width:760px;">
+      <div id="admn-form-title" style="${_ADM_TITLE}">Nueva noticia</div>
+      ${_admField('Fotografía (opcional)', `<input id="admn-img" type="file" accept="image/*" onchange="_admNotImg=this.files[0]||null" style="${_ADM_INPUT}">`)}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="flex:2;min-width:160px;">${_admField('Categoría', `<select id="admn-tag" style="${_ADM_INPUT}">${tags}</select>`)}</div>
+        <div style="flex:1;min-width:140px;">${_admField('Fecha', `<input id="admn-fecha" type="date" style="${_ADM_INPUT}">`)}</div>
+      </div>
+      ${_admField('Título', `<input id="admn-titulo" type="text" placeholder="Título de la noticia" style="${_ADM_INPUT}">`)}
+      ${_admField('Contenido', `<div id="admn-quill"></div>`)}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button id="admn-btn-pub" onclick="admGuardarNoticia(true)" style="${_ADM_BTN_PUB}">Publicar</button>
+        <button id="admn-btn-draft" onclick="admGuardarNoticia(false)" style="${_ADM_BTN_LINE}">Borrador</button>
+        <button id="admn-btn-cancel" onclick="loadAdmNoticias()" style="${_ADM_BTN_CANCEL}">Cancelar edición</button>
       </div>
     </div>
-    <div id="admn-lista" style="display:flex;flex-direction:column;gap:2px;max-width:680px;"></div>`;
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;max-width:760px;">
+      <input id="admn-search" type="text" placeholder="Buscar por título, contenido, autor…" oninput="_admNotRender()" style="${_ADM_INPUT}flex:2;min-width:200px;">
+      <select id="admn-tag-filter" onchange="_admNotRender()" style="${_ADM_INPUT}flex:1;min-width:150px;"><option value="">Todas las categorías</option>${tags}</select>
+      <select id="admn-estado-filter" onchange="_admNotRender()" style="${_ADM_INPUT}flex:1;min-width:150px;"><option value="">Publicadas y borradores</option><option value="1">Solo publicadas</option><option value="0">Solo borradores</option></select>
+    </div>
+    <div id="admn-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;max-width:760px;"></div>`;
+  document.getElementById('admn-fecha').value = new Date().toISOString().split('T')[0];
+  initQuillEditor('admn-quill', { placeholder: 'Contenido de la noticia…' });
+  await _admNotLoad();
 }
 
-async function admPublicarNoticia(publish) {
-  const titulo    = document.getElementById('admn-titulo')?.value.trim();
+async function _admNotLoad() {
+  const { data, error } = await sb.from('noticias').select('*').order('fecha_pub', { ascending: false });
+  if (error) { const g=document.getElementById('admn-grid'); if(g) g.innerHTML=`<div style="color:#ff6b6b;">Error: ${error.message}</div>`; return; }
+  _admNotAll = data || [];
+  _admNotRender();
+}
+
+function _admNotRender() {
+  const grid = document.getElementById('admn-grid'); if (!grid) return;
+  const term = (document.getElementById('admn-search')?.value||'').trim().toLowerCase();
+  const tag  = document.getElementById('admn-tag-filter')?.value||'';
+  const est  = document.getElementById('admn-estado-filter')?.value||'';
+  const data = _admNotAll.filter(n => {
+    if (tag && n.tag !== tag) return false;
+    if (est === '1' && !n.publicado) return false;
+    if (est === '0' &&  n.publicado) return false;
+    if (term) { const hay=[n.titulo,n.extracto,n.autor_nombre,n.tag].filter(Boolean).join(' ').toLowerCase(); if(!hay.includes(term)) return false; }
+    return true;
+  });
+  if (!data.length) { grid.innerHTML='<div style="color:var(--text-dim);font-style:italic;grid-column:1/-1;padding:16px 0;">No hay noticias que coincidan.</div>'; return; }
+  grid.innerHTML = data.map(n => {
+    const img = n.imagen_url
+      ? `<img src="${n.imagen_url}" style="width:100%;height:150px;object-fit:cover;display:block;">`
+      : `<div style="width:100%;height:150px;background:var(--dark-4);display:flex;align-items:center;justify-content:center;font-size:30px;opacity:0.2;">◈</div>`;
+    const estado = n.publicado ? '<span style="color:#4caf50;">Publicada</span>' : '<span style="color:var(--gold-dim);">Borrador</span>';
+    const fecha = n.fecha_pub ? new Date(n.fecha_pub+'T12:00:00').toLocaleDateString('es-CL') : '';
+    return `<div style="background:var(--dark-3);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;">
+      ${img}
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:6px;flex:1;">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:var(--gold-dim);text-transform:uppercase;">${esc(n.tag||'Noticia')} · ${estado} · ${fecha}</div>
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--cream);line-height:1.3;">${esc(n.titulo)}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${esc(n.autor_nombre||'—')}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:8px;">
+          <button onclick="admEditarNoticia('${n.id}')" style="${_ADM_ROWBTN}color:var(--gold);border:1px solid var(--border-bright);">Editar</button>
+          <button onclick="admToggleNoticia('${n.id}',${!!n.publicado})" style="${_ADM_ROWBTN}color:var(--text-dim);border:1px solid var(--border);">${n.publicado?'Despublicar':'Publicar'}</button>
+          <button onclick="admEliminarNoticia('${n.id}')" style="${_ADM_ROWBTN}color:#ff6b6b;border:1px solid rgba(220,60,60,0.4);">Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function admGuardarNoticia(publish) {
+  const titulo = document.getElementById('admn-titulo')?.value.trim();
   const contenido = getQuillContent('admn-quill');
   if (!titulo || !contenido) { toast('Completa título y contenido','error'); return; }
-  const { error } = await sb.from('noticias').insert({
+  let imgUrl = _admNotImgUrl;
+  if (_admNotImg) {
+    const ext = (_admNotImg.name.split('.').pop()||'jpg').toLowerCase();
+    const path = 'noticias/not-'+Date.now()+'.'+ext;
+    const { error } = await sb.storage.from('Noticias').upload(path, _admNotImg, { upsert:false });
+    if (error) { toast('Error al subir imagen: '+error.message,'error'); return; }
+    imgUrl = sb.storage.from('Noticias').getPublicUrl(path).data.publicUrl;
+  }
+  const payload = {
     titulo, contenido, extracto: stripHtml(contenido).substring(0,220),
-    tag: 'General',
-    fecha_pub: new Date().toISOString().split('T')[0],
-    autor_id: currentProfile.id,
-    autor_nombre: (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]),
-    publicado: publish
-  });
+    tag: document.getElementById('admn-tag')?.value||'Tenida',
+    fecha_pub: document.getElementById('admn-fecha')?.value||new Date().toISOString().split('T')[0],
+    imagen_url: imgUrl||null, publicado: publish
+  };
+  let error;
+  if (_admNotEditId) ({ error } = await sb.from('noticias').update(payload).eq('id', _admNotEditId));
+  else {
+    payload.autor_id = currentProfile.id;
+    payload.autor_nombre = (currentProfile.nombre||'').split(' ')[0]+' '+((currentProfile.apellido||'').split(' ')[0]);
+    ({ error } = await sb.from('noticias').insert(payload));
+  }
+  if (error) { toast('Error al guardar: '+error.message,'error'); return; }
+  toast(_admNotEditId ? 'Cambios guardados' : (publish?'Noticia publicada':'Borrador guardado'),'success');
+  loadAdmNoticias();
+}
+
+async function admEditarNoticia(id) {
+  let n = _admNotAll.find(x=>x.id===id);
+  if (!n) { const r = await sb.from('noticias').select('*').eq('id',id).single(); n = r.data; }
+  if (!n) { toast('No se encontró la noticia','error'); return; }
+  _admNotEditId = id; _admNotImgUrl = n.imagen_url||null; _admNotImg = null;
+  document.getElementById('admn-form-title').textContent = 'Editar noticia';
+  document.getElementById('admn-tag').value = n.tag||'Tenida';
+  document.getElementById('admn-fecha').value = n.fecha_pub||'';
+  document.getElementById('admn-titulo').value = n.titulo||'';
+  initQuillEditor('admn-quill', { content: n.contenido||'' });
+  document.getElementById('admn-btn-cancel').style.display='';
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+async function admToggleNoticia(id, pub) {
+  const { error } = await sb.from('noticias').update({ publicado: !pub }).eq('id', id);
   if (error) { toast('Error: '+error.message,'error'); return; }
-  toast(publish?'Noticia publicada':'Borrador guardado','success');
-  document.getElementById('admn-titulo').value = '';
-  if (_quillInstances['admn-quill']) _quillInstances['admn-quill'].setContents([]);
-  const content = document.getElementById('adm-noticias-content');
-  if (content) await admLoadNoticiasList(content);
+  toast(pub?'Despublicada':'Publicada'); _admNotLoad();
 }
-
-async function admLoadNoticiasList(content) {
-  const lista = document.getElementById('admn-lista');
-  if (!lista) return;
-  const { data } = await sb.from('noticias').select('*').eq('autor_id',currentProfile.id).order('created_at',{ascending:false}).limit(20);
-  lista.innerHTML = '';
-  if (!data?.length) { lista.innerHTML='<div style="color:var(--text-dim);font-style:italic;padding:16px 0;">No has publicado noticias aún.</div>'; return; }
-  data.forEach(n => {
-    const div = document.createElement('div');
-    div.style.cssText = 'background:var(--dark-3);border:1px solid var(--border);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;';
-    div.innerHTML = `<div>
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--cream);">${n.titulo}</div>
-      <div style="font-size:12px;color:var(--text-dim);">${n.publicado?'Publicada':'Borrador'} · ${new Date(n.created_at).toLocaleDateString('es-CL')}</div>
-    </div>
-    <button onclick="admEliminarNoticia('${n.id}')" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#ff6b6b;background:transparent;border:1px solid rgba(220,60,60,0.4);padding:6px 10px;cursor:pointer;">Eliminar</button>`;
-    lista.appendChild(div);
-  });
-}
-
 async function admEliminarNoticia(id) {
   if (!confirm('¿Eliminar esta noticia?')) return;
-  const { error } = await sb.from('noticias').delete().eq('id',id).eq('autor_id',currentProfile.id);
+  const { error } = await sb.from('noticias').delete().eq('id', id);
   if (error) { toast('Error al eliminar: '+error.message,'error'); return; }
-  toast('Noticia eliminada');
-  const content = document.getElementById('adm-noticias-content');
-  if (content) await admLoadNoticiasList(content);
+  toast('Noticia eliminada'); _admNotLoad();
 }
 
 
